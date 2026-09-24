@@ -2,6 +2,7 @@
 //
 //   node baskets.mjs [../config/baskets.plan.json]
 //
+// Tier 1 = base baskets (every Face, at mint); tiers 2/3 = top-ups after reveal (Watch / Heavy Stare).
 // Writes ../contracts/config/baskets.<chainId>.json (read by Deploy.s.sol) and prints the
 // pool budget needed to seed all 5555 Faces (per token and in USD).
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -66,7 +67,7 @@ writeFileSync(outPath, JSON.stringify(out, null, 2));
 
 console.log(`wrote ${outPath}\n`);
 for (const b of baskets) console.log(`  #${b.id} ${b.name.padEnd(28)} ~$${b.usd.toFixed(2)}`);
-console.log(`\nPool needed to seed all 5555 Faces (~$${Math.round(usdTotal).toLocaleString()}):`);
+console.log(`\nPool needed to seed all 5555 Faces (~$${Math.round(usdTotal).toLocaleString("en-US")}):`);
 const bySymbol = Object.fromEntries(Object.entries(plan.tokens).map(([s, t]) => [getAddress(t.address), [s, t.decimals]]));
 for (const [addr, amt] of Object.entries(need)) {
   const [sym, dec] = bySymbol[addr];

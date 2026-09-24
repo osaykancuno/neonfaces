@@ -69,6 +69,9 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     bytes32 public provenanceHash; // keccak running hash of the on-chain art chunks, committed before mint
     uint256 public revealBlock; // L2 block whose hash becomes the reveal seed
     uint256 public revealSeed; // 0 until revealed
+    /// @notice Minting ends for good when the reveal is requested: nobody can mint once art is knowable.
+    bool public mintClosed;
+    uint256 public revealRequests;
 
     /// @notice "Unblinking": when each Face last changed hands (mint or transfer). The longer a stare
     /// stays with one holder, the longer its eyes have been open. Read by the renderer.
@@ -85,17 +88,21 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     event MetadataFrozen();
     event ContractURIUpdated(); // ERC-7572
     event TeamMint(address indexed to, uint256 firstId, uint256 quantity);
+    event MintClosed(uint256 totalSupply);
 
     error ExceedsPublicAllocation();
     error ExceedsTeamAllocation();
     error MintIsPaused();
     error ZeroQuantity();
+    error ProvenanceNotSet();
+    error MintIsClosed();
     error ProvenanceAlreadySet();
     error MintAlreadyStarted();
     error RevealAlreadyDone();
     error RevealNotRequested();
     error RevealTooEarly();
     error RevealBlockExpired();
+    error RevealStillOpen();
     error MetadataIsFrozen();
     error RoyaltyTooHigh();
 
@@ -134,6 +141,9 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
 
     function _mintBatch(address to, uint256 quantity) private returns (uint256 firstId) {
         if (quantity == 0) revert ZeroQuantity();
+        if (mintClosed) revert MintIsClosed();
+        // the art must be committed before the first Face exists, or it could never be sealed
+        if (provenanceHash == bytes32(0)) revert ProvenanceNotSet();
         firstId = totalSupply + 1;
         totalSupply += quantity;
         // MAX_SUPPLY is implied: PUBLIC_CAP + TEAM_CAP == MAX_SUPPLY
@@ -164,7 +174,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     }
 
     // ---------------------------------------------------------------------
-    // Provenance + reveal (commit before mint, random offset after)
+    // Provenance + reveal (commit before mint, keyed permutation after)
     // ---------------------------------------------------------------------
 
     /// @notice Commit the provenance hash of the full art set. Only once and only before mint.
@@ -176,10 +186,21 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     }
 
     /// @notice Step 1 of the reveal: pick a future L2 block whose hash will be the seed.
-    /// Can be called again only if the previous target block fell out of the 256-block window.
+    /// Closes minting forever (art and Stare tiers become knowable at reveal).
+    /// Can be called again only after the previous target block fell out of the 256-block window;
+    /// every request is an event, so re-requests are publicly visible.
     function requestReveal() external onlyRole(METADATA_ROLE) {
         if (revealSeed != 0) revert RevealAlreadyDone();
+        uint256 previous = revealBlock;
+        if (previous != 0 && (ChainEntropy.blockNumber() <= previous || ChainEntropy.blockHash(previous) != bytes32(0))) {
+            revert RevealStillOpen(); // target not mined yet, or its hash is still usable: call reveal()
+        }
+        if (!mintClosed) {
+            mintClosed = true;
+            emit MintClosed(totalSupply);
+        }
         revealBlock = ChainEntropy.blockNumber() + REVEAL_DELAY_BLOCKS;
+        ++revealRequests;
         emit RevealRequested(revealBlock);
     }
 

@@ -1,4 +1,4 @@
-import { formatEther, formatUnits, parseEventLogs } from "viem";
+import { formatEther, formatUnits, parseEther, parseEventLogs, toFunctionSelector } from "viem";
 import { ABI, PHASES, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata } from "./chain.js";
 import { pixelEye } from "./effects/eye.js";
 import { decode, svgDataURI } from "./render.js";
@@ -81,7 +81,7 @@ async function liveRecords() {
     if (!(await readAt(state.dep.art, "art", "isSealed"))) return;
     const recs = await Promise.all(gallery.map((f) => readAt(state.dep.art, "art", "artData", [BigInt(f.artId)])));
     recs.forEach((rec, i) => (gallery[i].record = rec));
-    $("#gallery-source").textContent = `read live from NeonArt ${short(state.dep.art)}`;
+    $("#gallery-source").textContent = `Read live from NeonArt ${short(state.dep.art)}.`;
   } catch {}
 }
 
@@ -260,6 +260,7 @@ $("#connect").addEventListener("click", () => doConnect().catch((e) => e.message
 window.addEventListener("neon:account", () => {
   $("#connect").textContent = state.account ? short(state.account) : "Connect";
   refreshMint();
+  if (!$("#face-page").hidden) route();
 });
 
 const FRIENDLY = {
@@ -271,6 +272,13 @@ const FRIENDLY = {
   ExceedsPublicAllocation: "Sold out.",
   WrongPayment: "Wrong ETH amount — refresh and try again.",
   InvalidQuantity: "Choose between 1 and 10.",
+  MintIsClosed: "Mint is over.",
+  AccountIsLocked: "This Face's account is locked.",
+  InvalidLock: "A lock can only be extended, up to 365 days.",
+  InvalidAgentConfig: "Check the agent address, expiry and calls (the account itself can't be a target).",
+  InsufficientPool: "The seed pool is being refilled — try again later.",
+  NotUpgradeable: "Nothing to upgrade for this Face.",
+  Unauthorized: "Only the holder can do this.",
 };
 
 function errMsg(e) {
@@ -326,13 +334,13 @@ function setMsg(t, cls = "") {
 async function refreshMint() {
   if (state.preview) return;
   try {
-    const [phase, supply, funded] = await Promise.all([read("minter", "phase"), read("faces", "totalSupply"), read("seeder", "fundedCount")]);
+    const [phase, supply, funded, closed] = await Promise.all([read("minter", "phase"), read("faces", "totalSupply"), read("seeder", "fundedCount"), read("faces", "mintClosed")]);
     const [price, maxPerWallet, supplyCap, minted] = await read("minter", "phaseConfig", [phase]);
     mintState.phase = Number(phase);
     mintState.cfg = { price, maxPerWallet, supplyCap, minted };
     const name = PHASES[mintState.phase];
-    const live = mintState.phase >= 1 && mintState.phase <= 3;
-    $("#phase-pill").textContent = live ? `${name} · live` : name === "Finished" ? "Sold out / closed" : "Closed";
+    const live = !closed && mintState.phase >= 1 && mintState.phase <= 3;
+    $("#phase-pill").textContent = live ? `${name} · live` : closed ? "Mint over" : name === "Finished" ? "Sold out / closed" : "Closed";
     $("#phase-pill").classList.toggle("live", live);
     $("#progress-text").textContent = `${supply} / 5555`;
     $("#progress-bar").style.width = `${(Number(supply) / 5555) * 100}%`;
@@ -396,10 +404,24 @@ async function onMint() {
 // =====================================================================================
 // face page
 // =====================================================================================
+// selectors that let an agent move assets out of the Face: the panel asks for confirmation
+const RISKY = {
+  "0xa9059cbb": "transfer — lets the agent send tokens anywhere",
+  "0x23b872dd": "transferFrom — lets the agent move tokens",
+  "0x095ea7b3": "approve — lets the agent approve ANY spender, including itself",
+  "0x39509351": "increaseAllowance — same risk as approve",
+  "0xa22cb465": "setApprovalForAll — hands over whole NFT collections",
+  "0x42842e0e": "safeTransferFrom — moves NFTs out",
+  "0xd505accf": "permit — signature-based approvals",
+};
+
+const fmtDate = (sec) => new Date(Number(sec) * 1000).toISOString().slice(0, 16).replace("T", " ");
+
 async function showFace(id) {
   $("#face-title").textContent = `NEONFACES #${id}`;
   $("#face-img").src = placeholder ? svgDataURI(5555, placeholder) : "";
   ["#face-owner", "#face-account", "#face-balances", "#face-traits", "#face-agent", "#face-links", "#face-actions"].forEach((s) => ($(s).innerHTML = ""));
+  $("#face-holder")?.remove();
   $("#face-search").onsubmit = (e) => {
     e.preventDefault();
     const v = Number($("#face-search-id").value);
@@ -418,53 +440,55 @@ async function showFace(id) {
     $("#face-img").src = meta.image; // on-chain SVG
     const accLink = explorer(`address/${seed.account}`);
     $("#face-owner").innerHTML = `<b>holder</b>${esc(owner)}`;
-    $("#face-account").innerHTML = `<b>account</b>${accLink ? `<a href="${accLink}" target="_blank" rel="noopener">${seed.account}</a>` : seed.account} · <span class="neon">${TIERS[seed.tier]}</span>`;
+    $("#face-account").innerHTML = `<b>account</b>${accLink ? `<a href="${accLink}" target="_blank" rel="noopener">${seed.account}</a>` : seed.account} · <span class="neon">${seed.tier ? TIERS[seed.tier] : "Unrevealed"}</span>`;
     const show = (a) => (a.display_type === "date" ? new Date(a.value * 1000).toISOString().slice(0, 10) : a.value);
     $("#face-traits").innerHTML = meta.attributes.map((a) => `<div><span>${esc(a.trait_type)}</span>${esc(show(a))}</div>`).join("");
 
-    // balances: seed legs + ETH
+    // balances: every seed token (base + top-up) + ETH
+    const tokens = [...new Set([...seed.legs, ...seed.upgradeLegs].map((l) => l.token))];
+    const deployed = !!(await state.pub.getCode({ address: seed.account }));
     const eth = await state.pub.getBalance({ address: seed.account });
-    const legs = await Promise.all(
-      seed.legs.map(async (l) => {
+    const rows = await Promise.all(
+      tokens.map(async (t) => {
         const [bal, sym, dec] = await Promise.all([
-          readAt(l.token, "erc20", "balanceOf", [seed.account]),
-          readAt(l.token, "erc20", "symbol").catch(() => "?"),
-          readAt(l.token, "erc20", "decimals").catch(() => 18),
+          readAt(t, "erc20", "balanceOf", [seed.account]),
+          readAt(t, "erc20", "symbol").catch(() => "?"),
+          readAt(t, "erc20", "decimals").catch(() => 18),
         ]);
         return { sym, v: formatUnits(bal, dec) };
       }),
     );
-    const rows = [...legs, { sym: "ETH", v: formatEther(eth) }];
+    rows.push({ sym: "ETH", v: formatEther(eth) });
     $("#face-balances").innerHTML = rows.map((b) => `<div class="bal"><span>${esc(b.sym)}</span><b>${Number(b.v).toLocaleString("en-US", { maximumFractionDigits: 6 })}</b></div>`).join("");
-    if (!seed.funded) {
-      const label = seed.activated ? "Seed pending — fund it" : "Activate this Face";
+
+    // permissionless actions: anyone can push a pending seed or a top-up
+    const act = (label, fn) => {
       const btn = document.createElement("button");
       btn.className = "btn btn-neon";
       btn.textContent = label;
-      btn.onclick = async () => {
-        try {
-          if (!state.account) await doConnect();
-          await ensureChain();
-          const fn = seed.activated ? "fund" : "activate";
-          const { request } = await state.pub.simulateContract({ address: state.dep.seeder, abi: ABI.seeder, functionName: fn, args: [BigInt(id)], account: state.account });
-          const hash = await state.wallet.writeContract(request);
-          toast("Sent. Waiting for the chain…");
-          await state.pub.waitForTransactionReceipt({ hash });
-          showFace(id);
-        } catch (e) { toast(errMsg(e)); }
-      };
+      btn.onclick = () => send(state.dep.seeder, ABI.seeder, fn, [BigInt(id)], () => showFace(id));
       $("#face-actions").appendChild(btn);
-    }
+    };
+    if (!seed.activated) act("Activate this Face", "activate");
+    else if (!seed.funded) act("Seed pending — deliver it", "fund");
+    if (seed.tier >= 2 && !seed.upgraded) act(`Deliver the ${TIERS[seed.tier]} top-up`, "upgrade");
 
-    // agent
-    try {
-      const [agent, , expiry, active] = await readAt(seed.account, "account", "agentConfig");
-      $("#face-agent").innerHTML = active
-        ? `<b>agent</b>${agent} · until ${new Date(Number(expiry) * 1000).toLocaleString()}`
-        : `<b>agent</b>none delegated`;
-    } catch {
-      $("#face-agent").innerHTML = `<b>agent</b>account not deployed yet`;
+    // agent + lock
+    let agentInfo = null;
+    let lockedUntil = 0n;
+    if (deployed) {
+      agentInfo = await readAt(seed.account, "account", "agentConfig");
+      lockedUntil = await readAt(seed.account, "account", "lockedUntil");
     }
+    const lockedNow = Number(lockedUntil) * 1000 > Date.now();
+    const [agent, , expiry, active, allowance] = agentInfo ?? [];
+    $("#face-agent").innerHTML =
+      (!deployed
+        ? `<b>agent</b>account not deployed yet`
+        : active
+          ? `<b>agent</b>${agent}<br><b>until</b>${fmtDate(expiry)} · <b>ETH budget</b>${formatEther(allowance)}`
+          : `<b>agent</b>none active`) +
+      (lockedNow ? `<br><b>locked until</b><span class="neon">${fmtDate(lockedUntil)}</span> — nothing can leave this account` : "");
 
     const links = [];
     const tl = explorer(`token/${state.dep.faces}/instance/${id}`);
@@ -472,7 +496,101 @@ async function showFace(id) {
     if (state.dep.chain.opensea) links.push(`<a href="${state.dep.chain.opensea}/${state.dep.faces}/${id}" target="_blank" rel="noopener">OpenSea ↗</a>`);
     links.push(`<a href="${meta.image}" download="neonface-${id}.svg">Download SVG</a>`);
     $("#face-links").innerHTML = links.join("");
+
+    if (state.account && state.account.toLowerCase() === owner.toLowerCase() && deployed) holderPanel(id, seed.account, lockedNow);
   } catch (e) {
     $("#face-owner").innerHTML = `<b>status</b>${/nonexistent|ERC721NonexistentToken/i.test(String(e)) ? "not minted yet" : esc(errMsg(e))}`;
   }
+}
+
+async function send(address, abi, functionName, args, done) {
+  try {
+    if (!state.account) await doConnect();
+    await ensureChain();
+    const { request } = await state.pub.simulateContract({ address, abi, functionName, args, account: state.account });
+    const hash = await state.wallet.writeContract(request);
+    toast("Sent. Waiting for the chain…");
+    const r = await state.pub.waitForTransactionReceipt({ hash });
+    toast(r.status === "success" ? "Done." : "Reverted.");
+    done?.();
+  } catch (e) {
+    toast(errMsg(e));
+  }
+}
+
+/** "0xTarget functionName(types)" lines -> permissions, plus warnings for risky selectors. */
+function parsePermissions(text) {
+  const perms = [];
+  const warnings = [];
+  for (const raw of text.split(/\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const [target, ...rest] = line.split(/\s+/);
+    const sig = rest.join("");
+    if (!/^0x[0-9a-fA-F]{40}$/.test(target) || !sig) throw new Error(`bad line: "${line}" (expected: 0xContract functionName(types))`);
+    const selector = /^0x[0-9a-fA-F]{8}$/.test(sig) ? sig.toLowerCase() : toFunctionSelector(sig.startsWith("function") ? sig : `function ${sig}`);
+    if (RISKY[selector]) warnings.push(`${sig} on ${short(target)}: ${RISKY[selector]}`);
+    perms.push({ target, selector });
+  }
+  return { perms, warnings };
+}
+
+function holderPanel(id, account, lockedNow) {
+  const box = document.createElement("div");
+  box.id = "face-holder";
+  box.className = "holder-panel";
+  box.innerHTML = `
+    <h3>Your Face · controls</h3>
+    <p class="fine">Only the holder can use these. They act on this Face's own account.</p>
+    <details open><summary>Delegate an agent</summary>
+      <label>Agent address<input id="ag-addr" placeholder="0x…" autocomplete="off"></label>
+      <label>Valid for (days)<input id="ag-days" type="number" min="1" value="30"></label>
+      <label>ETH it may spend (total)<input id="ag-eth" type="number" min="0" step="0.001" value="0"></label>
+      <label>Allowed calls — one per line: <code>0xContract functionName(types)</code>
+        <textarea id="ag-perms" rows="4" placeholder="0x… swap(address,address,uint256)"></textarea></label>
+      <div id="ag-warn" class="msg err"></div>
+      <div class="row">
+        <button class="btn btn-neon" id="ag-set">Delegate (replaces the current agent)</button>
+        <button class="btn btn-ghost" id="ag-add">Add these calls</button>
+        <button class="btn btn-ghost" id="ag-del">Remove these calls</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost" id="ag-budget">Update ETH budget</button>
+        <button class="btn btn-ghost" id="ag-revoke">Revoke agent</button>
+      </div>
+    </details>
+    <details><summary>Lock the account (before listing)</summary>
+      <p class="fine">While locked, nothing can leave the account — not you, not your agent, no signature. The lock survives a sale, so a buyer gets exactly what they see. It can only be extended (max 365 days). Revoke old token approvals first: allowances granted before locking stay valid at the token level.</p>
+      <label>Lock for (days)<input id="lk-days" type="number" min="1" max="365" value="7"></label>
+      <button class="btn btn-neon" id="lk-set">${lockedNow ? "Extend lock" : "Lock"}</button>
+    </details>`;
+  $("#face-links").after(box);
+  const reload = () => showFace(id);
+  const permsConfirmed = () => {
+    const { perms, warnings } = parsePermissions($("#ag-perms").value);
+    $("#ag-warn").textContent = warnings.length ? "Careful: " + warnings.join(" · ") : "";
+    if (warnings.length && !confirm(`These permissions can move assets out of your Face:\n\n${warnings.join("\n")}\n\nContinue?`)) throw new Error("cancelled");
+    return perms;
+  };
+  const guard = (fn) => () => {
+    try {
+      fn();
+    } catch (e) {
+      if (e.message !== "cancelled") toast(e.message);
+    }
+  };
+  $("#ag-set").onclick = guard(() => {
+    const agent = $("#ag-addr").value.trim();
+    if (!/^0x[0-9a-fA-F]{40}$/.test(agent)) throw new Error("Enter the agent address.");
+    const expiry = BigInt(Math.floor(Date.now() / 1000) + Number($("#ag-days").value) * 86400);
+    send(account, ABI.account, "setAgent", [agent, expiry, permsConfirmed(), parseEther(String($("#ag-eth").value || "0"))], reload);
+  });
+  $("#ag-add").onclick = guard(() => send(account, ABI.account, "setAgentPermissions", [permsConfirmed(), true], reload));
+  $("#ag-del").onclick = guard(() => send(account, ABI.account, "setAgentPermissions", [parsePermissions($("#ag-perms").value).perms, false], reload));
+  $("#ag-budget").onclick = guard(() => send(account, ABI.account, "setAgentValueAllowance", [parseEther(String($("#ag-eth").value || "0"))], reload));
+  $("#ag-revoke").onclick = guard(() => send(account, ABI.account, "revokeAgent", [], reload));
+  $("#lk-set").onclick = guard(() => {
+    const until = BigInt(Math.floor(Date.now() / 1000) + Number($("#lk-days").value) * 86400);
+    send(account, ABI.account, "lock", [until], reload);
+  });
 }

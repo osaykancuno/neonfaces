@@ -71,10 +71,12 @@ contract NeonRenderer {
         } else {
             j.p(_attr("Status", "Unrevealed", true));
         }
-        j.p(_attr("Seed", _basketLabel(s), true));
+        j.p(_attr("Seed", s.funded ? _basketLabel(s.legs) : (s.activated ? "Pending" : "None"), true));
         j.p(_attr("Seed Status", s.funded ? "Funded" : (s.activated ? "Pending" : "Inactive"), true));
+        if (s.tier >= 2) j.p(_attr("Stare Upgrade", s.upgraded ? _basketLabel(s.upgradeLegs) : "Pending", true));
         j.p(_holdings(s));
         j.p(_unblinking(tokenId));
+        j.p(_lock(s.account));
         if (revealed) j.p(',{"trait_type":"Art ID","display_type":"number","value":', bytes(artId.toString()), "}");
         j.p("]}");
         return string.concat("data:application/json;base64,", Base64.encode(j.data));
@@ -226,14 +228,13 @@ contract NeonRenderer {
         if (tier == 1) return "Glance";
         if (tier == 2) return "Watch";
         if (tier == 3) return "Heavy Stare";
-        return "Unassigned";
+        return "Unrevealed";
     }
 
-    function _basketLabel(NeonSeeder.SeedView memory s) internal view returns (string memory label) {
-        if (s.legs.length == 0) return s.activated ? "Pending" : "None";
-        for (uint256 i; i < s.legs.length; ++i) {
+    function _basketLabel(NeonSeeder.Leg[] memory legs) internal view returns (string memory label) {
+        for (uint256 i; i < legs.length; ++i) {
             string memory sym;
-            try IERC20Metadata(s.legs[i].token).symbol() returns (string memory x) {
+            try IERC20Metadata(legs[i].token).symbol() returns (string memory x) {
                 sym = x;
             } catch {
                 sym = "?";
@@ -244,8 +245,17 @@ contract NeonRenderer {
 
     /// @dev Live balances of the seed tokens inside the Face account, e.g. {"trait_type":"Holds TSLA","value":"0.003"}
     function _holdings(NeonSeeder.SeedView memory s) internal view returns (bytes memory out) {
-        for (uint256 i; i < s.legs.length; ++i) {
-            address t = s.legs[i].token;
+        uint256 n = s.legs.length;
+        address[] memory tokens = new address[](n + s.upgradeLegs.length);
+        for (uint256 i; i < n; ++i) tokens[i] = s.legs[i].token;
+        for (uint256 i; i < s.upgradeLegs.length; ++i) {
+            address t = s.upgradeLegs[i].token;
+            bool dup;
+            for (uint256 k; k < n; ++k) if (tokens[k] == t) dup = true;
+            if (!dup) tokens[n++] = t;
+        }
+        for (uint256 i; i < n; ++i) {
+            address t = tokens[i];
             (bool ok1, bytes memory rb) = t.staticcall(abi.encodeCall(IERC20.balanceOf, (s.account)));
             (bool ok2, bytes memory rd) = t.staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
             if (!ok1 || !ok2 || rb.length < 32 || rd.length < 32) continue;
@@ -259,6 +269,16 @@ contract NeonRenderer {
                 out, _attr(string.concat("Holds ", sym), _decimal(abi.decode(rb, (uint256)), abi.decode(rd, (uint8))), true)
             );
         }
+    }
+
+    /// @dev "Locked until" (date) while the Face account is locked — a buyer's guarantee the contents stay put.
+    function _lock(address account) internal view returns (bytes memory) {
+        if (account.code.length == 0) return "";
+        (bool ok, bytes memory r) = account.staticcall{gas: 20_000}(abi.encodeWithSignature("lockedUntil()"));
+        if (!ok || r.length < 32) return "";
+        uint256 until = abi.decode(r, (uint256));
+        if (until <= block.timestamp) return "";
+        return abi.encodePacked(',{"trait_type":"Locked until","display_type":"date","value":', until.toString(), "}");
     }
 
     /// @dev "Unblinking": days the current holder has kept the Face + the date its eyes opened.

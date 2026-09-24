@@ -192,16 +192,6 @@ h3 { font-family: var(--pixel); font-size: 18px; color: var(--neon); margin: 0 0
   .vs-row > span:nth-child(2)::before { content: "Typical: "; text-decoration: none; }
 }
 
-/* flow diagram */
-.flow { border: 1px solid var(--line); background: #030400; padding: 20px; margin-bottom: 30px; overflow-x: auto; }
-#flow-svg { width: 100%; min-width: 640px; height: auto; display: block; }
-#flow-svg .node rect { fill: #070900; stroke: var(--neon); stroke-width: 2; }
-#flow-svg .node text { fill: var(--ice); font-family: var(--pixel); font-size: 15px; text-anchor: middle; }
-#flow-svg .node text.dim { fill: var(--dim); font-family: var(--mono); font-size: 11px; }
-#flow-svg .node.small text { font-size: 13px; }
-#flow-svg .wire { fill: none; stroke: var(--neon); stroke-width: 2; stroke-dasharray: 6 6; animation: flow 1s linear infinite; }
-@keyframes flow { to { stroke-dashoffset: -12; } }
-
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .card { border: 1px solid var(--line); background: linear-gradient(160deg, #0a0d02, #000); padding: 22px; position: relative; transition: border-color .2s, transform .2s steps(3); }
 .card:hover { border-color: var(--neon); transform: translate(-3px, -3px); box-shadow: 3px 3px 0 var(--neon); }
@@ -311,6 +301,15 @@ h3 { font-family: var(--pixel); font-size: 18px; color: var(--neon); margin: 0 0
 .face-search { display: flex; gap: 8px; margin-top: 40px; max-width: 360px; }
 .face-search input { flex: 1; background: #000; border: 2px solid var(--neon); color: var(--ice); font-family: var(--pixel); font-size: 16px; padding: 10px; }
 @media (max-width: 900px) { .face-grid { grid-template-columns: 1fr; } }
+
+/* holder panel */
+.holder-panel { margin-top: 28px; border: 2px solid var(--neon); padding: 18px; background: #030400; display: grid; gap: 10px; }
+.holder-panel details { border-top: 1px solid var(--line); padding-top: 10px; }
+.holder-panel summary { font-family: var(--pixel); color: var(--ice); cursor: none; margin-bottom: 8px; }
+.holder-panel label { display: grid; gap: 4px; font-family: var(--mono); font-size: 12px; color: var(--dim); margin: 8px 0; }
+.holder-panel input, .holder-panel textarea { background: #000; border: 1px solid var(--olive-2); color: var(--ice); font-family: var(--mono); font-size: 13px; padding: 8px; width: 100%; }
+.holder-panel .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.holder-panel .btn { font-size: 12px; padding: 9px 12px; }
 
 /* footer / toast */
 .footer { border-top: 2px solid var(--neon); padding: 30px var(--gutter) 40px; margin-top: 40px; }

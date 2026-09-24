@@ -3,10 +3,11 @@
 5555 close-up faces on **Robinhood Chain** (chain id 4663). Every Face is an account.
 
 - **Fully on-chain pixel art.** Each Face is a 20–40 block grid (~168 bytes, RLE) stored in contract bytecode (SSTORE2). `tokenURI` draws the SVG and writes the JSON on-chain. No IPFS, no server.
-- **Every Face is a wallet.** An ERC-6551 Token Bound Account is created through the canonical registry *and funded* with a basket of Stock Tokens / USDG in the mint transaction.
-- **Stare tiers from an exact on-chain urn**: 4444 Glance / 833 Watch / 278 Heavy Stare — the tier decides the basket and biases the art.
+- **Every Face is a wallet.** An ERC-6551 Token Bound Account is created through the canonical registry *and funded* with a base basket of Stock Tokens in the mint transaction.
+- **Stare tiers set at reveal**: a keyed on-chain permutation maps tokens to art; the art decides the tier (exactly 4444 Glance / 833 Watch / 278 Heavy Stare) and Watch / Heavy Stare Faces get a top-up. Nothing valuable is decided at mint, so it can't be sniped.
 - **Unblinking**: an on-chain clock of how long each Face has stayed with its holder, shown in the metadata. Selling resets it.
-- **Scoped agents**: holders can delegate an agent that may only call the (contract, function) pairs they allow — no ETH, no signatures, expiring, void on sale.
+- **Scoped agents**: holders delegate an agent that may only call the (contract, function) pairs they allow, within an ETH budget — no signatures, expiring, void on sale. See [docs/AGENTS.md](docs/AGENTS.md).
+- **Lock before listing**: a holder can freeze the account until a date; the lock survives the sale, so buyers get exactly what they see.
 - **Money said before, not after**: 40 / 25 / 20 / 15 split hard-coded in the minter; team share vests over 6 months.
 
 > Plain truth: NEONFACES does not sell shares or shareholder rights. It sells an artwork that can hold on-chain exposure. Stock Tokens give economic exposure only and are not available to US persons.
@@ -17,10 +18,10 @@
 |---|---|
 | `art/` | Procedural renderer + collection generator (Python). Produces the on-chain records, provenance, previews. |
 | `contracts/` | Foundry project: `NeonFaces` (ERC-721), `NeonMinter`, `NeonSeeder`, `NeonFaceAccount` (ERC-6551), `NeonArt` (SSTORE2), `NeonRenderer` (SVG/JSON). Tests, deploy + upload + rehearsal scripts. |
-| `tools/` | Node ops tools: baskets, allowlists (Merkle), Safe batches, reveal watcher, on-chain verifier, site export. |
+| `tools/` | Node ops tools: baskets, allowlists (Merkle), Safe batches, reveal watcher, top-ups, reference agent, on-chain verifier, site export. |
 | `web/` | The site (Vite + viem, static). Draws Faces from the on-chain bytes with a byte-identical JS port of the renderer. Mint, Face pages. |
 | `config/` | Seed basket plan (verified Stock Token addresses), allowlist CSVs. |
-| `docs/` | Lore, architecture, launch runbook, security & trust, economics, traits. |
+| `docs/` | Lore, architecture, agents, launch runbook, security review, economics, traits. |
 
 ## Quick start
 
@@ -30,7 +31,7 @@ Requirements: Foundry, Node ≥ 20, Python ≥ 3.11 with `numpy pillow pycryptod
 # 1. art: generate the 5555 Faces (≈9 min) and the site assets
 cd art && python generate.py && python export_site.py && cd ..
 
-# 2. contracts: build + test (46 tests incl. full-supply urn, byte-exact SVG, agent rules)
+# 2. contracts: build + test (60 tests incl. anti-sniping, full-supply permutation, byte-exact SVG, agents, lock)
 cd contracts && forge test && cd ..
 
 # 3. optional: fork test against REAL Stock Tokens on Robinhood Chain mainnet

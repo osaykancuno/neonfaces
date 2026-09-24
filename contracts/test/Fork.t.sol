@@ -67,6 +67,7 @@ contract ForkTest is Test {
         seeder.setTierBaskets(1, ids);
         seeder.setTierBaskets(2, ids);
         seeder.setTierBaskets(3, ids);
+        faces.setProvenanceHash(keccak256("fork test art"));
         minter.configurePhase(NeonMinter.Phase.Public, 0.01 ether, 5, 0, bytes32(0));
         minter.setPhase(NeonMinter.Phase.Public);
         vm.stopPrank();

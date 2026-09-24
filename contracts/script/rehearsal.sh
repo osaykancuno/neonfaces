@@ -10,7 +10,7 @@
 #   RPC=https://rpc.testnet.chain.robinhood.com PK=<deployer key> ./script/rehearsal.sh
 #
 # Steps: deploy (mock tokens) -> upload + seal the 5555 Faces -> Builders allowlist phase (free)
-# -> Public phase config -> export deployment.json for the site -> mint 20 Faces -> reveal.
+# -> Public phase config -> export deployment.json for the site -> mint 20 Faces -> reveal -> Stare top-ups.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -74,5 +74,6 @@ if [[ "${REVEAL:-1}" == 1 ]]; then
   if [[ $LOCAL == 1 ]]; then cast rpc anvil_mine 8 --rpc-url "$RPC" >/dev/null; else sleep 3; fi
   send "$FACES" "reveal()"
   echo "== revealed, seed $(cast call "$FACES" 'revealSeed()(uint256)' --rpc-url "$RPC")"
+  (cd ../tools && RPC_URL="$RPC" PK="$PK" node upgrade-all.mjs "$CHAIN_ID" | tail -2)
 fi
 echo "== done. Run the site: npm --prefix ../web run dev"

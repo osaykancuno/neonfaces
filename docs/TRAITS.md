@@ -107,9 +107,12 @@ Rule: shrink a Face to 48 px. If you can't tell it's a NEONFACE, the trait is to
 
 | Attribute | Source |
 |---|---|
-| Seed | tickers of the basket delivered to the Face account |
+| Stare | Unrevealed until the reveal, then Glance / Watch / Heavy Stare |
+| Seed | tickers of the base basket delivered at mint |
 | Seed Status | Funded / Pending / Inactive |
+| Stare Upgrade | top-up basket (Watch / Heavy Stare) or Pending |
 | Holds <TICKER> | live balance inside the Face account |
+| Locked until | date, while the holder has locked the account |
 | Unblinking (days) | days since the Face last changed hands |
 | Eyes open since | date of the last transfer |
 | Art ID | art piece assigned at reveal |

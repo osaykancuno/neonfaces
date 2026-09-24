@@ -70,7 +70,7 @@ Deploy the site (`web/`, `npm run build`, host `dist/` on Vercel / Cloudflare Pa
 
 Open phases one at a time: `node tools/safe-tx.mjs 4663 open Builders` → `Allowlist` → `Public`.
 
-## 7. Team allocation
+## 7. Team allocation (before the reveal — minting closes for good at the reveal request)
 
 ```bash
 RPC_URL=https://rpc.mainnet.chain.robinhood.com node tools/safe-tx.mjs 4663 team-mint <safe> 111
@@ -81,8 +81,9 @@ Mint + activate in the same Safe batch, ideally while the sale is paused or fini
 
 1. `node tools/safe-tx.mjs 4663 open Finished` (terminal).
 2. Start the watcher: `PK=<any funded key> node tools/reveal-watch.mjs 4663`.
-3. Safe: `node tools/safe-tx.mjs 4663 reveal-request`. The watcher calls `reveal()` within the 25-second window. If missed, repeat step 3.
-4. `node tools/verify-onchain.mjs 4663` → art visible in `tokenURI`.
+3. Safe: `node tools/safe-tx.mjs 4663 reveal-request`. This closes minting forever; the watcher calls `reveal()` within the 25-second window. If missed, repeat step 3 once the window has passed.
+4. Deliver the Stare top-ups: `PK=<any funded key> node tools/upgrade-all.mjs 4663` (permissionless, idempotent — needs the Watch / Heavy Stare inventory in the pool).
+5. `node tools/verify-onchain.mjs 4663` → art and tiers visible in `tokenURI`.
 
 ## 9. After mint
 
@@ -90,6 +91,7 @@ Mint + activate in the same Safe batch, ideally while the sale is paused or fini
 - `lock-seeder` once baskets are final. `freeze-metadata` only when no future renderer is planned.
 - OpenSea: the collection reads `contractURI()` on-chain; claim the collection with the Safe (owner() = Safe). List on HoodMarket too.
 - Refill pending seeds: `NeonSeeder.fund(id)` is permissionless.
+- Point holders to their Face page (`/face/<id>`): agent delegation and lock are there. Agent builders: [AGENTS.md](AGENTS.md).
 
 ## Rehearsal (do this first)
 

@@ -2,18 +2,18 @@
 
 ## Default baskets (`config/baskets.plan.json`, USD targets)
 
-| Tier | Faces | Baskets (drawn uniformly) | ≈ value per Face |
-|---|---|---|---|
-| Glance (80%) | 4444 | one ticker: TSLA / NVDA / AAPL / AMZN / MSFT | $1 |
-| Watch (15%) | 833 | a ticker + USDG: NVDA / GOOGL / META ($4) + $1 USDG | $5 |
-| Heavy Stare (5%) | 278 | SPY $8 + NVDA $5 + TSLA $4 + USDG $3 | $20 |
+| Delivery | When | Faces | Baskets | ≈ value |
+|---|---|---|---|---|
+| Base | at mint | every Face (5555) | one ticker: TSLA / NVDA / AAPL / AMZN / MSFT — keep them equal in value | $1 |
+| Watch top-up | after reveal | 833 | NVDA / GOOGL / META ($3) + $1 USDG | +$4 (total $5) |
+| Heavy Stare top-up | after reveal | 278 | SPY $8 + NVDA $4 + TSLA $4 + USDG $3 | +$19 (total $20) |
 
-Full-supply pool: 4444 × 1 + 833 × 5 + 278 × 20 ≈ **$14,169** (≈ $2.55 per Face on average).
+Full-supply pool: 5555 × 1 + 833 × 4 + 278 × 19 ≈ **$14,169** (≈ $2.55 per Face on average).
 `node tools/baskets.mjs` recomputes token amounts and the exact per-token budget from live prices you enter.
 
 ## Funding rule
 
-The seed vault receives 40% of every sale. To seed everything from proceeds alone, total mint revenue must be ≥ pool / 0.40 ≈ **$35.4k**. Below that, the treasury tops up. Free Builders mints (up to 1111 Faces ≈ $2.8k of seeds) are funded **before** the phase opens — a Face is never born empty.
+The seed vault receives 40% of every sale. To seed everything from proceeds alone, total mint revenue must be ≥ pool / 0.40 ≈ **$35.4k**. Below that, the treasury tops up. Base seeds for the free Builders mints (up to 1111 Faces ≈ $1.1k) are in the pool **before** the phase opens — a Face is never born empty. Top-ups (≈ $8.6k) are only needed after the reveal.
 
 ## Example sale plan (tune to market)
 

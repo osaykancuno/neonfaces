@@ -10,6 +10,8 @@ import {NeonRenderer} from "../src/NeonRenderer.sol";
 import {NeonFaces} from "../src/NeonFaces.sol";
 import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {MockStockToken} from "./mocks/MockStockToken.sol";
+import {NeonMinter} from "../src/NeonMinter.sol";
+import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
 
 /// @notice Fully on-chain art: storage, provenance seal, byte-exact SVG, JSON metadata.
 contract OnChainTest is Base {
@@ -196,6 +198,35 @@ contract OnChainTest is Base {
         uint256 bal = MockStockToken(s.legs[0].token).balanceOf(s.account);
         assertEq(bal, 1e18 + s.legs[0].amount);
         assertTrue(LibString.contains(j, string.concat('"trait_type":"Holds ', sym, '","value":"1.')));
+    }
+
+    function test_Metadata_StareUpgradeAndLockAfterReveal() public {
+        bytes memory rec = _tinyRecord();
+        _uploadAll(rec);
+        artStore.seal();
+        _openPublic();
+        vm.prank(admin);
+        minter.configurePhase(NeonMinter.Phase.Public, PUBLIC_PRICE, 100, 0, bytes32(0));
+        for (uint256 i; i < 4; ++i) _mintPublic(alice, 10);
+
+        string memory pre = _json(faces.tokenURI(1));
+        assertTrue(LibString.contains(pre, '"trait_type":"Stare","value":"Unrevealed"'));
+
+        _reveal();
+        uint256 id = 1;
+        while (seeder.tierOf(id) < 2) ++id; // first Watch / Heavy Stare Face
+        string memory j = _json(faces.tokenURI(id));
+        assertTrue(LibString.contains(j, '"trait_type":"Stare Upgrade","value":"Pending"'));
+        assertFalse(LibString.contains(j, '"value":"Unrevealed"'));
+
+        seeder.upgrade(id);
+        NeonFaceAccount acc = NeonFaceAccount(payable(seeder.accountOf(id)));
+        vm.prank(alice);
+        acc.lock(uint64(block.timestamp + 2 days));
+        j = _json(faces.tokenURI(id));
+        assertFalse(LibString.contains(j, '"Stare Upgrade","value":"Pending"'));
+        assertTrue(LibString.contains(j, '"trait_type":"Locked until","display_type":"date"'));
+        assertTrue(LibString.contains(j, seeder.tierOf(id) == 2 ? '"value":"Watch"' : '"value":"Heavy Stare"'));
     }
 
     function test_ContractURI_OnChain() public view {

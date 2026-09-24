@@ -104,40 +104,14 @@
             <span>Plain truth</span>
             <p>We don't sell real shares or shareholder rights. We sell an artwork that can hold on-chain exposure.</p>
           </div>
-          <div class="flow">
-            <svg id="flow-svg" viewBox="0 0 900 260" role="img" aria-label="NFT to account to stock tokens">
-              <defs>
-                <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                  <path d="M0 0L10 5L0 10z" fill="#ccff00" />
-                </marker>
-              </defs>
-              <g class="node"><rect x="10" y="80" width="200" height="100" /><text x="110" y="122">NEONFACE #</text><text x="110" y="148" class="dim">ERC-721</text></g>
-              <path class="wire" d="M210 130 H340" marker-end="url(#arr)" />
-              <g class="node"><rect x="345" y="80" width="210" height="100" /><text x="450" y="122">FACE ACCOUNT</text><text x="450" y="148" class="dim">ERC-6551 · holder controls it</text></g>
-              <path class="wire" d="M555 110 C620 110 620 40 690 40" marker-end="url(#arr)" />
-              <path class="wire" d="M555 130 H690" marker-end="url(#arr)" />
-              <path class="wire" d="M555 150 C620 150 620 220 690 220" marker-end="url(#arr)" />
-              <g class="node small"><rect x="695" y="18" width="195" height="44" /><text x="792" y="46">STOCK TOKENS</text></g>
-              <g class="node small"><rect x="695" y="108" width="195" height="44" /><text x="792" y="136">USDG</text></g>
-              <g class="node small"><rect x="695" y="198" width="195" height="44" /><text x="792" y="226">AGENT (scoped)</text></g>
-            </svg>
-          </div>
           <div class="cards">
             <article class="card">
-              <h3>How the seed works</h3>
-              <p>The mint transaction creates the Face's account through the canonical ERC-6551 registry and drops a small basket of Stock Tokens in it. Open the Face and it already holds exposure.</p>
-            </article>
-            <article class="card">
               <h3>Stare tiers</h3>
-              <p><b>Glance</b> 80% — a sliver of one ticker. <b>Watch</b> 15% — a ticker plus USDG. <b>Heavy Stare</b> 5% — a richer basket. Drawn on-chain from an exact urn: 4444 / 833 / 278, no more, no less.</p>
+              <p>Every Face gets a base basket at mint. At reveal the art decides the tier — <b>Glance</b> 4444, <b>Watch</b> 833, <b>Heavy Stare</b> 278, exact — and Watch / Heavy Stare Faces receive a top-up: a ticker plus USDG, or a richer basket. Nobody can know a tier inside the mint transaction, so bots can't snipe them.</p>
             </article>
             <article class="card">
-              <h3>Agents, on a leash</h3>
-              <p>Delegate an agent to your Face: it may only call the contracts and functions you allow, can't move ETH, can't sign, expires, and dies automatically the moment the Face is sold.</p>
-            </article>
-            <article class="card">
-              <h3>Liquid, always</h3>
-              <p>The holder can empty the account at any time. The NFT stays the Face; the value inside is liquid. Nothing is locked, nothing is custodial.</p>
+              <h3>Lock before you list</h3>
+              <p>A holder can lock the account until a date: nothing leaves it — not the holder, not the agent, no signature — and the lock survives the sale. Buyers see "Locked until" in the metadata and get exactly what they paid for.</p>
             </article>
           </div>
         </section>
@@ -145,14 +119,14 @@
         <section id="gallery" class="block reveal">
           <div class="label">03 / Faces</div>
           <h2>Distance zero.</h2>
-          <p class="lead">No image files: every Face below is drawn in your browser from the same bytes stored on-chain, with a byte-identical port of the contract's renderer. <span id="gallery-source" class="neon">bundled records · identical to the chain data</span></p>
+          <p class="lead">Drawn from the same bytes that live on-chain. <span id="gallery-source" class="neon"></span></p>
           <div id="gallery-grid" class="gallery"></div>
         </section>
 
         <section id="traits" class="block reveal">
           <div class="label">04 / Traits</div>
           <h2>Eleven traits. Exact rarities.</h2>
-          <p class="lead">Every trait value has a fixed count, published before mint. The rule: shrink a Face to 48 pixels — if you can't tell it's a NEONFACE, the trait is too weak.</p>
+          <p class="lead">Every count is fixed and published before mint.</p>
           <div id="trait-explorer" class="traits"></div>
         </section>
 
@@ -162,14 +136,13 @@
           <p class="lead">A busy chain means a lot of drops that look alike. Every line below is enforced by the contracts, not by a promise.</p>
           <div class="versus" role="table">
             <div class="vs-row vs-head" role="row"><span role="columnheader"></span><span role="columnheader">Typical drop</span><span role="columnheader">NEONFACES</span></div>
-            <div class="vs-row" role="row"><b role="cell">Art</b><span role="cell">An IPFS link that can go dark</span><span role="cell">Pixels stored in contract bytecode (SSTORE2), sealed against a hash committed before mint</span></div>
-            <div class="vs-row" role="row"><b role="cell">Image</b><span role="cell">A PNG on someone's server</span><span role="cell">SVG drawn by <code>tokenURI</code> itself, ~168 bytes per Face</span></div>
+            <div class="vs-row" role="row"><b role="cell">Art</b><span role="cell">An image on IPFS or a server that can go dark</span><span role="cell">Pixels stored on-chain and drawn by the contract itself, sealed against a hash committed before mint</span></div>
             <div class="vs-row" role="row"><b role="cell">Wallet</b><span role="cell">None, or an empty one</span><span role="cell">An ERC-6551 account created <em>and funded</em> in the mint transaction</span></div>
-            <div class="vs-row" role="row"><b role="cell">Rarity</b><span role="cell">An off-chain script and a spreadsheet</span><span role="cell">Exact on-chain urn: 4444 / 833 / 278 Stare tiers, published trait counts</span></div>
+            <div class="vs-row" role="row"><b role="cell">Rarity</b><span role="cell">An off-chain script and a spreadsheet</span><span role="cell">Published exact counts; each token's art and tier set at reveal by an on-chain permutation anyone can recompute</span></div>
             <div class="vs-row" role="row"><b role="cell">Metadata</b><span role="cell">Frozen JSON, stale on day two</span><span role="cell">Live: traits read what the Face actually holds</span></div>
             <div class="vs-row" role="row"><b role="cell">Holding</b><span role="cell">Nothing rewards patience</span><span role="cell"><b class="neon">Unblinking</b> — an on-chain clock of how long the stare has stayed with its holder. Selling resets it.</span></div>
-            <div class="vs-row" role="row"><b role="cell">Agents</b><span role="cell">A slide</span><span role="cell">Scoped delegation built into the account: allowed calls only, no ETH, no signatures, expires, dies on sale</span></div>
-            <div class="vs-row" role="row"><b role="cell">Mint money</b><span role="cell">A tweet</span><span role="cell">40 / 25 / 20 / 15 split hard-coded in the minter; team share vests over 6 months</span></div>
+            <div class="vs-row" role="row"><b role="cell">Agents</b><span role="cell">A slide</span><span role="cell">Delegation built into every account: allowed calls only, an ETH budget you set, no signatures, expires, dies on sale</span></div>
+            <div class="vs-row" role="row"><b role="cell">Resale</b><span role="cell">Seller can empty the wallet before the sale lands</span><span role="cell">Account lock that survives the sale, visible in the metadata</span></div>
             <div class="vs-row" role="row"><b role="cell">Control</b><span role="cell">Upgradeable proxy, pausable transfers</span><span role="cell">No proxy, no transfer pause, no blocklist. Supply fixed in bytecode. Safe multisig with a 2-day handover.</span></div>
           </div>
         </section>
@@ -182,7 +155,7 @@
             <svg id="donut" viewBox="0 0 200 200" aria-label="Mint proceeds split"></svg>
             <ul id="split-list" class="split-list"></ul>
           </div>
-          <p class="lead">Shares are immutable in <code>NeonMinter</code>. Anyone can push the split with <code>releaseAll()</code>. The team share streams through a 6-month vesting contract. Royalties: 5% on-chain (ERC-2981) to the treasury multisig.</p>
+          <p class="lead">The shares and the four addresses are immutable in <code>NeonMinter</code>; anyone can push the split with <code>releaseAll()</code>. Royalties: 5% on-chain (ERC-2981) to the treasury multisig.</p>
         </section>
 
         <section id="principles" class="block reveal">
@@ -214,8 +187,8 @@
         <section id="roadmap" class="block reveal">
           <div class="label">08 / Three milestones</div>
           <ol class="roadmap">
-            <li><b>Mint + seeding</b><span>Every Face minted with its account and its first basket. Reveal on-chain.</span></li>
-            <li><b>Agent integration</b><span>Scoped agent delegation, first strategies (DCA, "hold 40% stable"), holder dashboard.</span></li>
+            <li><b>Mint + seeding</b><span>Every Face minted with its account and base basket. On-chain reveal, Stare top-ups.</span></li>
+            <li><b>Agent strategies</b><span>Delegation ships in every account from day one. Next: ready-made strategies ("accumulate one ticker", "keep 40% liquid") and a holder dashboard.</span></li>
             <li><b>Market + analytics</b><span>Listings on OpenSea and HoodMarket, account-value analytics, holder votes on which tickers join the pool.</span></li>
           </ol>
         </section>
@@ -239,7 +212,7 @@
               <button id="mint-btn" class="btn btn-neon btn-wide" disabled>Connect wallet</button>
               <div id="mint-msg" class="msg" role="status"></div>
               <div id="mint-result" class="mint-result"></div>
-              <p class="fine">Each Face is minted with its account and seed in the same transaction. Stock Tokens give economic exposure only, not legal ownership of the underlying shares, and are not available to US persons.</p>
+              <p class="fine">Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only and are not available to US persons.</p>
             </div>
           </div>
         </section>
@@ -247,13 +220,11 @@
         <section id="faq" class="block reveal">
           <div class="label">10 / FAQ</div>
           <div class="faq">
-            <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT. At mint it receives a small basket of Stock Tokens (and USDG for Watch / Heavy Stare). You can add more, withdraw everything, or delegate a scoped agent.</p></details>
-            <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure — not shares, not shareholder rights. Stock Tokens are tokenized instruments that give economic exposure to the underlying; they are not legal ownership of the shares. They are not available to US persons. We sell "on-chain exposure held in an account bound to the Face", never "shares inside an NFT".</p></details>
-            <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and anyone can fund it later with one call once the pool is refilled. 40% of mint proceeds go to the seed vault that refills it.</p></details>
-            <details><summary>How is the Stare tier assigned?</summary><p>On-chain at mint, from an exact urn: the probability of each tier is its remaining slots over the remaining supply, so the final count is exactly 4444 / 833 / 278.</p></details>
-            <details><summary>How does the reveal work?</summary><p>Art is committed by hash before mint. After mint, a future L2 block hash sets a random offset inside each tier. Every token's art is then computable by anyone with <code>artIdOf(tokenId)</code>.</p></details>
-            <details><summary>Can the team change the art or pause trading?</summary><p>No. The art contract is sealed against the provenance hash. There is no transfer pause, no blocklist, no upgradeable proxy. The admin is a Safe multisig with a 2-day handover delay.</p></details>
-            <details><summary>Royalties?</summary><p>5% on-chain via ERC-2981, capped in the contract, paid to the treasury multisig.</p></details>
+            <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT: a base basket from mint, a top-up after reveal for Watch / Heavy Stare, plus anything you add. You can withdraw everything, add more, delegate an agent or lock it — from the Face's page.</p></details>
+            <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure. Stock Tokens are tokenized instruments that track the underlying; they give no legal ownership and no shareholder rights.</p></details>
+            <details><summary>When do I know my Stare tier?</summary><p>At reveal, after the mint closes. The reveal maps every token to one art piece with a keyed permutation — check it with <code>artIdOf(tokenId)</code> — and the art decides the tier. Watch / Heavy Stare top-ups can then be delivered by anyone, in one call.</p></details>
+            <details><summary>What can an agent do with my Face?</summary><p>Only the contract functions you allow, spending ETH only within the budget you set. It can never sign for the account, it expires, and it stops the moment the Face changes hands. Allowing <code>transfer</code> or <code>approve</code> lets it move assets out — the Face page warns you before you do.</p></details>
+            <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and anyone can deliver it with one call once the pool is refilled — the seed vault receives 40% of mint proceeds for exactly this.</p></details>
           </div>
         </section>
       </section>

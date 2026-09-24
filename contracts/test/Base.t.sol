@@ -59,11 +59,11 @@ abstract contract Base is Test {
         faces.grantRole(faces.METADATA_ROLE(), admin);
         seeder.grantRole(seeder.CONFIG_ROLE(), admin);
 
-        // baskets
-        _basket(1, _legs1(address(tsla), 0.002e18)); // Glance: a sliver of one ticker
+        // baskets: 1-2 = base (every Face, at mint), 3 = Watch top-up, 4 = Heavy Stare top-up (at reveal)
+        _basket(1, _legs1(address(tsla), 0.002e18));
         _basket(2, _legs1(address(nvda), 0.003e18));
-        _basket(3, _legs2(address(nvda), 0.01e18, address(usdg), 2e6)); // Watch
-        _basket(4, _legs2(address(spy), 0.01e18, address(tsla), 0.005e18)); // Heavy Stare
+        _basket(3, _legs2(address(nvda), 0.01e18, address(usdg), 2e6));
+        _basket(4, _legs2(address(spy), 0.01e18, address(tsla), 0.005e18));
         uint32[] memory g = new uint32[](2);
         g[0] = 1;
         g[1] = 2;
@@ -104,9 +104,30 @@ abstract contract Base is Test {
         legs[1] = NeonSeeder.Leg(t2, a2);
     }
 
+    /// @dev the art commitment every mint requires (tests that upload real chunks commit their own)
+    function _commitProvenance() internal {
+        if (faces.provenanceHash() != bytes32(0)) return;
+        vm.prank(admin);
+        faces.setProvenanceHash(keccak256("neonfaces test art"));
+    }
+
     function _openPublic() internal {
+        _commitProvenance();
         vm.prank(admin);
         minter.setPhase(NeonMinter.Phase.Public);
+    }
+
+    function _reveal() internal {
+        vm.prank(admin);
+        faces.requestReveal();
+        vm.roll(block.number + 6);
+        faces.reveal();
+    }
+
+    function _grantMinter(address who) internal {
+        bytes32 role = faces.MINTER_ROLE();
+        vm.prank(admin);
+        faces.grantRole(role, who);
     }
 
     function _mintPublic(address who, uint256 qty) internal returns (uint256 firstId) {

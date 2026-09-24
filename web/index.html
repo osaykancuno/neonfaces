@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEONFACES — They don't blink.</title>
+    <meta name="description" content="5555 close-up faces on Robinhood Chain. Every Face is an account (ERC-6551) seeded with Stock Tokens. Art and metadata fully on-chain." />
+    <meta name="theme-color" content="#ccff00" />
+    <meta property="og:title" content="NEONFACES — They don't blink." />
+    <meta property="og:description" content="5555 faces. Every one is an account. Fully on-chain on Robinhood Chain." />
+    <meta property="og:image" content="/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- global overlays -->
+    <div class="crt" aria-hidden="true"></div>
+    <div class="noise" aria-hidden="true"></div>
+    <div id="cursor" aria-hidden="true"></div>
+
+    <!-- boot sequence -->
+    <div id="boot" aria-hidden="true">
+      <pre id="boot-log"></pre>
+    </div>
+
+    <header class="nav">
+      <a class="brand" href="/" data-link>
+        <canvas id="nav-eye" width="24" height="12"></canvas>
+        <span>NEONFACES</span>
+      </a>
+      <nav>
+        <a href="/#lore" data-link>Lore</a>
+        <a href="/#account" data-link>Native</a>
+        <a href="/#traits" data-link>Traits</a>
+        <a href="/#funds" data-link>Funds</a>
+        <a href="/#principles" data-link>Principles</a>
+        <a href="/#faq" data-link>FAQ</a>
+        <a href="/#mint" class="nav-mint" data-link>Mint</a>
+      </nav>
+      <button id="connect" class="btn btn-ghost">Connect</button>
+    </header>
+
+    <main id="app">
+      <!-- ================= HOME ================= -->
+      <section id="home" class="page">
+        <section class="hero">
+          <div id="mosaic" class="mosaic" aria-hidden="true"></div>
+          <div class="hero-inner">
+            <canvas id="eye" class="eye" width="480" height="240" aria-label="A pixel eye that follows you"></canvas>
+            <h1 class="title" data-scramble>NEONFACES</h1>
+            <p class="tagline" data-scramble>They don't blink.</p>
+            <p class="sub">5555 close-up faces on Robinhood Chain.<br />Every one is an account.</p>
+            <div class="hero-cta">
+              <a href="/#mint" class="btn btn-neon" data-link>Mint a Face</a>
+              <a href="/#account" class="btn btn-ghost" data-link>What's inside</a>
+            </div>
+            <div class="hero-stats">
+              <div><b data-stat="minted">—</b><span>minted</span></div>
+              <div><b>5555</b><span>supply</span></div>
+              <div><b data-stat="seeded">—</b><span>seeded accounts</span></div>
+              <div><b>100%</b><span>on-chain</span></div>
+            </div>
+          </div>
+        </section>
+
+        <div class="tape" aria-hidden="true"><div class="tape-track" id="tape"></div></div>
+
+        <section id="lore" class="block reveal">
+          <div class="label">01 / Lore</div>
+          <div class="lore">
+            <p class="big">On Robinhood Chain the market never closes. <em>Someone has to keep watching.</em></p>
+            <div class="lore-cols">
+              <p>NEONFACES are not portraits of people. They are the faces of agents. No bodies — they don't need them: an eye, a nose, a strip of forehead. Everything else is out of frame. The crop is this tight because the only thing that matters is the ticker.</p>
+              <p>Every Face is born with a Token Bound Account. Inside that wallet lives a piece of the real market: Stock Tokens, USDG, whatever the holder or the agent puts there. Sell the Face and you sell the stare — and everything it has accumulated.</p>
+              <p>First there were portraits. Then PFPs. Then pixel brokers with stocks in their pockets. NEONFACES strips the costume. What's left is zero distance: skin reduced to blocks, light reduced to <span class="neon">#CCFF00</span>, identity reduced to an account.</p>
+              <p>5555 is not random. Five, like the fingers holding a phone open all night. Five thousand and more, because a 24/7 market needs more than one watcher. Some faces are darker. Some carry more neon. That's not cosmetic rarity: it's how long that stare has stayed on.</p>
+            </div>
+            <p class="whisper" data-scramble>They don't smile. They don't pose. They don't blink.</p>
+          </div>
+        </section>
+
+        <section id="account" class="block reveal">
+          <div class="label">02 / Native to the chain</div>
+          <h2>Three things. No jargon.</h2>
+          <ol class="native">
+            <li>
+              <b>Every Face has its own wallet.</b>
+              <p>Not an image sitting in an account: the image <em>is the key</em> to an account. Tokens, stablecoins and pieces of tokenized stocks can live inside it.</p>
+            </li>
+            <li>
+              <b>A Face is never born empty.</b>
+              <p>Part of the mint turns the stare on: a small, visible basket, different from piece to piece. Leave it there, add to it, or withdraw it. If the Face changes hands, what's inside follows.</p>
+            </li>
+            <li>
+              <b>The stare can work.</b>
+              <p>This chain is built for agents too. You stay the owner and can delegate simple rules — "keep part of it liquid", "accumulate one ticker". Not a landing-page bot: the same idea as a face that never closes its eyes.</p>
+            </li>
+          </ol>
+          <div class="truth">
+            <span>Plain truth</span>
+            <p>We don't sell real shares or shareholder rights. We sell an artwork that can hold on-chain exposure.</p>
+          </div>
+          <div class="flow">
+            <svg id="flow-svg" viewBox="0 0 900 260" role="img" aria-label="NFT to account to stock tokens">
+              <defs>
+                <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0 0L10 5L0 10z" fill="#ccff00" />
+                </marker>
+              </defs>
+              <g class="node"><rect x="10" y="80" width="200" height="100" /><text x="110" y="122">NEONFACE #</text><text x="110" y="148" class="dim">ERC-721</text></g>
+              <path class="wire" d="M210 130 H340" marker-end="url(#arr)" />
+              <g class="node"><rect x="345" y="80" width="210" height="100" /><text x="450" y="122">FACE ACCOUNT</text><text x="450" y="148" class="dim">ERC-6551 · holder controls it</text></g>
+              <path class="wire" d="M555 110 C620 110 620 40 690 40" marker-end="url(#arr)" />
+              <path class="wire" d="M555 130 H690" marker-end="url(#arr)" />
+              <path class="wire" d="M555 150 C620 150 620 220 690 220" marker-end="url(#arr)" />
+              <g class="node small"><rect x="695" y="18" width="195" height="44" /><text x="792" y="46">STOCK TOKENS</text></g>
+              <g class="node small"><rect x="695" y="108" width="195" height="44" /><text x="792" y="136">USDG</text></g>
+              <g class="node small"><rect x="695" y="198" width="195" height="44" /><text x="792" y="226">AGENT (scoped)</text></g>
+            </svg>
+          </div>
+          <div class="cards">
+            <article class="card">
+              <h3>How the seed works</h3>
+              <p>The mint transaction creates the Face's account through the canonical ERC-6551 registry and drops a small basket of Stock Tokens in it. Open the Face and it already holds exposure.</p>
+            </article>
+            <article class="card">
+              <h3>Stare tiers</h3>
+              <p><b>Glance</b> 80% — a sliver of one ticker. <b>Watch</b> 15% — a ticker plus USDG. <b>Heavy Stare</b> 5% — a richer basket. Drawn on-chain from an exact urn: 4444 / 833 / 278, no more, no less.</p>
+            </article>
+            <article class="card">
+              <h3>Agents, on a leash</h3>
+              <p>Delegate an agent to your Face: it may only call the contracts and functions you allow, can't move ETH, can't sign, expires, and dies automatically the moment the Face is sold.</p>
+            </article>
+            <article class="card">
+              <h3>Liquid, always</h3>
+              <p>The holder can empty the account at any time. The NFT stays the Face; the value inside is liquid. Nothing is locked, nothing is custodial.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="gallery" class="block reveal">
+          <div class="label">03 / Faces</div>
+          <h2>Distance zero.</h2>
+          <p class="lead">No image files: every Face below is drawn in your browser from the same bytes stored on-chain, with a byte-identical port of the contract's renderer. <span id="gallery-source" class="neon">bundled records · identical to the chain data</span></p>
+          <div id="gallery-grid" class="gallery"></div>
+        </section>
+
+        <section id="traits" class="block reveal">
+          <div class="label">04 / Traits</div>
+          <h2>Eleven traits. Exact rarities.</h2>
+          <p class="lead">Every trait value has a fixed count, published before mint. The rule: shrink a Face to 48 pixels — if you can't tell it's a NEONFACE, the trait is too weak.</p>
+          <div id="trait-explorer" class="traits"></div>
+        </section>
+
+        <section id="onchain" class="block reveal">
+          <div class="label">05 / Different by construction</div>
+          <h2>Everything here is checkable on-chain.</h2>
+          <p class="lead">A busy chain means a lot of drops that look alike. Every line below is enforced by the contracts, not by a promise.</p>
+          <div class="versus" role="table">
+            <div class="vs-row vs-head" role="row"><span role="columnheader"></span><span role="columnheader">Typical drop</span><span role="columnheader">NEONFACES</span></div>
+            <div class="vs-row" role="row"><b role="cell">Art</b><span role="cell">An IPFS link that can go dark</span><span role="cell">Pixels stored in contract bytecode (SSTORE2), sealed against a hash committed before mint</span></div>
+            <div class="vs-row" role="row"><b role="cell">Image</b><span role="cell">A PNG on someone's server</span><span role="cell">SVG drawn by <code>tokenURI</code> itself, ~168 bytes per Face</span></div>
+            <div class="vs-row" role="row"><b role="cell">Wallet</b><span role="cell">None, or an empty one</span><span role="cell">An ERC-6551 account created <em>and funded</em> in the mint transaction</span></div>
+            <div class="vs-row" role="row"><b role="cell">Rarity</b><span role="cell">An off-chain script and a spreadsheet</span><span role="cell">Exact on-chain urn: 4444 / 833 / 278 Stare tiers, published trait counts</span></div>
+            <div class="vs-row" role="row"><b role="cell">Metadata</b><span role="cell">Frozen JSON, stale on day two</span><span role="cell">Live: traits read what the Face actually holds</span></div>
+            <div class="vs-row" role="row"><b role="cell">Holding</b><span role="cell">Nothing rewards patience</span><span role="cell"><b class="neon">Unblinking</b> — an on-chain clock of how long the stare has stayed with its holder. Selling resets it.</span></div>
+            <div class="vs-row" role="row"><b role="cell">Agents</b><span role="cell">A slide</span><span role="cell">Scoped delegation built into the account: allowed calls only, no ETH, no signatures, expires, dies on sale</span></div>
+            <div class="vs-row" role="row"><b role="cell">Mint money</b><span role="cell">A tweet</span><span role="cell">40 / 25 / 20 / 15 split hard-coded in the minter; team share vests over 6 months</span></div>
+            <div class="vs-row" role="row"><b role="cell">Control</b><span role="cell">Upgradeable proxy, pausable transfers</span><span role="cell">No proxy, no transfer pause, no blocklist. Supply fixed in bytecode. Safe multisig with a 2-day handover.</span></div>
+          </div>
+        </section>
+
+        <section id="funds" class="block reveal">
+          <div class="label">06 / Where the mint goes</div>
+          <h2>Said before, not after.</h2>
+          <p class="lead">A major share turns the Faces on — the content of their wallets. A share stays in the treasury for art, site, presence and liquidity. A share is the team's, with rules against dumping on the floor. A share goes to growth and collaborations. If the Faces were born empty, NEONFACES would be just an aesthetic. The aesthetic is strong. It isn't enough.</p>
+          <div class="split">
+            <svg id="donut" viewBox="0 0 200 200" aria-label="Mint proceeds split"></svg>
+            <ul id="split-list" class="split-list"></ul>
+          </div>
+          <p class="lead">Shares are immutable in <code>NeonMinter</code>. Anyone can push the split with <code>releaseAll()</code>. The team share streams through a 6-month vesting contract. Royalties: 5% on-chain (ERC-2981) to the treasury multisig.</p>
+        </section>
+
+        <section id="principles" class="block reveal">
+          <div class="label">07 / Principles</div>
+          <h2>How this lasts. And how it fails.</h2>
+          <div class="principles">
+            <div class="works">
+              <h3>It works if</h3>
+              <ul>
+                <li>the art stays iron-clad and recognizable</li>
+                <li>the Face lit at mint is real, not a slide</li>
+                <li>the community is chosen, not inflated</li>
+                <li>the tone stays adult: market, stare, neon — no mascots</li>
+              </ul>
+            </div>
+            <div class="fails">
+              <h3>It fails if</h3>
+              <ul>
+                <li>it becomes "yet another pixel broker"</li>
+                <li>it promises returns</li>
+                <li>it grows the supply or the allowlist out of fear <small>(the supply is 5555 in bytecode — it can't grow even if we wanted it to)</small></li>
+                <li>the team disappears after mint and only the listings feed is left</li>
+              </ul>
+            </div>
+          </div>
+          <p class="lead">The reference isn't the biggest collection on the chain. It's the one that proved a portrait can carry a piece of the market. NEONFACES takes that intuition and moves it to art: less character, more close-up, the chain's color, a stare instead of a costume.</p>
+        </section>
+
+        <section id="roadmap" class="block reveal">
+          <div class="label">08 / Three milestones</div>
+          <ol class="roadmap">
+            <li><b>Mint + seeding</b><span>Every Face minted with its account and its first basket. Reveal on-chain.</span></li>
+            <li><b>Agent integration</b><span>Scoped agent delegation, first strategies (DCA, "hold 40% stable"), holder dashboard.</span></li>
+            <li><b>Market + analytics</b><span>Listings on OpenSea and HoodMarket, account-value analytics, holder votes on which tickers join the pool.</span></li>
+          </ol>
+        </section>
+
+        <section id="mint" class="block reveal">
+          <div class="label">09 / Mint</div>
+          <div class="mint">
+            <div class="mint-art">
+              <img id="mint-preview" alt="" />
+            </div>
+            <div class="mint-panel">
+              <div class="phase-row"><span class="pill" id="phase-pill">Loading…</span><span id="phase-price"></span></div>
+              <div class="progress"><div id="progress-bar"></div></div>
+              <div class="progress-label"><span id="progress-text">— / 5555</span><span id="phase-cap"></span></div>
+              <div id="al-status" class="al-status"></div>
+              <div class="qty">
+                <button id="qty-minus" aria-label="less">−</button>
+                <input id="qty" type="number" min="1" max="10" value="1" />
+                <button id="qty-plus" aria-label="more">+</button>
+              </div>
+              <button id="mint-btn" class="btn btn-neon btn-wide" disabled>Connect wallet</button>
+              <div id="mint-msg" class="msg" role="status"></div>
+              <div id="mint-result" class="mint-result"></div>
+              <p class="fine">Each Face is minted with its account and seed in the same transaction. Stock Tokens give economic exposure only, not legal ownership of the underlying shares, and are not available to US persons.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="faq" class="block reveal">
+          <div class="label">10 / FAQ</div>
+          <div class="faq">
+            <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT. At mint it receives a small basket of Stock Tokens (and USDG for Watch / Heavy Stare). You can add more, withdraw everything, or delegate a scoped agent.</p></details>
+            <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure — not shares, not shareholder rights. Stock Tokens are tokenized instruments that give economic exposure to the underlying; they are not legal ownership of the shares. They are not available to US persons. We sell "on-chain exposure held in an account bound to the Face", never "shares inside an NFT".</p></details>
+            <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and anyone can fund it later with one call once the pool is refilled. 40% of mint proceeds go to the seed vault that refills it.</p></details>
+            <details><summary>How is the Stare tier assigned?</summary><p>On-chain at mint, from an exact urn: the probability of each tier is its remaining slots over the remaining supply, so the final count is exactly 4444 / 833 / 278.</p></details>
+            <details><summary>How does the reveal work?</summary><p>Art is committed by hash before mint. After mint, a future L2 block hash sets a random offset inside each tier. Every token's art is then computable by anyone with <code>artIdOf(tokenId)</code>.</p></details>
+            <details><summary>Can the team change the art or pause trading?</summary><p>No. The art contract is sealed against the provenance hash. There is no transfer pause, no blocklist, no upgradeable proxy. The admin is a Safe multisig with a 2-day handover delay.</p></details>
+            <details><summary>Royalties?</summary><p>5% on-chain via ERC-2981, capped in the contract, paid to the treasury multisig.</p></details>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= FACE PAGE ================= -->
+      <section id="face-page" class="page" hidden>
+        <div class="face-wrap">
+          <a href="/" data-link class="back">← all faces</a>
+          <div class="face-grid">
+            <div class="face-art"><img id="face-img" alt="" /></div>
+            <div class="face-info">
+              <h1 id="face-title">NEONFACES #</h1>
+              <div id="face-owner" class="kv"></div>
+              <div id="face-account" class="kv"></div>
+              <h3>Inside the account</h3>
+              <div id="face-balances" class="balances"></div>
+              <div id="face-actions" class="face-actions"></div>
+              <h3>Traits</h3>
+              <div id="face-traits" class="face-traits"></div>
+              <h3>Agent</h3>
+              <div id="face-agent" class="kv"></div>
+              <div id="face-links" class="links"></div>
+            </div>
+          </div>
+          <form id="face-search" class="face-search">
+            <input id="face-search-id" type="number" min="1" max="5555" placeholder="Face #" />
+            <button class="btn btn-ghost">Look</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="foot-row">
+        <span class="brand-sm">NEONFACES</span>
+        <span id="foot-contracts" class="foot-contracts"></span>
+      </div>
+      <p class="disclaimer">Stock Tokens are tokenized debt instruments that provide economic exposure to the underlying security; they do not confer legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
+    </footer>
+
+    <div id="toast" class="toast" role="status"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "neonfaces-tools",
+  "private": true,
+  "type": "module",
+  "description": "Operational tooling for NEONFACES: baskets, allowlists, metadata, IPFS, Safe batches.",
+  "scripts": {
+    "baskets": "node baskets.mjs",
+    "allowlist": "node allowlist.mjs",
+    "safe": "node safe-tx.mjs",
+    "verify": "node verify-onchain.mjs",
+    "export-web": "node export-web.mjs"
+  },
+  "dependencies": {
+    "@openzeppelin/merkle-tree": "^1.0.8",
+    "viem": "^2.37.0"
+  }
+}

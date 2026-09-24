@@ -1,0 +1,17 @@
+node_modules/
+.env
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/31337/
+contracts/deployments/31337.json
+web/dist/
+art/output/images/
+art/output/contact_sheet.png
+art/output/legibility_48px.png
+art/generate.log
+__pycache__/
+*.pyc
+art/output/unrevealed.png
+contracts/broadcast/
+safe/
+.claude/

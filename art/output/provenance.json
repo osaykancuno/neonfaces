@@ -1,0 +1,25 @@
+{
+ "provenanceHash": "0xe628567d41e6291ff71ac787e801cfdf3baf1c6b3ba071172ae065970a80fa9d",
+ "algorithm": "h0 = 0x00..00; h(k+1) = keccak256(h(k) || chunk(k)); chunks = onchain/chunks.json in order",
+ "count": 5555,
+ "chunks": 174,
+ "totalBytes": 942580,
+ "tiers": {
+  "1": {
+   "name": "Glance",
+   "first": 0,
+   "count": 4444
+  },
+  "2": {
+   "name": "Watch",
+   "first": 4444,
+   "count": 833
+  },
+  "3": {
+   "name": "Heavy Stare",
+   "first": 5277,
+   "count": 278
+  }
+ },
+ "masterSeed": 555500004663
+}

@@ -1,0 +1,45 @@
+trait,value,count,percent
+Stare,Glance,4444,80.00
+Stare,Watch,833,15.00
+Stare,Heavy Stare,278,5.00
+Crop,Eye,1111,20.00
+Crop,Nose,1000,18.00
+Crop,Cheek,778,14.01
+Crop,Brow,778,14.01
+Crop,Temple,667,12.01
+Crop,Mouth,666,11.99
+Crop,Profile-edge,555,9.99
+Density,Mid,2458,44.25
+Density,Sparse,1680,30.24
+Density,Heavy,1417,25.51
+Neon,Standard,3110,55.99
+Neon,Deep,1361,24.50
+Neon,Hot,1084,19.51
+Edge,Stair-step,2778,50.01
+Edge,Hard cut,1666,29.99
+Edge,Bleed dither,1111,20.00
+Grain,Clean print,2500,45.00
+Grain,Dusty,2111,38.00
+Grain,Heavy scan,944,16.99
+Light,Left,2333,42.00
+Light,Right,2333,42.00
+Light,Top,889,16.00
+Expression,Flat,1889,34.01
+Expression,Squint,1222,22.00
+Expression,Glare,1000,18.00
+Expression,Wide,778,14.01
+Expression,Tense,666,11.99
+Accessory,None,3555,64.00
+Accessory,Mole,556,10.01
+Accessory,Scar,444,7.99
+Accessory,Stud,389,7.00
+Accessory,Tape,333,5.99
+Accessory,Visor,278,5.00
+Block,Standard,2944,53.00
+Block,Fine,1389,25.00
+Block,Coarse,1222,22.00
+Anomaly,None,5027,90.50
+Anomaly,Dead pixel,222,4.00
+Anomaly,Inverted blocks,139,2.50
+Anomaly,Extra-wide crop,111,2.00
+Anomaly,Double-eye fragment,56,1.01

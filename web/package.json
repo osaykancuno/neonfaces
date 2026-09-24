@@ -1,0 +1,17 @@
+{
+  "name": "neonfaces-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test test/render.test.mjs"
+  },
+  "dependencies": {
+    "viem": "^2.37.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0"
+  }
+}

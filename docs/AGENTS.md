@@ -15,11 +15,25 @@ Every Face owns an ERC-6551 account (`NeonFaceAccount`). The holder can delegate
 | Lock wins | while the account is locked, agent calls revert |
 | Atomic batches | `executeBatchAsAgent` succeeds or reverts as a whole |
 
-## Holder side
+## Holder side (no code needed)
 
-From the site: open `/face/<id>` with the holder wallet → **Your Face · controls** → *Delegate an agent* (address, days, ETH budget, one allowed call per line: `0xContract functionName(types)`). The panel warns before allowing selectors that can move assets (`transfer`, `transferFrom`, `approve`, `increaseAllowance`, `setApprovalForAll`, `safeTransferFrom`, `permit`).
+On the site, open `/face/<id>` with the wallet that holds the Face. The **Your Face · controls** panel walks through four steps in plain language:
 
-Directly on-chain (holder = the Face owner, EOA or smart wallet):
+1. **Paste your agent's address** — the app or AI service you use shows it to you.
+2. **What can it do?** — tick ready-made actions (e.g. "Buy Stock Tokens with ETH", "Swap between Stock Tokens"), each with a one-line explanation and a risk badge.
+3. **For how long?** — 1, 7, 30 or 90 days.
+4. **How much ETH can it spend, at most?** — 0 / 0.01 / 0.05 / 0.1 ETH or a custom amount, taken only from the Face's wallet.
+
+A summary in plain sentences appears before signing (1 transaction, or 2 when an action needs a one-time token approval). Afterwards the panel shows what the agent can do, the ETH left and the end date, with **Stop the agent now** and **Change the spending limit**. "Selling this Face? Lock its wallet" offers ready durations. An **Advanced** box accepts raw `0xContract functionName(types)` lines for developers and warns before risky functions.
+
+### Publishing ready-made actions (team, before launch)
+
+Copy `config/agent-presets.example.json` to `config/agent-presets.<chainId>.json` and list only **verified** contracts (e.g. the chain's main DEX router and the Stock Token addresses). `node tools/export-web.mjs <chainId>` publishes them to the site. Rules:
+- `risk: "low"` only when results can only come back into the Face (swaps through a trusted router); anything that can send assets elsewhere is `"careful"`.
+- `approvals` are granted once by the holder (max allowance to the listed spender) in the same flow.
+- Keep titles and `plain` sentences free of jargon; never mention returns.
+
+### Direct contract calls (developers)
 
 ```solidity
 setAgent(address agent, uint64 expiry, Permission[] permissions, uint256 valueAllowance) // replaces everything
@@ -28,8 +42,6 @@ setAgentValueAllowance(uint256 valueAllowance)                                  
 revokeAgent()                                                                              // allowed even while locked
 lock(uint64 until)                                                                         // max 365 days, extend only
 ```
-
-Safe pattern for trading strategies: the holder approves a trusted router **once** with `execute`, then allows the agent only the router's swap function. Output tokens return to the Face account; nothing reaches the agent.
 
 ## Agent side
 

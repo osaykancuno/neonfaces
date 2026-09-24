@@ -1,7 +1,8 @@
-import { formatEther, formatUnits, parseEther, parseEventLogs, toFunctionSelector } from "viem";
+import { formatEther, formatUnits, parseEventLogs } from "viem";
 import { ABI, PHASES, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata } from "./chain.js";
 import { pixelEye } from "./effects/eye.js";
 import { decode, svgDataURI } from "./render.js";
+import { holderPanel } from "./agent-ui.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -404,17 +405,6 @@ async function onMint() {
 // =====================================================================================
 // face page
 // =====================================================================================
-// selectors that let an agent move assets out of the Face: the panel asks for confirmation
-const RISKY = {
-  "0xa9059cbb": "transfer — lets the agent send tokens anywhere",
-  "0x23b872dd": "transferFrom — lets the agent move tokens",
-  "0x095ea7b3": "approve — lets the agent approve ANY spender, including itself",
-  "0x39509351": "increaseAllowance — same risk as approve",
-  "0xa22cb465": "setApprovalForAll — hands over whole NFT collections",
-  "0x42842e0e": "safeTransferFrom — moves NFTs out",
-  "0xd505accf": "permit — signature-based approvals",
-};
-
 const fmtDate = (sec) => new Date(Number(sec) * 1000).toISOString().slice(0, 16).replace("T", " ");
 
 async function showFace(id) {
@@ -422,6 +412,7 @@ async function showFace(id) {
   $("#face-img").src = placeholder ? svgDataURI(5555, placeholder) : "";
   ["#face-owner", "#face-account", "#face-balances", "#face-traits", "#face-agent", "#face-links", "#face-actions"].forEach((s) => ($(s).innerHTML = ""));
   $("#face-holder")?.remove();
+  $("#face-agent").hidden = $("#face-agent").previousElementSibling.hidden = false;
   $("#face-search").onsubmit = (e) => {
     e.preventDefault();
     const v = Number($("#face-search-id").value);
@@ -497,7 +488,11 @@ async function showFace(id) {
     links.push(`<a href="${meta.image}" download="neonface-${id}.svg">Download SVG</a>`);
     $("#face-links").innerHTML = links.join("");
 
-    if (state.account && state.account.toLowerCase() === owner.toLowerCase() && deployed) holderPanel(id, seed.account, lockedNow);
+    if (state.account && state.account.toLowerCase() === owner.toLowerCase() && deployed) {
+      const ctx = { state, send, readAt, ABI, toast, reload: () => showFace(id) };
+      await holderPanel(ctx, $("#face-links"), id, seed.account, agentInfo, lockedUntil);
+      $("#face-agent").hidden = $("#face-agent").previousElementSibling.hidden = true; // the panel says it in full
+    }
   } catch (e) {
     $("#face-owner").innerHTML = `<b>status</b>${/nonexistent|ERC721NonexistentToken/i.test(String(e)) ? "not minted yet" : esc(errMsg(e))}`;
   }
@@ -513,84 +508,9 @@ async function send(address, abi, functionName, args, done) {
     const r = await state.pub.waitForTransactionReceipt({ hash });
     toast(r.status === "success" ? "Done." : "Reverted.");
     done?.();
+    return r.status === "success";
   } catch (e) {
     toast(errMsg(e));
+    return false;
   }
-}
-
-/** "0xTarget functionName(types)" lines -> permissions, plus warnings for risky selectors. */
-function parsePermissions(text) {
-  const perms = [];
-  const warnings = [];
-  for (const raw of text.split(/\n/)) {
-    const line = raw.trim();
-    if (!line) continue;
-    const [target, ...rest] = line.split(/\s+/);
-    const sig = rest.join("");
-    if (!/^0x[0-9a-fA-F]{40}$/.test(target) || !sig) throw new Error(`bad line: "${line}" (expected: 0xContract functionName(types))`);
-    const selector = /^0x[0-9a-fA-F]{8}$/.test(sig) ? sig.toLowerCase() : toFunctionSelector(sig.startsWith("function") ? sig : `function ${sig}`);
-    if (RISKY[selector]) warnings.push(`${sig} on ${short(target)}: ${RISKY[selector]}`);
-    perms.push({ target, selector });
-  }
-  return { perms, warnings };
-}
-
-function holderPanel(id, account, lockedNow) {
-  const box = document.createElement("div");
-  box.id = "face-holder";
-  box.className = "holder-panel";
-  box.innerHTML = `
-    <h3>Your Face · controls</h3>
-    <p class="fine">Only the holder can use these. They act on this Face's own account.</p>
-    <details open><summary>Delegate an agent</summary>
-      <label>Agent address<input id="ag-addr" placeholder="0x…" autocomplete="off"></label>
-      <label>Valid for (days)<input id="ag-days" type="number" min="1" value="30"></label>
-      <label>ETH it may spend (total)<input id="ag-eth" type="number" min="0" step="0.001" value="0"></label>
-      <label>Allowed calls — one per line: <code>0xContract functionName(types)</code>
-        <textarea id="ag-perms" rows="4" placeholder="0x… swap(address,address,uint256)"></textarea></label>
-      <div id="ag-warn" class="msg err"></div>
-      <div class="row">
-        <button class="btn btn-neon" id="ag-set">Delegate (replaces the current agent)</button>
-        <button class="btn btn-ghost" id="ag-add">Add these calls</button>
-        <button class="btn btn-ghost" id="ag-del">Remove these calls</button>
-      </div>
-      <div class="row">
-        <button class="btn btn-ghost" id="ag-budget">Update ETH budget</button>
-        <button class="btn btn-ghost" id="ag-revoke">Revoke agent</button>
-      </div>
-    </details>
-    <details><summary>Lock the account (before listing)</summary>
-      <p class="fine">While locked, nothing can leave the account — not you, not your agent, no signature. The lock survives a sale, so a buyer gets exactly what they see. It can only be extended (max 365 days). Revoke old token approvals first: allowances granted before locking stay valid at the token level.</p>
-      <label>Lock for (days)<input id="lk-days" type="number" min="1" max="365" value="7"></label>
-      <button class="btn btn-neon" id="lk-set">${lockedNow ? "Extend lock" : "Lock"}</button>
-    </details>`;
-  $("#face-links").after(box);
-  const reload = () => showFace(id);
-  const permsConfirmed = () => {
-    const { perms, warnings } = parsePermissions($("#ag-perms").value);
-    $("#ag-warn").textContent = warnings.length ? "Careful: " + warnings.join(" · ") : "";
-    if (warnings.length && !confirm(`These permissions can move assets out of your Face:\n\n${warnings.join("\n")}\n\nContinue?`)) throw new Error("cancelled");
-    return perms;
-  };
-  const guard = (fn) => () => {
-    try {
-      fn();
-    } catch (e) {
-      if (e.message !== "cancelled") toast(e.message);
-    }
-  };
-  $("#ag-set").onclick = guard(() => {
-    const agent = $("#ag-addr").value.trim();
-    if (!/^0x[0-9a-fA-F]{40}$/.test(agent)) throw new Error("Enter the agent address.");
-    const expiry = BigInt(Math.floor(Date.now() / 1000) + Number($("#ag-days").value) * 86400);
-    send(account, ABI.account, "setAgent", [agent, expiry, permsConfirmed(), parseEther(String($("#ag-eth").value || "0"))], reload);
-  });
-  $("#ag-add").onclick = guard(() => send(account, ABI.account, "setAgentPermissions", [permsConfirmed(), true], reload));
-  $("#ag-del").onclick = guard(() => send(account, ABI.account, "setAgentPermissions", [parsePermissions($("#ag-perms").value).perms, false], reload));
-  $("#ag-budget").onclick = guard(() => send(account, ABI.account, "setAgentValueAllowance", [parseEther(String($("#ag-eth").value || "0"))], reload));
-  $("#ag-revoke").onclick = guard(() => send(account, ABI.account, "revokeAgent", [], reload));
-  $("#lk-set").onclick = guard(() => {
-    const until = BigInt(Math.floor(Date.now() / 1000) + Number($("#lk-days").value) * 86400);
-    send(account, ABI.account, "lock", [until], reload);
-  });
 }

@@ -66,7 +66,9 @@ node tools/safe-tx.mjs 4663 phase Allowlist 0.012 2000
 node tools/safe-tx.mjs 4663 phase Public 0.02 0 public 5              # 5 per wallet
 node tools/export-web.mjs 4663                                        # site config
 ```
-Deploy the site (`web/`, `npm run build`, host `dist/` on Vercel / Cloudflare Pages / Netlify — `/face/:id` rewrites are included; on IPFS use `/#/face/:id`).
+Agent actions for holders: copy `config/agent-presets.example.json` to `config/agent-presets.4663.json` with **verified** router / token addresses (see [AGENTS.md](AGENTS.md)); `export-web` publishes it.
+
+Deploy the site: `web/public/{deployment.json, allowlist/, agent-presets.json}` are generated (git-ignored) by the two commands above — run them, then `npm run build` and host `dist/` on Vercel / Cloudflare Pages / Netlify (`/face/:id` rewrites included; on IPFS use `/#/face/:id`).
 
 Open phases one at a time: `node tools/safe-tx.mjs 4663 open Builders` → `Allowlist` → `Public`.
 

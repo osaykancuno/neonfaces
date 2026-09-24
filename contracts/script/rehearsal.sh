@@ -62,6 +62,24 @@ EXPORT_RPC=$([[ $LOCAL == 1 ]] && echo "$RPC" || echo "")
 (cd ../tools && node export-web.mjs "$CHAIN_ID" $EXPORT_RPC >/dev/null)
 echo "== web/public/deployment.json written"
 
+# demo agent actions (test router + mock tokens) so the holder panel can be tried end to end
+SEEDER=$(jqr seeder)
+TSLA=$(cast call "$SEEDER" "basket(uint32)((address,uint256)[])" 1 --rpc-url "$RPC" | grep -oE "0x[0-9a-fA-F]{40}" | head -1)
+USDG=$(cast call "$SEEDER" "basket(uint32)((address,uint256)[])" 4 --rpc-url "$RPC" | grep -oE "0x[0-9a-fA-F]{40}" | tail -1)
+ROUTER=$(forge create test/mocks/MockRouter.sol:MockRouter --rpc-url "$RPC" --private-key "$PK" --broadcast 2>/dev/null | grep "Deployed to" | awk '{print $3}')
+send "$USDG" "mint(address,uint256)" "$ROUTER" 1000000000000000000000000
+send "$TSLA" "mint(address,uint256)" "$ROUTER" 1000000000000000000000
+cat > ../web/public/agent-presets.json <<JSON
+{ "presets": [
+  { "id": "buy-usdg", "title": "Buy USDG with ETH (test router)", "plain": "Your agent can spend ETH from this Face's wallet, up to your limit, to buy test USDG. What it buys stays in the Face.", "risk": "low", "needsEth": true,
+    "calls": [{ "target": "$ROUTER", "signature": "buyWithETH(address)", "label": "Buy tokens with ETH on the test router" }] },
+  { "id": "swap-tsla", "title": "Swap TSLA into USDG (test router)", "plain": "Your agent can turn test TSLA held by this Face into test USDG. The USDG comes back into the Face.", "risk": "low", "needsEth": false,
+    "approvals": [{ "token": "$TSLA", "spender": "$ROUTER", "label": "test TSLA" }],
+    "calls": [{ "target": "$ROUTER", "signature": "swap(address,address,uint256)", "label": "Swap tokens on the test router" }] }
+] }
+JSON
+echo "== demo agent actions published (test router $ROUTER)"
+
 if [[ "${MINT:-1}" == 1 ]]; then
   send "$MINTER" "mint(uint256,uint256,bytes32[])" 10 20 "$PROOF"
   send "$MINTER" "mint(uint256,uint256,bytes32[])" 10 20 "$PROOF"

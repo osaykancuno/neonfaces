@@ -1,0 +1,13 @@
+{
+  "_readme": "Ready-made agent actions shown to holders on the Face page. Copy to agent-presets.<chainId>.json, use ONLY verified contract addresses, then run node tools/export-web.mjs <chainId>. risk: 'low' when assets can only stay in the Face (e.g. swaps through a trusted router), 'careful' otherwise. approvals are granted once by the holder (max allowance) before delegating.",
+  "_entryFormat": {
+    "id": "unique-id",
+    "title": "Short action name, plain language",
+    "plain": "One sentence a non-technical holder understands: what the agent can do and where the result goes.",
+    "risk": "low | careful",
+    "needsEth": false,
+    "approvals": [{ "token": "0xToken", "spender": "0xRouter", "label": "TSLA" }],
+    "calls": [{ "target": "0xRouter", "signature": "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)", "label": "Swap Stock Tokens on <DEX>" }]
+  },
+  "presets": []
+}

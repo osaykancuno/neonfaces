@@ -61,6 +61,11 @@ export const ABI = {
     "error InvalidLock()",
     "error Unauthorized()",
   ]),
+  accountExec: parseAbi([
+    "function executeBatch((address target, uint256 value, bytes data)[] calls, uint8 operation) payable returns (bytes[])",
+    "error AccountIsLocked(uint64 until)",
+    "error Unauthorized()",
+  ]),
   erc20: parseAbi([
     "function balanceOf(address) view returns (uint256)",
     "function symbol() view returns (string)",

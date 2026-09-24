@@ -15,3 +15,6 @@ art/output/unrevealed.png
 contracts/broadcast/
 safe/
 .claude/
+web/public/agent-presets.json
+web/public/deployment.json
+web/public/allowlist/

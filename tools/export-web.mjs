@@ -3,7 +3,7 @@
 //   node export-web.mjs <chainId> [rpcUrl]
 //
 // Writes ../web/public/deployment.json. The site reads it at runtime, so a redeploy never needs a rebuild.
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -23,6 +23,18 @@ const outPath = resolve(here, "../web/public/deployment.json");
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, JSON.stringify(out, null, 2));
 console.log(`wrote ${outPath}`);
+
+// ready-made agent actions for the holder panel (config/agent-presets.<chainId>.json, verified addresses only)
+const presetsSrc = resolve(here, `../config/agent-presets.${chainId}.json`);
+const presetsDst = resolve(here, "../web/public/agent-presets.json");
+if (existsSync(presetsSrc)) {
+  const { presets = [] } = JSON.parse(readFileSync(presetsSrc, "utf8"));
+  writeFileSync(presetsDst, JSON.stringify({ presets }, null, 2));
+  console.log(`agent presets: ${presets.length}`);
+} else if (!process.env.KEEP_PRESETS) {
+  writeFileSync(presetsDst, JSON.stringify({ presets: [] }));
+  console.log("agent presets: none (holders only see the Advanced option)");
+}
 
 // allowlist files present?
 const alDir = resolve(here, "../web/public/allowlist");

@@ -26,7 +26,8 @@
 | `NeonSeeder` | creates the TBA, delivers base seeds at mint, maps tokens to art at reveal, delivers tier top-ups | configure baskets until `lockConfig()`, withdraw unused pool | touch tokens already in Face accounts, influence tiers |
 | `NeonFaceAccount` | ERC-6551 account (Solady base), immutable | — (only the Face holder) | be upgraded; agents can't sign, exceed their calls or ETH budget, act while locked, or survive a sale |
 | `NeonArt` | 174 SSTORE2 chunks of 32 records, running keccak | add chunks / reset **until sealed** | change anything after `seal()` (permissionless, requires provenance match) |
-| `NeonRenderer` | builds SVG + JSON on-chain | none (no owner, no storage) | — |
+| `NeonRenderer` | builds SVG + JSON on-chain; "Holds" lists seed tokens plus tradable tokens the Face holds | none (no owner) | — |
+| `NeonTrader` | the only trading door for agents: Uniswap v3 SwapRouter02, output to the caller, Chainlink-bounded price, daily USD cap per account | none (no owner, no upgrade) | pay anyone but the caller, trade unlisted tokens, use stale prices |
 
 Admin roles sit behind `AccessControlDefaultAdminRules` (2-step transfer, 2-day delay on NeonFaces / Seeder / Minter).
 
@@ -52,7 +53,7 @@ SVG: one `<path>` per palette color (runs split per row) + procedural grain from
 
 ## Face account
 
-Holder: `execute` / `executeBatch` (CALL only), receives ETH / ERC-20 / 721 / 1155, ERC-1271 via Solady's nested EIP-712 (safe against replay across accounts of the same holder). Agents: see [AGENTS.md](AGENTS.md). Lock: `lock(until)` blocks holder calls, agent calls and signatures until `until` (≤ 365 days, extend only), survives transfers, shown as "Locked until" in the metadata.
+Holder: `execute` / `executeBatch` (CALL only), receives ETH / ERC-20 / 721 / 1155, ERC-1271 via Solady's nested EIP-712 (safe against replay across accounts of the same holder). Agents: see [AGENTS.md](AGENTS.md); trading goes through NeonTrader (Uniswap v3 + Chainlink on Robinhood Chain, addresses in `config/trader.4663.json`). Lock: `lock(until)` blocks holder calls, agent calls and signatures until `until` (≤ 365 days, extend only), survives transfers, shown as "Locked until" in the metadata.
 
 ## Live metadata
 

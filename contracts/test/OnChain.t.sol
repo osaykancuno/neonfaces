@@ -26,7 +26,9 @@ contract OnChainTest is Base {
         fixtures = vm.readFile("test/fixtures/svg-samples.json");
         artStore = new NeonArt(faces, admin);
         bytes memory ph = fixtures.readBytes("[3].record");
-        renderer = new NeonRenderer(faces, seeder, artStore, ph, "https://neonfaces.xyz/");
+        address[] memory watch = new address[](1);
+        watch[0] = address(spy);
+        renderer = new NeonRenderer(faces, seeder, artStore, ph, "https://neonfaces.xyz/", watch);
         bytes32 artistRole = artStore.ARTIST_ROLE();
         vm.startPrank(admin);
         artStore.grantRole(artistRole, admin);
@@ -227,6 +229,16 @@ contract OnChainTest is Base {
         assertFalse(LibString.contains(j, '"Stare Upgrade","value":"Pending"'));
         assertTrue(LibString.contains(j, '"trait_type":"Locked until","display_type":"date"'));
         assertTrue(LibString.contains(j, seeder.tierOf(id) == 2 ? '"value":"Watch"' : '"value":"Heavy Stare"'));
+    }
+
+    function test_Metadata_ShowsTradedTokensWhenHeld() public {
+        _openPublic();
+        _mintPublic(alice, 1);
+        string memory j = _json(faces.tokenURI(1));
+        assertFalse(LibString.contains(j, '"Holds SPY"'), "not shown while not held");
+        spy.mint(seeder.accountOf(1), 2e18); // e.g. bought by the Face's agent
+        j = _json(faces.tokenURI(1));
+        assertTrue(LibString.contains(j, '"trait_type":"Holds SPY","value":"2"'));
     }
 
     function test_ContractURI_OnChain() public view {

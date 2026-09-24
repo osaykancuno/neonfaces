@@ -2,7 +2,7 @@ import { formatEther, formatUnits, parseEventLogs } from "viem";
 import { ABI, PHASES, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata } from "./chain.js";
 import { pixelEye } from "./effects/eye.js";
 import { decode, svgDataURI } from "./render.js";
-import { holderPanel } from "./agent-ui.js";
+import { holderPanel, knownTokens } from "./agent-ui.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -435,8 +435,9 @@ async function showFace(id) {
     const show = (a) => (a.display_type === "date" ? new Date(a.value * 1000).toISOString().slice(0, 10) : a.value);
     $("#face-traits").innerHTML = meta.attributes.map((a) => `<div><span>${esc(a.trait_type)}</span>${esc(show(a))}</div>`).join("");
 
-    // balances: every seed token (base + top-up) + ETH
-    const tokens = [...new Set([...seed.legs, ...seed.upgradeLegs].map((l) => l.token))];
+    // balances: seed tokens (always) + any tradable token the account holds + ETH
+    const seedTokens = [...seed.legs, ...seed.upgradeLegs].map((l) => l.token.toLowerCase());
+    const tokens = [...new Set([...seedTokens, ...(await knownTokens()).map((x) => x.toLowerCase())])];
     const deployed = !!(await state.pub.getCode({ address: seed.account }));
     const eth = await state.pub.getBalance({ address: seed.account });
     const rows = await Promise.all(
@@ -446,9 +447,9 @@ async function showFace(id) {
           readAt(t, "erc20", "symbol").catch(() => "?"),
           readAt(t, "erc20", "decimals").catch(() => 18),
         ]);
-        return { sym, v: formatUnits(bal, dec) };
+        return { sym, v: formatUnits(bal, dec), keep: bal > 0n || seedTokens.includes(t) };
       }),
-    );
+    ).then((r) => r.filter((x) => x.keep));
     rows.push({ sym: "ETH", v: formatEther(eth) });
     $("#face-balances").innerHTML = rows.map((b) => `<div class="bal"><span>${esc(b.sym)}</span><b>${Number(b.v).toLocaleString("en-US", { maximumFractionDigits: 6 })}</b></div>`).join("");
 

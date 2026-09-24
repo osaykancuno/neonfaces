@@ -17,7 +17,7 @@ import {NeonArt} from "./NeonArt.sol";
 ///  - the art traits are decoded from the same record,
 ///  - the Stare tier, the Face account (ERC-6551) and the seed basket are read live from NeonSeeder,
 ///  - the basket tickers are read from the Stock Token contracts themselves.
-/// No IPFS, no server. This contract has no owner and no storage besides immutables.
+/// No IPFS, no server. This contract has no owner; its only storage (watchTokens) is set in the constructor.
 contract NeonRenderer {
     using DynamicBufferLib for DynamicBufferLib.DynamicBuffer;
     using LibString for uint256;
@@ -27,17 +27,27 @@ contract NeonRenderer {
     NeonArt public immutable art;
     address public immutable placeholder; // SSTORE2 pointer of the pre-reveal record
     address private immutable _siteURL; // SSTORE2 pointer of the external URL prefix
+    /// @notice Extra tokens shown as "Holds <TICKER>" when the Face account holds them (set once, at deploy).
+    address[] public watchTokens;
 
     uint256 private constant BG = 5;
     uint256 private constant PLACEHOLDER_ART_ID = 5555;
 
-    constructor(NeonFaces faces_, NeonSeeder seeder_, NeonArt art_, bytes memory placeholderRecord, string memory siteURL_)
-    {
+    constructor(
+        NeonFaces faces_,
+        NeonSeeder seeder_,
+        NeonArt art_,
+        bytes memory placeholderRecord,
+        string memory siteURL_,
+        address[] memory watchTokens_
+    ) {
         faces = faces_;
         seeder = seeder_;
         art = art_;
         placeholder = SSTORE2.write(placeholderRecord);
         _siteURL = SSTORE2.write(bytes(siteURL_));
+        require(watchTokens_.length <= 16, "too many tokens");
+        watchTokens = watchTokens_;
     }
 
     function siteURL() public view returns (string memory) {
@@ -245,20 +255,19 @@ contract NeonRenderer {
 
     /// @dev Live balances of the seed tokens inside the Face account, e.g. {"trait_type":"Holds TSLA","value":"0.003"}
     function _holdings(NeonSeeder.SeedView memory s) internal view returns (bytes memory out) {
-        uint256 n = s.legs.length;
-        address[] memory tokens = new address[](n + s.upgradeLegs.length);
-        for (uint256 i; i < n; ++i) tokens[i] = s.legs[i].token;
-        for (uint256 i; i < s.upgradeLegs.length; ++i) {
-            address t = s.upgradeLegs[i].token;
-            bool dup;
-            for (uint256 k; k < n; ++k) if (tokens[k] == t) dup = true;
-            if (!dup) tokens[n++] = t;
-        }
+        uint256 n;
+        uint256 seedCount;
+        address[] memory tokens = new address[](s.legs.length + s.upgradeLegs.length + watchTokens.length);
+        for (uint256 i; i < s.legs.length; ++i) n = _addUnique(tokens, n, s.legs[i].token);
+        for (uint256 i; i < s.upgradeLegs.length; ++i) n = _addUnique(tokens, n, s.upgradeLegs[i].token);
+        seedCount = n;
+        for (uint256 i; i < watchTokens.length; ++i) n = _addUnique(tokens, n, watchTokens[i]);
         for (uint256 i; i < n; ++i) {
             address t = tokens[i];
             (bool ok1, bytes memory rb) = t.staticcall(abi.encodeCall(IERC20.balanceOf, (s.account)));
             (bool ok2, bytes memory rd) = t.staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
             if (!ok1 || !ok2 || rb.length < 32 || rd.length < 32) continue;
+            if (i >= seedCount && abi.decode(rb, (uint256)) == 0) continue; // extra tokens only when held
             string memory sym;
             try IERC20Metadata(t).symbol() returns (string memory x) {
                 sym = x;
@@ -269,6 +278,12 @@ contract NeonRenderer {
                 out, _attr(string.concat("Holds ", sym), _decimal(abi.decode(rb, (uint256)), abi.decode(rd, (uint8))), true)
             );
         }
+    }
+
+    function _addUnique(address[] memory list, uint256 n, address t) internal pure returns (uint256) {
+        for (uint256 k; k < n; ++k) if (list[k] == t) return n;
+        list[n] = t;
+        return n + 1;
     }
 
     /// @dev "Locked until" (date) while the Face account is locked — a buyer's guarantee the contents stay put.

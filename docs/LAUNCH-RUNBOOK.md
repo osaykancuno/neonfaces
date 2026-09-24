@@ -21,8 +21,7 @@ Keep `art/output/onchain/chunks.json`, `placeholder.hex`, `provenance.json`, `ar
 
 ## 2. Seed baskets
 
-1. Update `config/baskets.plan.json` → `prices` (USD) and `pricesAsOf`.
-2. `node tools/baskets.mjs` → writes `contracts/config/baskets.4663.json` and prints the pool budget.
+1. On a trading day: `node tools/baskets.mjs --live` → reads Chainlink prices, writes `contracts/config/baskets.4663.json` and prints the pool budget (≈ $42.5k at full supply).
 3. The seed vault buys that inventory. **Pre-fund `NeonSeeder` before the Builders phase** at least for the Faces that will be minted free: a Face must never be born empty.
 
 ## 3. Deploy
@@ -39,6 +38,12 @@ Verify every contract on Blockscout:
 forge verify-contract <address> src/NeonFaces.sol:NeonFaces --chain 4663 --verifier blockscout --verifier-url https://robinhoodchain.blockscout.com/api/ --watch
 ```
 (repeat for NeonMinter, NeonSeeder, NeonFaceAccount, NeonArt, NeonRenderer, VestingWallet; constructor args are in `broadcast/`.)
+
+Agent trading (NeonTrader, no owner) and the holder panel's ready-made action:
+```bash
+forge script script/DeployTrader.s.sol --rpc-url robinhood --private-key $DEPLOYER_PK --broadcast --slow
+node tools/presets.mjs 4663          # config/agent-presets.4663.json from the deployed trader
+```
 
 Independent check:
 ```bash
@@ -59,6 +64,7 @@ Transfer the basket inventory to `NeonSeeder`. Check coverage per basket: `cast 
 ## 6. Allowlists and phases
 
 ```bash
+node tools/snapshot.mjs config/allowlists/collections.json         # holders of partner NFT collections -> <phase>.csv
 node tools/allowlist.mjs builders config/allowlists/builders.csv     # address,allowance
 node tools/allowlist.mjs allowlist config/allowlists/allowlist.csv
 node tools/safe-tx.mjs 4663 phase Builders 0 1111                     # free, max 1111 Faces
@@ -66,8 +72,6 @@ node tools/safe-tx.mjs 4663 phase Allowlist 0.012 2000
 node tools/safe-tx.mjs 4663 phase Public 0.02 0 public 5              # 5 per wallet
 node tools/export-web.mjs 4663                                        # site config
 ```
-Agent actions for holders: copy `config/agent-presets.example.json` to `config/agent-presets.4663.json` with **verified** router / token addresses (see [AGENTS.md](AGENTS.md)); `export-web` publishes it.
-
 Deploy the site: `web/public/{deployment.json, allowlist/, agent-presets.json}` are generated (git-ignored) by the two commands above — run them, then `npm run build` and host `dist/` on Vercel / Cloudflare Pages / Netlify (`/face/:id` rewrites included; on IPFS use `/#/face/:id`).
 
 Open phases one at a time: `node tools/safe-tx.mjs 4663 open Builders` → `Allowlist` → `Public`.

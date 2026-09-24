@@ -1,46 +1,53 @@
 {
-  "_readme": "Seed baskets by USD target. Tier 1 = BASE baskets delivered at mint to every Face (keep them equal in value: the draw among them is not secret). Tier 2 / 3 = TOP-UPS delivered after reveal to Watch / Heavy Stare Faces, on top of the base. Update `prices` right before deploy, then run: node tools/baskets.mjs. Token addresses verified on-chain (symbol + decimals) on Robinhood Chain mainnet, 2026-09-24.",
+  "_readme": "Seed baskets by USD target. Tier 1 = BASE baskets delivered at mint to every Face (keep them equal in value: the draw among them is not secret). Tier 2 / 3 = TOP-UPS delivered after reveal to Watch / Heavy Stare Faces, on top of the base. `node tools/baskets.mjs --live` reads current prices from the Chainlink feeds listed per token (verified 2026-09-24); without --live it uses `prices`. Token addresses verified on-chain (symbol + decimals).",
   "chainId": 4663,
-  "pricesAsOf": "UPDATE-ME",
+  "pricesAsOf": "2026-09-24T21:17Z (Chainlink, Robinhood Chain mainnet)",
   "prices": {
-    "TSLA": 0,
-    "NVDA": 0,
-    "AAPL": 0,
-    "AMZN": 0,
-    "MSFT": 0,
-    "GOOGL": 0,
-    "META": 0,
-    "SPY": 0,
-    "USDG": 1
+    "TSLA": 378.34,
+    "NVDA": 224.41,
+    "AAPL": 336.31,
+    "AMZN": 248.78,
+    "MSFT": 497.99,
+    "GOOGL": 341.92,
+    "META": 778.25,
+    "SPY": 766.7,
+    "USDG": 1.0
   },
   "tokens": {
     "TSLA": {
       "address": "0x322F0929c4625eD5bAd873c95208D54E1c003b2d",
-      "decimals": 18
+      "decimals": 18,
+      "feed": "0x4A1166a659A55625345e9515b32adECea5547C38"
     },
     "AAPL": {
       "address": "0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9",
-      "decimals": 18
+      "decimals": 18,
+      "feed": "0x6B22A786bAa607d76728168703a39Ea9C99f2cD0"
     },
     "NVDA": {
       "address": "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC",
-      "decimals": 18
+      "decimals": 18,
+      "feed": "0x379EC4f7C378F34a1B47E4F3cbeBCbAC3E8E9F15"
     },
     "AMZN": {
       "address": "0x12f190a9F9d7D37a250758b26824B97CE941bF54",
-      "decimals": 18
+      "decimals": 18,
+      "feed": "0xD5a1508ceD74c084eBf3cBe853e2C968fB2a651C"
     },
     "MSFT": {
       "address": "0xe93237C50D904957Cf27E7B1133b510C669c2e74",
-      "decimals": 18
+      "decimals": 18,
+      "feed": "0x45C3C877C15E6BA2EBB19eA114Ea508d14C1Af2E"
     },
     "GOOGL": {
       "address": "0x2e0847E8910a9732eB3fb1bb4b70a580ADAD4FE3",
-      "decimals": 18
+      "decimals": 18,
+      "feed": "0xF6f373a037c30F0e5010d854385cA89185AE638b"
     },
     "META": {
       "address": "0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35",
-      "decimals": 18
+      "decimals": 18,
+      "feed": "0x7C38C00C30BEe9378381E7B6135d7283356D71b1"
     },
     "MSTR": {
       "address": "0xec262a75e413fAfD0dF80480274532C79D42da09",
@@ -48,7 +55,8 @@
     },
     "SPY": {
       "address": "0x117cc2133c37B721F49dE2A7a74833232B3B4C0C",
-      "decimals": 18
+      "decimals": 18,
+      "feed": "0x319724394D3A0e3669269846abE664Cd621f9f6A"
     },
     "QCOM": {
       "address": "0x0f17206447090e464C277571124dD2688E48AEA9",
@@ -56,68 +64,70 @@
     },
     "USDG": {
       "address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
-      "decimals": 6
+      "decimals": 6,
+      "feed": "0x61B7e5650328764B076A108EFF5fa7282a1B9aD2",
+      "stable": true
     }
   },
   "baskets": [
     {
       "name": "Base / TSLA",
       "legs": {
-        "TSLA": 1.0
+        "TSLA": 3.0
       }
     },
     {
       "name": "Base / NVDA",
       "legs": {
-        "NVDA": 1.0
+        "NVDA": 3.0
       }
     },
     {
       "name": "Base / AAPL",
       "legs": {
-        "AAPL": 1.0
+        "AAPL": 3.0
       }
     },
     {
       "name": "Base / AMZN",
       "legs": {
-        "AMZN": 1.0
+        "AMZN": 3.0
       }
     },
     {
       "name": "Base / MSFT",
       "legs": {
-        "MSFT": 1.0
+        "MSFT": 3.0
       }
     },
     {
       "name": "Watch top-up / NVDA + USDG",
       "legs": {
-        "NVDA": 3.0,
-        "USDG": 1.0
+        "NVDA": 9.0,
+        "USDG": 3.0
       }
     },
     {
       "name": "Watch top-up / GOOGL + USDG",
       "legs": {
-        "GOOGL": 3.0,
-        "USDG": 1.0
+        "GOOGL": 9.0,
+        "USDG": 3.0
       }
     },
     {
       "name": "Watch top-up / META + USDG",
       "legs": {
-        "META": 3.0,
-        "USDG": 1.0
+        "META": 9.0,
+        "USDG": 3.0
       }
     },
     {
       "name": "Heavy Stare top-up / Index + Mag",
       "legs": {
-        "SPY": 8.0,
-        "NVDA": 4.0,
-        "TSLA": 4.0,
-        "USDG": 3.0
+        "SPY": 25.0,
+        "NVDA": 12.0,
+        "TSLA": 12.0,
+        "USDG": 8.0
       }
     }
   ],

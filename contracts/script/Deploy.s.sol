@@ -71,7 +71,7 @@ contract Deploy is Script {
             payable(vm.envAddress("GROWTH"))
         );
         d.art = new NeonArt(d.faces, deployer);
-        d.renderer = new NeonRenderer(d.faces, d.seeder, d.art, placeholder, vm.envString("SITE_URL"));
+        d.renderer = new NeonRenderer(d.faces, d.seeder, d.art, placeholder, vm.envString("SITE_URL"), _watchTokens());
 
         // ---- wiring ----
         d.faces.grantRole(d.faces.MINTER_ROLE(), address(d.minter));
@@ -102,6 +102,19 @@ contract Deploy is Script {
 
         vm.stopBroadcast();
         _write(d);
+    }
+
+    /// @dev tradable tokens from ../config/trader.<chainid>.json (none on local / mock deployments)
+    function _watchTokens() internal view returns (address[] memory tokens) {
+        string memory path = string.concat("../config/trader.", vm.toString(block.chainid), ".json");
+        if (!vm.exists(path)) return tokens;
+        string memory cfg = vm.readFile(path);
+        uint256 n;
+        while (vm.keyExistsJson(cfg, string.concat(".tokens[", vm.toString(n), "]"))) ++n;
+        tokens = new address[](n);
+        for (uint256 i; i < n; ++i) {
+            tokens[i] = vm.parseJsonAddress(cfg, string.concat(".tokens[", vm.toString(i), "].address"));
+        }
     }
 
     // ------------------------------------------------------------------

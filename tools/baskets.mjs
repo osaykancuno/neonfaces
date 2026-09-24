@@ -1,6 +1,6 @@
 // Resolve seed baskets from USD targets into on-chain token amounts.
 //
-//   node baskets.mjs [../config/baskets.plan.json]
+//   node baskets.mjs [--live] [../config/baskets.plan.json]
 //
 // Tier 1 = base baskets (every Face, at mint); tiers 2/3 = top-ups after reveal (Watch / Heavy Stare).
 // Writes ../contracts/config/baskets.<chainId>.json (read by Deploy.s.sol) and prints the
@@ -8,11 +8,31 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseUnits, formatUnits, getAddress } from "viem";
+import { parseUnits, formatUnits, getAddress, createPublicClient, http, parseAbi } from "viem";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const planPath = resolve(process.argv[2] ?? resolve(here, "../config/baskets.plan.json"));
+const args = process.argv.slice(2);
+const live = args.includes("--live");
+const planPath = resolve(args.find((a) => !a.startsWith("--")) ?? resolve(here, "../config/baskets.plan.json"));
 const plan = JSON.parse(readFileSync(planPath, "utf8"));
+
+// --live: current prices from the Chainlink feeds (8 decimals), refusing stale ones
+if (live) {
+  const rpc = process.env.RPC_URL ?? { 4663: "https://rpc.mainnet.chain.robinhood.com" }[plan.chainId];
+  const client = createPublicClient({ transport: http(rpc) });
+  const feedAbi = parseAbi(["function latestRoundData() view returns (uint80, int256, uint256, uint256, uint80)", "function description() view returns (string)"]);
+  let oldest = Infinity;
+  for (const [sym, t] of Object.entries(plan.tokens)) {
+    if (!t.feed || t.stable) continue; // stablecoins at face value ($1)
+    const [, answer, , updatedAt] = await client.readContract({ address: t.feed, abi: feedAbi, functionName: "latestRoundData" });
+    const age = Date.now() / 1000 - Number(updatedAt);
+    if (age > 26 * 3600) throw new Error(`${sym} feed is stale (${Math.round(age / 3600)} h): markets closed? retry on a trading day`);
+    plan.prices[sym] = Number(answer) / 1e8;
+    oldest = Math.min(oldest, Number(updatedAt));
+  }
+  plan.pricesAsOf = `${new Date(oldest * 1000).toISOString()} (Chainlink, oldest feed update)`;
+  console.log("live prices:", Object.entries(plan.prices).map(([k, v]) => `${k} $${v}`).join("  "));
+}
 
 const missing = Object.entries(plan.prices).filter(([, p]) => !(p > 0)).map(([t]) => t);
 const used = new Set(plan.baskets.flatMap((b) => Object.keys(b.legs)));

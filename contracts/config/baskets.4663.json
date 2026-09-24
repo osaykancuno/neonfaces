@@ -1,0 +1,117 @@
+{
+  "_generated": "from C:\\Users\\Utente\\Desktop\\NEONFACES\\config\\baskets.plan.json on 2026-09-24T21:25:19.338Z with prices as of 2026-09-24T04:04:06.000Z (Chainlink, oldest feed update)",
+  "chainId": 4663,
+  "basketCount": 9,
+  "baskets": [
+    {
+      "name": "Base / TSLA",
+      "tokens": [
+        "0x322F0929c4625eD5bAd873c95208D54E1c003b2d"
+      ],
+      "amounts": [
+        "7929380000000000"
+      ]
+    },
+    {
+      "name": "Base / NVDA",
+      "tokens": [
+        "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC"
+      ],
+      "amounts": [
+        "13368460000000000"
+      ]
+    },
+    {
+      "name": "Base / AAPL",
+      "tokens": [
+        "0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9"
+      ],
+      "amounts": [
+        "8920470000000000"
+      ]
+    },
+    {
+      "name": "Base / AMZN",
+      "tokens": [
+        "0x12f190a9F9d7D37a250758b26824B97CE941bF54"
+      ],
+      "amounts": [
+        "12058720000000000"
+      ]
+    },
+    {
+      "name": "Base / MSFT",
+      "tokens": [
+        "0xe93237C50D904957Cf27E7B1133b510C669c2e74"
+      ],
+      "amounts": [
+        "6024200000000000"
+      ]
+    },
+    {
+      "name": "Watch top-up / NVDA + USDG",
+      "tokens": [
+        "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC",
+        "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
+      ],
+      "amounts": [
+        "40105380000000000",
+        "3000000"
+      ]
+    },
+    {
+      "name": "Watch top-up / GOOGL + USDG",
+      "tokens": [
+        "0x2e0847E8910a9732eB3fb1bb4b70a580ADAD4FE3",
+        "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
+      ],
+      "amounts": [
+        "26322100000000000",
+        "3000000"
+      ]
+    },
+    {
+      "name": "Watch top-up / META + USDG",
+      "tokens": [
+        "0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35",
+        "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
+      ],
+      "amounts": [
+        "11564460000000000",
+        "3000000"
+      ]
+    },
+    {
+      "name": "Heavy Stare top-up / Index + Mag",
+      "tokens": [
+        "0x117cc2133c37B721F49dE2A7a74833232B3B4C0C",
+        "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC",
+        "0x322F0929c4625eD5bAd873c95208D54E1c003b2d",
+        "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
+      ],
+      "amounts": [
+        "32607280000000000",
+        "53473830000000000",
+        "31717500000000000",
+        "8000000"
+      ]
+    }
+  ],
+  "tiers": {
+    "1": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "2": [
+      6,
+      7,
+      8
+    ],
+    "3": [
+      9
+    ]
+  }
+}

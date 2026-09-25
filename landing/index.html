@@ -185,10 +185,24 @@
     .tabbar svg { width: 20px; height: 20px; flex: none; }
     .tabbar .side-brand { display: block; font: 700 18px/1 var(--pixel); color: var(--neon); padding: 6px 14px 20px; letter-spacing: .04em; background: none; }
   }
+
+  /* NEONCAM: the camera through the collection's pipeline (24-cell close-up, 8 neon tones, grain, Gaze) */
+  .cam { position: relative; width: 100%; max-width: 560px; aspect-ratio: 1; border: 2px solid var(--neon); background: #000; box-sizing: border-box; }
+  .cam canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .cam-idle { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; text-align: center; }
+  .cam-idle[hidden], #cam-tools[hidden], .cam-btn[hidden] { display: none; }
+  .cam-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 2px solid var(--neon); background: var(--neon); color: #000; font: 700 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; box-sizing: border-box; }
+  .cam-btn.ghost { background: transparent; color: var(--neon); }
+  .cam-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; max-width: 560px; }
+  .cam-seg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
+  .cam-seg > span { font: 600 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); min-width: 56px; }
+  .cam-seg button { min-height: 36px; padding: 6px 12px; border: 1px solid var(--line); background: #070900; color: var(--text); font: 600 12px/1 var(--mono); cursor: pointer; }
+  .cam-seg button[aria-pressed="true"] { border-color: var(--neon); color: #000; background: var(--neon); }
+  .cam-msg { font-size: 14px; color: var(--dim); min-height: 1.4em; }
   @media (max-width: 760px) {
     body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); font-size: 17px; }
     .tabbar {
-      left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr);
+      left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(6, 1fr);
       height: calc(62px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 2px solid var(--neon);
     }
     .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--dim); font: 600 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
@@ -397,6 +411,35 @@
   </section>
   </div>
 
+  <div class="view" data-view="cam" hidden>
+  <section id="neoncam" class="col">
+    <span class="label">NEONCAM</span>
+    <h2>See yourself the way they see you</h2>
+    <p>Your camera through the same pipeline as the collection: a close-up of 24 cells in the eight neon tones, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it.</p>
+    <div class="cam">
+      <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas>
+      <div class="cam-idle" id="cam-idle">
+        <button class="cam-btn" id="cam-start" type="button">Turn the camera on</button>
+        <label class="cam-btn ghost">Use a photo<input type="file" accept="image/*" id="cam-file" hidden></label>
+      </div>
+    </div>
+    <div id="cam-tools" hidden>
+      <div class="cam-seg" data-opt="cells"><span>Cells</span><button type="button" data-v="24" aria-pressed="true">24</button><button type="button" data-v="32" aria-pressed="false">32</button><button type="button" data-v="48" aria-pressed="false">48</button></div>
+      <div class="cam-seg" data-opt="neon"><span>Neon</span><button type="button" data-v="0" aria-pressed="true">Standard</button><button type="button" data-v="1" aria-pressed="false">Deep</button><button type="button" data-v="2" aria-pressed="false">Hot</button></div>
+      <div class="cam-seg" data-opt="grain"><span>Grain</span><button type="button" data-v="0" aria-pressed="true">Clean print</button><button type="button" data-v="1" aria-pressed="false">Dusty</button><button type="button" data-v="2" aria-pressed="false">Heavy scan</button></div>
+      <div class="cam-seg" data-opt="gaze"><span>Gaze</span><button type="button" data-v="0" aria-pressed="true">None</button><button type="button" data-v="1" aria-pressed="false">Steady</button><button type="button" data-v="2" aria-pressed="false">Fixed</button><button type="button" data-v="3" aria-pressed="false">Burning</button></div>
+      <div class="cam-row">
+        <button class="cam-btn" id="cam-shot" type="button">Take the photo</button>
+        <button class="cam-btn ghost" id="cam-flip" type="button" hidden>Switch camera</button>
+        <button class="cam-btn" id="cam-save" type="button" hidden>Save</button>
+        <button class="cam-btn" id="cam-share" type="button" hidden>Share</button>
+        <button class="cam-btn ghost" id="cam-again" type="button" hidden>Again</button>
+      </div>
+    </div>
+    <p class="cam-msg" id="cam-msg" aria-live="polite"></p>
+  </section>
+  </div>
+
   <div class="view" data-view="facts" hidden>
   <section id="check" class="col">
     <span class="label">Check it yourself</span>
@@ -433,7 +476,7 @@
     <p>Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
   </footer>
 </main>
-<nav class="tabbar" aria-label="Sections"><a class="side-brand" href="#home">NEONFACES</a><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
+<nav class="tabbar" aria-label="Sections"><a class="side-brand" href="#home">NEONFACES</a><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#cam" data-tab="cam" aria-label="NEONCAM"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="3" width="6" height="2"/><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="9"/><rect x="2" y="16" width="16" height="2"/><rect x="8" y="8" width="4" height="2"/><rect x="6" y="10" width="2" height="3"/><rect x="12" y="10" width="2" height="3"/><rect x="8" y="13" width="4" height="2"/></svg><span>Cam</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
 <script>
   // sound in the NEONFACES style: synthesized in the browser (no music, no files), off by default, remembered
   const sound = (() => {
@@ -477,7 +520,209 @@
     document.addEventListener("click", (e) => e.target.closest?.("a, button") && e.target.closest("button") !== b && sound.click());
   })();
 
-  // views: #home, #faces, #sets, #wallet, #facts; any other #id opens the view that holds it and scrolls to it
+  // NEONCAM: camera (or a photo) -> center square -> luminance, auto-levels -> 8 neon tones on a 24/32/48 grid,
+  // the collection's grain and Gaze bloom. Local only: no upload, nothing stored.
+  (() => {
+    const PAL = [
+      ["#000000", "#1f2504", "#414d12", "#677920", "#94b21d", "#ccff00", "#f2ffc8", "#ffffff"], // Standard
+      ["#000000", "#1c2304", "#3c4811", "#5f701e", "#89a61b", "#bcee00", "#f2ffc8", "#ffffff"], // Deep
+      ["#000000", "#202609", "#454e1b", "#6d7b2d", "#9cb432", "#d6ff1f", "#f2ffc8", "#ffffff"], // Hot
+    ].map((p) => p.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))));
+    const $ = (id) => document.getElementById(id);
+    const out = $("cam-out"), msg = $("cam-msg");
+    const opt = { cells: 24, neon: 0, grain: 0, gaze: 0 };
+    const small = document.createElement("canvas"), sctx = small.getContext("2d", { willReadFrequently: true });
+    const cellCanvas = document.createElement("canvas"), cctx = cellCanvas.getContext("2d");
+    const glow = document.createElement("canvas"), gctx = glow.getContext("2d");
+    const video = document.createElement("video");
+    video.muted = true; video.playsInline = true; video.setAttribute("playsinline", "");
+    let stream = null, facing = "user", still = null, shot = null, raf = 0, last = 0, seed = 1;
+    const say = (t) => (msg.textContent = t);
+
+    // one frame of the source (video or photo) -> the NEONFACES look, drawn on canvas `c` (size x size)
+    function render(src, sw, sh, mirror, c, size) {
+      const n = opt.cells, side = Math.min(sw, sh);
+      if (!side) return;
+      small.width = small.height = n;
+      sctx.save();
+      if (mirror) { sctx.translate(n, 0); sctx.scale(-1, 1); }
+      sctx.drawImage(src, (sw - side) / 2, (sh - side) / 2, side, side, 0, 0, n, n);
+      sctx.restore();
+      const img = sctx.getImageData(0, 0, n, n), d = img.data, lum = new Float32Array(n * n), hist = new Uint32Array(256);
+      for (let i = 0; i < n * n; i++) {
+        const y = 0.2126 * d[i * 4] + 0.7152 * d[i * 4 + 1] + 0.0722 * d[i * 4 + 2];
+        lum[i] = y; hist[y | 0]++;
+      }
+      let lo = 0, hi = 255, acc = 0; // auto-levels: 3rd to 97th percentile, so any light works
+      for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= n * n * 0.03) { lo = v; break; } }
+      acc = 0;
+      for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc >= n * n * 0.03) { hi = v; break; } }
+      const span = Math.max(24, hi - lo), pal = PAL[opt.neon];
+      for (let i = 0; i < n * n; i++) {
+        const t = Math.min(1, Math.max(0, (lum[i] - lo) / span)) ** 1.15;
+        const [R, G, B] = pal[Math.min(7, Math.round(t * 6.6))]; // white only in the brightest highlights
+        d[i * 4] = R; d[i * 4 + 1] = G; d[i * 4 + 2] = B; d[i * 4 + 3] = 255;
+      }
+      cellCanvas.width = cellCanvas.height = n;
+      cctx.putImageData(img, 0, 0);
+      const g = c.getContext("2d"), cell = size / n;
+      g.imageSmoothingEnabled = false;
+      g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.filter = "none";
+      g.drawImage(cellCanvas, 0, 0, size, size);
+      if (opt.gaze) { // the Gaze: a blurred copy screened on top (renderer: 0.6 / 0.9 / 1.2 cells, slope .35 / .55 / .8)
+        glow.width = glow.height = size;
+        gctx.imageSmoothingEnabled = false;
+        gctx.filter = `blur(${[0.6, 0.9, 1.2][opt.gaze - 1] * cell}px) brightness(${[0.35, 0.55, 0.8][opt.gaze - 1]})`;
+        gctx.drawImage(cellCanvas, 0, 0, size, size);
+        g.globalCompositeOperation = "screen";
+        g.drawImage(glow, 0, 0);
+        g.globalCompositeOperation = "source-over";
+      }
+      if (opt.grain === 1) { // Dusty: 90 specks, 70% dark, 30% light
+        let r = seed;
+        const rnd = () => (r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+        for (let i = 0; i < 90; i++) {
+          const x = rnd() * size, y = rnd() * size, w = (0.08 + rnd() * 0.18) * cell;
+          g.fillStyle = rnd() < 0.7 ? "rgba(0,0,0,.35)" : "rgba(255,255,255,.22)";
+          g.fillRect(x, y, w, w);
+        }
+      } else if (opt.grain === 2) { // Heavy scan: a line every half cell, a light band, noise
+        g.fillStyle = "rgba(0,0,0,.28)";
+        for (let y = 0; y < size; y += cell / 2) g.fillRect(0, y, size, cell * 0.15);
+        g.fillStyle = "rgba(255,255,255,.08)";
+        g.fillRect(((seed % 97) / 97) * size * 0.9, 0, cell * (0.2 + (seed % 7) / 10), size);
+        for (let i = 0; i < 700; i++) {
+          g.fillStyle = `rgba(0,0,0,${(Math.random() * 0.25).toFixed(3)})`;
+          g.fillRect(Math.random() * size, Math.random() * size, 2, 2);
+        }
+      }
+    }
+
+    function frame() {
+      if (still) render(still, still.naturalWidth, still.naturalHeight, false, out, out.width);
+      else if (video.readyState >= 2) render(video, video.videoWidth, video.videoHeight, facing === "user", out, out.width);
+    }
+    function loop(t) {
+      raf = requestAnimationFrame(loop);
+      if (t - last < 66) return; // about 15 frames a second: enough for the look, kind to phones
+      last = t;
+      frame();
+    }
+
+    async function startCam() {
+      stopCam();
+      if (!navigator.mediaDevices?.getUserMedia) return say("This browser can't open the camera here. Use a photo instead.");
+      say("Asking for the camera…");
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 720 }, height: { ideal: 720 } }, audio: false });
+      } catch (e) {
+        stream = null;
+        return say(e?.name === "NotAllowedError" ? "Camera access was refused. Allow it in the browser settings, or use a photo." : "No camera available. Use a photo instead.");
+      }
+      video.srcObject = stream;
+      await video.play().catch(() => {});
+      still = null;
+      ready();
+      const cams = (await navigator.mediaDevices.enumerateDevices().catch(() => [])).filter((x) => x.kind === "videoinput");
+      $("cam-flip").hidden = cams.length < 2;
+      say("");
+    }
+    function stopCam() {
+      stream?.getTracks().forEach((t) => t.stop());
+      stream = null;
+      video.srcObject = null;
+    }
+    function ready() {
+      $("cam-idle").hidden = true;
+      $("cam-tools").hidden = false;
+      seed = (Math.random() * 1e6) | 0;
+      shot = null;
+      buttons(false);
+      if (!raf) raf = requestAnimationFrame(loop);
+    }
+    function buttons(taken) {
+      $("cam-shot").hidden = taken;
+      $("cam-save").hidden = $("cam-share").hidden = $("cam-again").hidden = !taken;
+      if (taken) $("cam-flip").hidden = true;
+    }
+
+    // the photo: 1080 x 1080, the face, then a thin band with the name and the site
+    function takePhoto() {
+      const c = document.createElement("canvas");
+      c.width = c.height = 1080;
+      if (still) render(still, still.naturalWidth, still.naturalHeight, false, c, 1080);
+      else render(video, video.videoWidth, video.videoHeight, facing === "user", c, 1080);
+      const g = c.getContext("2d");
+      g.fillStyle = "#000"; g.fillRect(0, 1008, 1080, 72);
+      g.fillStyle = "#ccff00"; g.fillRect(0, 1004, 1080, 4);
+      g.textBaseline = "middle";
+      g.font = '700 30px "Silkscreen", monospace'; g.fillText("NEONFACES", 28, 1045);
+      g.font = '600 20px "JetBrains Mono", monospace'; g.fillStyle = "#c9d4a3"; g.textAlign = "right";
+      g.fillText("NEONCAM · neonfaces.xyz", 1052, 1045);
+      cancelAnimationFrame(raf);
+      raf = 0;
+      out.getContext("2d").drawImage(c, 0, 0, out.width, out.height); // the preview freezes on the photo
+      c.toBlob((b) => { shot = b; buttons(true); say("Got it. Save it, or share it."); }, "image/png");
+    }
+
+    function save() {
+      if (!shot) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(shot);
+      a.download = "neoncam.png";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    const TEXT = "They don't blink. Neither do I. NEONCAM by NEONFACES", LINK = "https://neonfaces.xyz/#cam";
+    async function share() {
+      if (!shot) return;
+      const file = new File([shot], "neoncam.png", { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        try { await navigator.share({ files: [file], text: TEXT, url: LINK }); return; } catch (e) { if (e?.name === "AbortError") return; }
+      }
+      save(); // no system share sheet (most desktops): save the photo and open a post to attach it to
+      open(`https://x.com/intent/post?text=${encodeURIComponent(TEXT)}&url=${encodeURIComponent(LINK)}`, "_blank", "noopener");
+      say("The photo is saved: attach it to the post that just opened.");
+    }
+
+    $("cam-start").addEventListener("click", startCam);
+    $("cam-file").addEventListener("change", (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const img = new Image();
+      img.onload = () => { stopCam(); still = img; $("cam-flip").hidden = true; ready(); say(""); };
+      img.onerror = () => say("That file isn't an image this browser can read.");
+      img.src = URL.createObjectURL(f);
+      e.target.value = "";
+    });
+    $("cam-flip").addEventListener("click", () => { facing = facing === "user" ? "environment" : "user"; startCam(); });
+    $("cam-shot").addEventListener("click", takePhoto);
+    $("cam-save").addEventListener("click", save);
+    $("cam-share").addEventListener("click", share);
+    $("cam-again").addEventListener("click", () => { say(""); if (!still && !stream) startCam(); else ready(); });
+    document.querySelectorAll("#cam-tools .cam-seg").forEach((seg) =>
+      seg.addEventListener("click", (e) => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+        opt[seg.dataset.opt] = Number(b.dataset.v);
+        if (shot) { say(""); ready(); } else if (!raf) frame();
+      }),
+    );
+    // leaving the view (or the browser tab) turns the camera off
+    const off = () => {
+      if (location.hash === "#cam" && !document.hidden) return;
+      const was = !!stream;
+      stopCam();
+      cancelAnimationFrame(raf);
+      raf = 0;
+      if (was) { $("cam-idle").hidden = false; $("cam-tools").hidden = true; shot = null; }
+    };
+    addEventListener("hashchange", off);
+    document.addEventListener("visibilitychange", off);
+  })();
+
+  // views: #home, #cam, #faces, #sets, #wallet, #facts; any other #id opens the view that holds it and scrolls to it
   (() => {
     const views = [...document.querySelectorAll(".view")];
     const show = () => {

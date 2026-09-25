@@ -36,6 +36,9 @@ interface IAggregatorV3 {
 ///  - **known tokens only**: Stock Tokens, USDG and WETH/ETH listed at deployment, each with its feed;
 ///  - **fresh prices only**: stale feeds (e.g. equities over the weekend) make trades revert;
 ///  - **daily cap in USD**, set by the account itself (i.e. by the holder through `execute`).
+/// The holder can also leave a standing **strategy** here (accumulate a ticker, keep a share liquid, trim a
+/// ticker), which agents read; an agent explains each trade with a short on-chain **note** (`swapWithNote`).
+/// Neither widens what an agent can do: every trade still passes the rules above.
 /// No owner, no upgrade, no fees. Trades run on Uniswap v3 through the official SwapRouter02.
 contract NeonTrader is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -54,7 +57,28 @@ contract NeonTrader is ReentrancyGuard {
     mapping(address account => uint256 usd8) public dailyLimit;
     mapping(address account => mapping(uint256 day => uint256 usd8)) public spentOn;
 
+    uint8 public constant ACCUMULATE = 1; // buy `token` with `usd8` of `funding` every `every` seconds
+    uint8 public constant KEEP_LIQUID = 2; // keep at least `bps` of the Face's value in `token` (a stablecoin)
+    uint8 public constant TRIM = 3; // sell `token` into `funding` when it exceeds `bps` of the Face's value
+    // Strategies are instructions, not permissions: moves are checked by the agent that runs them (and every
+    // trade still passes the price, token and daily-cap rules below). `every` paces them, the notes explain them.
+    uint256 public constant MAX_NOTE = 96;
+
+    /// @notice A standing instruction from the holder, read by agents (the NEONFACES strategy agent runs them).
+    struct Strategy {
+        uint8 kind; // 0 none
+        address token;
+        address funding;
+        uint16 bps;
+        uint32 every; // seconds between moves, at least 1 hour
+        uint96 usd8; // ACCUMULATE: USD per move, 8 decimals
+    }
+
+    mapping(address account => Strategy) internal _strategies;
+
     event DailyLimitSet(address indexed account, uint256 usd8);
+    event StrategySet(address indexed account, Strategy strategy);
+    event Note(address indexed account, string note);
     event Traded(
         address indexed account,
         address indexed tokenIn,
@@ -71,6 +95,8 @@ contract NeonTrader is ReentrancyGuard {
     error BadPrice(address token);
     error DailyLimitExceeded(uint256 requestedUsd8, uint256 leftUsd8);
     error BadEthAmount();
+    error BadStrategy();
+    error NoteTooLong();
 
     constructor(ISwapRouter02 router_, address weth_, address[] memory tokens_, address[] memory feeds_) {
         require(tokens_.length == feeds_.length && tokens_.length > 0, "config");
@@ -94,6 +120,25 @@ contract NeonTrader is ReentrancyGuard {
         emit DailyLimitSet(msg.sender, usd8);
     }
 
+    /// @notice Set (or clear, with kind 0) the caller's strategy. Tokens must be listed here.
+    function setStrategy(Strategy calldata s) external {
+        uint8 k = s.kind;
+        if (k > TRIM) revert BadStrategy();
+        if (k != 0) {
+            bool listed = feedOf[s.token] != address(0)
+                && (k == KEEP_LIQUID || (feedOf[s.funding] != address(0) && s.token != s.funding));
+            bool ok = listed && s.every >= 1 hours
+                && (k == ACCUMULATE ? s.usd8 != 0 : s.bps != 0 && s.bps < 10_000);
+            if (!ok) revert BadStrategy();
+        }
+        _strategies[msg.sender] = s;
+        emit StrategySet(msg.sender, s);
+    }
+
+    function strategyOf(address account) external view returns (Strategy memory) {
+        return _strategies[account];
+    }
+
     // ------------------------------------------------------------------
     // Trading
     // ------------------------------------------------------------------
@@ -105,6 +150,26 @@ contract NeonTrader is ReentrancyGuard {
         external
         payable
         nonReentrant
+        returns (uint256 amountOut)
+    {
+        amountOut = _swap(path, fees, amountIn, slippageBps);
+    }
+
+    /// @notice `swap`, plus a short public note (≤ 96 bytes) saying why, shown in the Face's journal.
+    function swapWithNote(
+        address[] calldata path,
+        uint24[] calldata fees,
+        uint256 amountIn,
+        uint256 slippageBps,
+        string calldata note
+    ) external payable nonReentrant returns (uint256 amountOut) {
+        if (bytes(note).length > MAX_NOTE) revert NoteTooLong();
+        amountOut = _swap(path, fees, amountIn, slippageBps);
+        emit Note(msg.sender, note);
+    }
+
+    function _swap(address[] calldata path, uint24[] calldata fees, uint256 amountIn, uint256 slippageBps)
+        internal
         returns (uint256 amountOut)
     {
         (uint256 minOut, uint256 valueUsd8) = quote(path, fees, amountIn, slippageBps);

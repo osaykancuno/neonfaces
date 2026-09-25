@@ -1,6 +1,11 @@
 # Agents on a NEONFACES account
 
-Every Face owns an ERC-6551 account (`NeonFaceAccount`). The holder can delegate **one agent** — a bot key, a strategy contract, an AI agent — that acts on the account within rules the holder sets. The holder stays the owner; the agent is only an executor.
+Every Face owns an ERC-6551 account (`NeonFaceAccount`). The holder can delegate **one agent** (a bot key, a strategy contract, an AI agent) that acts on the account within rules the holder sets. The holder stays the owner; the agent is only an executor.
+
+Three ways to put a Face to work, from the simplest:
+1. **Ready-made strategies** run by the **NEONFACES strategy agent** (no bot of your own): accumulate a ticker, keep a share in USDG, trim a ticker that grew too big. See "Strategies" below.
+2. **Talk to your Face** from an AI assistant: the MCP kit or `llms.txt` let any assistant read a Face and prepare actions as links the holder confirms. See "AI assistants" below.
+3. **Your own agent**: any address, with ready-made or advanced permissions (the wizard below).
 
 ## Rules the contract enforces
 
@@ -36,6 +41,30 @@ Never allow an agent to call a DEX router directly: a router's swap takes a `rec
 - a daily USD cap the holder sets in the wizard (`setDailyLimit`, called by the account itself).
 
 The holder's one-time setup (in the wizard's first transaction) approves NeonTrader for the listed tokens — safe because NeonTrader only ever pulls from and pays the caller.
+
+## Strategies and the NEONFACES strategy agent
+
+A strategy is a standing instruction stored on `NeonTrader` for the Face's account (`setStrategy`, called by the account, so by the holder); `strategyOf(account)` reads it. It is an instruction, not a permission: every trade still passes NeonTrader's rules.
+
+| kind | name | fields | what the agent does |
+|---|---|---|---|
+| 1 | Accumulate | `token`, `funding` (USDG or WETH = ETH), `usd8`, `every` | buys `usd8` dollars of `token` with `funding` once per `every` |
+| 2 | Keep liquid | `token` (USDG), `bps`, `every` | when USDG is more than 2 points under `bps` of the Face's value, sells the largest holding up to the target |
+| 3 | Trim | `token`, `funding` (USDG), `bps`, `every` | when `token` is more than 2 points above `bps` of the Face's value, sells the excess into USDG |
+
+`every` is at least 1 hour. Moves under $1 are skipped, the holder's daily USD cap limits each move, and stale prices (weekends) pause everything.
+
+**The strategy agent** is `tools/agent-runner.mjs` with its own key (`RUNNER_PK`; its address is published as `strategyAgent` in the site's `deployment.json`). It runs every 10 minutes in `.github/workflows/keeper.yml`, finds accounts through `StrategySet` events, and acts only where the account's current agent is its own address, the account isn't locked and the strategy is due. It trades with **`swapWithNote`**, which emits `Note(account, text)` (≤ 96 bytes): the Face's journal shows each trade with its reason ("accumulate TSLA: $10.00 every 1w"). On the Face page, **Let this Face follow a strategy** sets everything in two transactions: (1) approvals + daily cap + `setStrategy`, (2) `setAgent(strategyAgent, expiry, [NeonTrader.swapWithNote], ETH budget)`. Stopping: **Stop the agent now** (or selling the Face).
+
+What a stolen strategy-agent key could do: only `swapWithNote` on Faces that delegated to it, inside NeonTrader's rules (fair price ≤ 1% + pool fee, output back into the Face, the holder's daily cap). Holders revoke it in one click; the team rotates the key and republishes `strategyAgent`.
+
+## AI assistants: talk to your Face
+
+- **MCP kit**: `https://neonfaces.xyz/neonfaces-mcp.mjs` (source `web/public/neonfaces-mcp.mjs`), one file, Node 18+, no dependencies. Add it to Claude Desktop (`"mcpServers": { "neonfaces": { "command": "node", "args": ["/path/neonfaces-mcp.mjs"] } }`) or any MCP client. Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, lock), `prices`, `faces_of`, `prepare_action`. It reads the chain only; `NEONFACES_SITE` and `RPC_URL` override the defaults.
+- **`llms.txt`**: `https://neonfaces.xyz/llms.txt` (source `web/public/llms.txt`), the same guide for any assistant.
+- **Action links**: `https://neonfaces.xyz/face/<id>?do=trade|withdraw|lock|strategy|stop-agent&...` (format in `llms.txt` and `web/src/actions.js`). The Face page shows the action in plain words under **Prepared for you**; nothing is sent until the holder confirms. By construction a link can only trade through NeonTrader, withdraw to the connected holder's own wallet, lock, set a strategy for the published strategy agent, or revoke the agent: it can never name a recipient or another agent.
+
+The same page also has **Withdraw or trade what's inside** for holders who act themselves (a holder trade raises the daily cap if needed and says so before signing).
 
 ### Publishing ready-made actions (team, before launch)
 

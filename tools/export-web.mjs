@@ -5,7 +5,7 @@
 //
 // Writes ../web/public/deployment.json. The site reads it at runtime, so a redeploy never needs a rebuild.
 // OPENSEA_URL is the collection page OpenSea creates for the drop (the site's "Mint on OpenSea" button);
-// without it the button says the link is coming.
+// without it the button says the link is coming. STRATEGY_AGENT is the address of the strategy agent's key.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,15 @@ if (process.argv[3]) chain.rpcUrl = process.argv[3];
 
 const dep = JSON.parse(readFileSync(resolve(here, `../contracts/deployments/${chainId}.json`), "utf8"));
 const out = { ...dep, chain: { id: chainId, ...chain } };
+// tokens the Face page can trade and route (symbol, address, deepest pool fee vs USDG), from the verified config
+const traderCfg = resolve(here, `../config/trader.${chainId}.json`);
+if (existsSync(traderCfg)) {
+  const t = JSON.parse(readFileSync(traderCfg, "utf8"));
+  out.tradeTokens = t.tokens.map(({ symbol, address, fee }) => ({ symbol, address, fee }));
+}
+// the NEONFACES strategy agent (tools/agent-runner.mjs): holders can delegate to it from the Face page
+if (process.env.STRATEGY_AGENT) out.strategyAgent = process.env.STRATEGY_AGENT;
+else console.warn("STRATEGY_AGENT not set: the Face page won't offer the ready-made strategies");
 if (process.env.OPENSEA_URL) {
   if (!/^https:\/\/opensea\.io\/collection\/[\w-]+/.test(process.env.OPENSEA_URL)) throw new Error("OPENSEA_URL: https://opensea.io/collection/<slug>");
   out.opensea = { collection: process.env.OPENSEA_URL };

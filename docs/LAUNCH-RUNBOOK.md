@@ -67,10 +67,10 @@ node tools/safe-tx.mjs 4663 accept-admin     # import safe/4663-accept-admin.jso
 The keeper is the project's only off-chain moving part, and it runs by itself on GitHub Actions (`.github/workflows/keeper.yml`, every 10 minutes, free on a public repository, no server). Set it up before the first stage opens:
 
 1. Push the repository to GitHub (public: the contracts are verified on Blockscout anyway; `.env` and keys are git-ignored) and commit `contracts/deployments/4663.json`.
-2. Settings > Secrets and variables > Actions: secret `KEEPER_PK` (the keeper key), variable `KEEPER_CHAIN_ID` = `4663`.
+2. Settings > Secrets and variables > Actions: secret `KEEPER_PK` (the keeper key), secret `RUNNER_PK` (the strategy agent key, `cast wallet new`), variable `KEEPER_CHAIN_ID` = `4663`. Publish the strategy agent's address with the site: `STRATEGY_AGENT=<its address> OPENSEA_URL=... node tools/export-web.mjs 4663`.
 3. Actions > keeper > Run workflow once and read the log.
 
-Fund the keeper key with ≈ 0.01 ETH: each transaction costs a fraction of a cent, so it lasts for years. To run it by hand instead: `PK=<keeper key> node tools/seed-keeper.mjs 4663` (loops every minute).
+Fund the keeper key and the strategy agent key with ≈ 0.01 ETH each: each transaction costs a fraction of a cent, so it lasts for years. To run it by hand instead: `PK=<keeper key> node tools/seed-keeper.mjs 4663` (loops every minute).
 
 Each run it pays the split (`releaseAll`) and the team's vested share, buys what the pool is missing (pending seeds first, then a stock of 25 Faces ahead) and delivers pending seeds; after the reveal it delivers the top-ups and, every 30 minutes, finds assembled sets and delivers their one-time bonus (keeping 5 bonuses in stock); once a day it calls `refreshMetadata()` so marketplaces pick up Unblinking days and the Gaze; and it finalizes a requested reveal if the watcher missed it and the window is still open. Tested end to end on a mainnet fork with the live SeaDrop, Uniswap and Chainlink. Open the sale Tuesday–Thursday: over a weekend stock prices go stale and purchases wait.
 
@@ -135,7 +135,7 @@ Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers ne
 
 ## After launch: what runs alone, and the few things only a person can do
 
-Runs by itself, forever or until done: art and metadata (on-chain), every Face account, the Gaze and Unblinking (computed at read time), the journal and the boards on the site (read from the chain in the browser), and the keeper on GitHub Actions: seeds, top-ups, set bonuses, split and vesting payments, daily metadata refresh, reveal safety net. Every action it takes is permissionless except the vault's purchases, so if it ever stopped, anyone could run `tools/seed-keeper.mjs` (or call the functions from Blockscout) and nothing would be lost.
+Runs by itself, forever or until done: art and metadata (on-chain), every Face account, the Gaze and Unblinking (computed at read time), the journal and the boards on the site (read from the chain in the browser), and the keeper on GitHub Actions: seeds, top-ups, set bonuses, split and vesting payments, daily metadata refresh, reveal safety net. Every action it takes is permissionless except the vault's purchases, so if it ever stopped, anyone could run `tools/seed-keeper.mjs` (or call the functions from Blockscout) and nothing would be lost. The strategy agent runs in the same workflow; if it stopped, strategies simply pause and every Face keeps what it holds.
 
 Needs a person, on purpose (each is a decision or a key only the team should hold):
 

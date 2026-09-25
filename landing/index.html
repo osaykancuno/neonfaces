@@ -148,12 +148,67 @@
   .links { display: flex; flex-wrap: wrap; gap: 10px 24px; font: 600 14px/1.4 var(--mono); }
 
   @media (prefers-reduced-motion: reduce) { .banner { content: url("img/banner.png"); } }
+
+  section[id] { scroll-margin-top: 72px; }
+  /* top bar + menu */
+  .topbar { position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: -40px -20px 0; padding: 12px 20px; background: linear-gradient(#000 70%, rgba(0,0,0,0)); }
+  .topbar .brand { font: 700 18px/1 var(--pixel); color: var(--neon); text-decoration: none; letter-spacing: .04em; }
+  .menu-btn { font: 700 14px/1 var(--pixel); color: var(--neon); background: #000; border: 2px solid var(--neon); padding: 10px 14px; cursor: pointer; letter-spacing: .06em; }
+  .menu-btn:hover, .menu-btn:focus-visible { box-shadow: 3px 3px 0 var(--neon); outline: none; }
+  .bar-right { display: flex; gap: 8px; }
+  .sound-btn span { display: flex; align-items: flex-end; gap: 3px; height: 14px; }
+  .sound-btn i { display: block; width: 4px; height: 5px; background: var(--dim); }
+  .sound-btn i:nth-child(2) { height: 9px; }
+  .sound-btn i:nth-child(3) { height: 14px; }
+  .sound-btn.on i { background: var(--neon); animation: eq .9s steps(3) infinite alternate; transform-origin: bottom; }
+  .sound-btn.on i:nth-child(2) { animation-delay: .3s; }
+  .sound-btn.on i:nth-child(3) { animation-delay: .6s; }
+  @keyframes eq { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
+  @media (prefers-reduced-motion: reduce) { .sound-btn.on i { animation: none; } }
+  .menu { position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.84); display: grid; place-items: start end; padding: 12px; }
+  .menu[hidden] { display: none; }
+  .menu-box { box-sizing: border-box; width: min(420px, 100%); max-height: calc(100vh - 24px); overflow: auto; background: #030400; border: 2px solid var(--neon); box-shadow: 6px 6px 0 var(--olive); padding: 16px 18px; display: grid; gap: 8px; }
+  .menu-box .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .menu-box nav a { display: grid; grid-template-columns: 34px 1fr; padding: 9px 2px; border-bottom: 1px solid var(--line); font: 700 15px/1.3 var(--pixel); color: var(--ice); text-decoration: none; }
+  .menu-box nav a i { font: 400 12px/1.6 var(--mono); color: var(--dim); font-style: normal; }
+  .menu-box nav a:hover, .menu-box nav a:focus-visible { color: var(--neon); background: var(--panel); outline: none; }
+  .menu-box .foot { font: 400 12px/1.5 var(--mono); color: var(--dim); margin-top: 6px; }
 </style>
 
 <style>html,body{margin:0}img{max-width:100%}</style>
 </head>
 <body>
-<main class="page">
+<div class="topbar">
+  <a class="brand" href="#top">NEONFACES</a>
+  <span class="bar-right">
+    <button class="menu-btn sound-btn" id="sound-btn" aria-pressed="false" aria-label="Sound"><span aria-hidden="true"><i></i><i></i><i></i></span></button>
+    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="menu">MENU</button>
+  </span>
+</div>
+<div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <div class="menu-box">
+    <div class="head"><span class="label">Everything, one stare away</span><button class="menu-btn" id="menu-close" aria-label="Close the menu">&#10005;</button></div>
+    <nav>
+      <a href="#idea"><i>01</i>The idea</a>
+      <a href="#art"><i>02</i>On-chain art</a>
+      <a href="#wallet"><i>03</i>A wallet in every Face</a>
+      <a href="#tiers"><i>04</i>Stare tiers</a>
+      <a href="#sets"><i>05</i>Sets of four</a>
+      <a href="#gaze"><i>06</i>The Gaze</a>
+      <a href="#seeds"><i>07</i>The mint pays for itself</a>
+      <a href="#money"><i>08</i>Where the money goes</a>
+      <a href="#agents"><i>09</i>Agents</a>
+      <a href="#lock"><i>10</i>Lock before you list</a>
+      <a href="#traits"><i>11</i>Live traits</a>
+      <a href="#journal"><i>12</i>The journal</a>
+      <a href="#autonomy"><i>13</i>It runs by itself</a>
+      <a href="#life"><i>14</i>Life of a Face</a>
+      <a href="#check"><i>15</i>Check it yourself</a>
+    </nav>
+    <p class="foot">Mint on OpenSea, Robinhood Chain. Stages and dates are announced before the sale.</p>
+  </div>
+</div>
+<main class="page" id="top">
   <header>
     <img class="banner" src="img/banner.gif" width="1500" height="500" alt="A mosaic of pixel-art NEONFACES in neon yellow and black around a pixel eye and the words: They don't blink.">
     <span class="label">Robinhood Chain · 5555 Faces · fully on-chain</span>
@@ -168,28 +223,28 @@
     </div>
   </header>
 
-  <section class="col">
+  <section id="idea" class="col">
     <span class="label">The idea</span>
     <h2>A portrait that holds something</h2>
     <p>On Robinhood Chain the market never closes, so someone has to keep watching. NEONFACES are the faces of those watchers: no bodies, no costumes, just an eye, a nose, a strip of forehead, cropped so tight that only the stare is left. Every one is drawn in blocks of neon <em>#CCFF00</em> fading to black.</p>
     <p>What makes them different is behind the image. Each Face is the key to its own wallet, and that wallet is filled when the Face is minted. Sell the Face and you sell the stare, together with everything it has accumulated.</p>
   </section>
 
-  <section class="col">
+  <section id="art" class="col">
     <span class="label">Art</span>
     <h2>The art lives on the chain</h2>
     <p>Most collections keep their images on a server or on IPFS, and the NFT only points at them. NEONFACES stores the pixels themselves on Robinhood Chain: every Face is a grid of 20 to 40 blocks, about 168 bytes, and the contract draws the image and writes its description every time someone asks. No server, no link that can break.</p>
     <p>The full set was sealed against a fingerprint published before the first mint, so nobody can swap the art later. There are twelve traits (crop, light, grain, expression, accessories and more) with exact counts over the 5555 artworks, published before the mint.</p>
   </section>
 
-  <section class="col">
+  <section id="wallet" class="col">
     <span class="label">Wallet</span>
     <h2>Every Face is a wallet</h2>
     <p>Each Face gets its own account on the chain (the ERC-6551 standard): the NFT is the key. Whoever holds the Face controls the account. Tokens, stablecoins and pieces of tokenized stocks can live inside it.</p>
     <p>Every Face starts with a <strong>base basket</strong> of about $3 in one of TSLA, NVDA, AAPL, AMZN or MSFT. You can leave it there, add more, or withdraw it at any time from the Face's page. If the Face changes hands, what's inside goes with it.</p>
   </section>
 
-  <section>
+  <section id="tiers">
     <div class="col" style="display:grid;gap:18px">
       <span class="label">Stare tiers</span>
       <h2>Three kinds of stare, decided at the reveal</h2>
@@ -218,7 +273,7 @@
     <p class="col">Nothing valuable is decided inside the mint transaction, so bots can't mint, peek at the tier and cancel until they land a rare one. Basket values are set from live prices right before launch.</p>
   </section>
 
-  <section>
+  <section id="sets">
     <div class="col" style="display:grid;gap:18px">
       <span class="label">Sets</span>
       <h2>Four pieces. One face.</h2>
@@ -245,7 +300,7 @@
     </ul>
   </section>
 
-  <section>
+  <section id="gaze">
     <div class="col" style="display:grid;gap:18px">
       <span class="label">The Gaze</span>
       <h2>Patience shows in the picture</h2>
@@ -259,14 +314,14 @@
     </div>
   </section>
 
-  <section class="col">
+  <section id="seeds" class="col">
     <span class="label">The mint pays for itself</span>
     <h2>Part of every sale fills the Faces</h2>
     <p>The mint happens on OpenSea. OpenSea keeps its 10% fee, and the rest goes to a split written into the contract. 40% of it goes to a <strong>seed vault</strong>: a contract that can only buy the basket tokens, at prices checked against Chainlink, and deliver them straight to the Faces' pool. That money can't be spent on anything else.</p>
     <p>Most Faces are born with their basket. A Face minted in the first minutes, before the pool is restocked, gets it shortly after; anyone can deliver a pending basket with one click from the Face's page.</p>
   </section>
 
-  <section>
+  <section id="money">
     <div class="col" style="display:grid;gap:18px">
       <span class="label">Where the money goes</span>
       <h2>Said before, not after</h2>
@@ -284,25 +339,26 @@
     <p class="col">Resale royalties are 5%, suggested and optional: transfers are never restricted.</p>
   </section>
 
-  <section class="col">
+  <section id="agents" class="col">
     <span class="label">Agents</span>
     <h2>The stare can work</h2>
-    <p>Robinhood Chain is built for agents too. From your Face's page you can hand simple jobs to an agent (a bot, an app or an AI service) with a step-by-step setup in plain language, and you stay the owner.</p>
+    <p>Robinhood Chain is built for agents too. From your Face's page you can give it a simple rule, and the NEONFACES strategy agent runs it for you: buy one ticker every week, keep part of the Face in USDG, or trim a ticker that grew too big. Every move is written in the Face's journal with its reason. You can also bring your own agent (a bot, an app or an AI service), or simply ask your AI assistant about your Face: it reads the chain and prepares actions that you confirm in your wallet. You stay the owner.</p>
     <ul class="rules">
       <li>It can only do the actions you allow, like trading the Face's tokens.</li>
       <li>Trades go through a guard contract: what it buys always comes back into the Face, never more than 1% worse than the Chainlink price, and never beyond the daily limit you set.</li>
       <li>It can spend ETH only up to the budget you give it.</li>
       <li>It can never sign for the Face, it expires on the date you choose, and it stops the moment the Face is sold.</li>
+      <li>Strategies follow simple rules: they don't predict prices and promise nothing.</li>
     </ul>
   </section>
 
-  <section class="col">
+  <section id="lock" class="col">
     <span class="label">Buying and selling safely</span>
     <h2>Lock before you list</h2>
     <p>A seller could empty a Face's wallet right before a sale goes through. NEONFACES prevents that: the holder can <strong>lock</strong> the wallet until a date. Until then nothing can leave it, not by the holder, not by an agent, not by a signature, and the lock stays in place after the sale. Buyers see "Locked until" in the traits and get exactly what they paid for.</p>
   </section>
 
-  <section class="col">
+  <section id="traits" class="col">
     <span class="label">Live traits</span>
     <h2>Traits that keep watching</h2>
     <p>The metadata isn't frozen on day one. It reads the Face as it is now:</p>
@@ -314,21 +370,21 @@
     </ul>
   </section>
 
-  <section class="col">
+  <section id="journal" class="col">
     <span class="label">A journal for every Face</span>
     <h2>Every Face has a story</h2>
     <p>Each Face's page tells what happened to it, read straight from the chain: when it was minted, every change of hands, the baskets it received, the set it completed, the agents it trusted, the locks and the trades. Public boards show the longest stares and every set completed so far, with the Face that holds it.</p>
   </section>
 
-  <section class="col">
+  <section id="autonomy" class="col">
     <span class="label">Built to last without us</span>
     <h2>It runs by itself</h2>
-    <p>The art, the wallets, the Gaze and the metadata live on the chain and need nobody. The one moving part is a small keeper program that restocks and delivers the baskets, pays the set bonuses and the split, and tells marketplaces once a day to refresh the traits. It runs on a free schedule, and every step it takes can be done by anyone from a block explorer, so nothing depends on a single person or server. People are needed only for real decisions: the launch, the reveal and renewing the domain.</p>
+    <p>The art, the wallets, the Gaze and the metadata live on the chain and need nobody. The moving parts are two small programs: a keeper that restocks and delivers the baskets, pays the set bonuses and the split, and tells marketplaces once a day to refresh the traits; and the strategy agent that runs the strategies holders chose. They run on a free schedule; every keeper step can be done by anyone from a block explorer, and any holder can stop the strategy agent at any time, so nothing depends on a single person or server. People are needed only for real decisions: the launch, the reveal and renewing the domain.</p>
   </section>
 
   <p class="quote">They don't smile. They don't pose. They don't blink.</p>
 
-  <section class="col">
+  <section id="life" class="col">
     <span class="label">Life of a Face</span>
     <h2>From mint to your wallet</h2>
     <ol class="steps">
@@ -341,7 +397,7 @@
     </ol>
   </section>
 
-  <section class="col">
+  <section id="check" class="col">
     <span class="label">Check it yourself</span>
     <h2>Everything important is on the chain</h2>
     <div class="scroll">
@@ -375,5 +431,59 @@
     <p>Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
   </footer>
 </main>
+<script>
+  // sound in the NEONFACES style: synthesized in the browser (no music, no files), off by default, remembered
+  const sound = (() => {
+    let ctx, out, hum, on = false, last = 0;
+    try { on = localStorage.getItem("neonfaces:sound") === "on"; } catch {}
+    const ac = () => { if (!ctx) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ctx = new A(); out = ctx.createGain(); out.gain.value = .6; out.connect(ctx.destination); } if (ctx.state === "suspended") ctx.resume(); return ctx; };
+    const tone = (f, { d = .05, type = "square", v = .05, slide = 0, at = 0 } = {}) => {
+      if (!on || !ac()) return;
+      const t = ctx.currentTime + at, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, f + slide), t + d);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g).connect(out); o.start(t); o.stop(t + d + .02);
+    };
+    const startHum = () => {
+      if (hum || !ac()) return;
+      const o = ctx.createOscillator(), o2 = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain(), l = ctx.createOscillator(), lg = ctx.createGain();
+      o.type = "sawtooth"; o.frequency.value = 60; o2.type = "square"; o2.frequency.value = 120;
+      f.type = "lowpass"; f.frequency.value = 340; g.gain.value = 0; g.gain.linearRampToValueAtTime(.012, ctx.currentTime + 1.2);
+      l.frequency.value = .37; lg.gain.value = .004; l.connect(lg).connect(g.gain);
+      o.connect(f); o2.connect(f); f.connect(g).connect(out); [o, o2, l].forEach((x) => x.start()); hum = { g, n: [o, o2, l] };
+    };
+    const stopHum = () => { if (!hum) return; hum.g.gain.linearRampToValueAtTime(0, ctx.currentTime + .3); hum.n.forEach((x) => x.stop(ctx.currentTime + .35)); hum = null; };
+    return {
+      get on() { return on; },
+      set(v) { on = v; try { localStorage.setItem("neonfaces:sound", v ? "on" : "off"); } catch {} if (v) { startHum(); tone(220, { d: .08, slide: 660 }); tone(880, { d: .06, at: .09, v: .04 }); } else stopHum(); },
+      resume: startHum,
+      hover() { const n = performance.now(); if (n - last < 70) return; last = n; tone(1760, { d: .018, v: .018 }); },
+      click() { tone(660, { d: .03, v: .04 }); tone(990, { d: .04, at: .035, v: .035 }); },
+      open: () => tone(330, { d: .12, slide: 700, v: .04, type: "triangle" }),
+      close: () => tone(900, { d: .1, slide: -600, v: .035, type: "triangle" }),
+    };
+  })();
+  (() => {
+    const b = document.getElementById("sound-btn");
+    const paint = () => { b.setAttribute("aria-pressed", String(sound.on)); b.classList.toggle("on", sound.on); b.title = sound.on ? "Sound on" : "Sound off"; };
+    paint();
+    b.addEventListener("click", () => { sound.set(!sound.on); paint(); });
+    if (sound.on) addEventListener("pointerdown", sound.resume, { once: true });
+    document.addEventListener("pointerover", (e) => e.target.closest?.("a, button") && sound.hover());
+    document.addEventListener("click", (e) => e.target.closest?.("a, button") && e.target.closest("button") !== b && sound.click());
+  })();
+
+  // menu: open, close on a link, Esc or a click outside
+  (() => {
+    const menu = document.getElementById("menu");
+    const btn = document.getElementById("menu-btn");
+    const set = (open) => { if (open === menu.hidden) (open ? sound.open : sound.close)(); menu.hidden = !open; btn.setAttribute("aria-expanded", String(open)); if (open) menu.querySelector("a").focus(); else btn.focus(); };
+    btn.addEventListener("click", () => set(menu.hidden));
+    document.getElementById("menu-close").addEventListener("click", () => set(false));
+    menu.addEventListener("click", (e) => { if (e.target === menu || e.target.closest("a")) set(false); });
+    addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) set(false); });
+  })();
+</script>
 </body>
 </html>

@@ -1,0 +1,42 @@
+# NEONFACES
+
+> 5555 fully on-chain pixel faces on Robinhood Chain (chain id 4663). Every Face is an ERC-6551 wallet that holds Stock Tokens, USDG or ETH. Minted on OpenSea; managed at https://neonfaces.xyz/face/<id>.
+
+This file tells AI assistants how to help a holder. You can read everything from the chain; you can never move anything. For any change you prepare a link, and the holder confirms it in their own wallet on the Face page.
+
+## Talk to a Face with an MCP client
+
+Download https://neonfaces.xyz/neonfaces-mcp.mjs (one file, Node 18+, no dependencies) and add it to the client, e.g. Claude Desktop:
+`"mcpServers": { "neonfaces": { "command": "node", "args": ["/path/to/neonfaces-mcp.mjs"] } }`
+Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, lock), `prices`, `faces_of`, `prepare_action`.
+
+## Read a Face directly
+
+- Addresses: https://neonfaces.xyz/deployment.json (`faces`, `seeder`, `trader`, `strategyAgent`, `tradeTokens`, `chain.rpcUrl`).
+- `NeonFaces.tokenURI(id)`: on-chain JSON (image, traits, "account", "Holds <TICKER>", Set, Gaze, Unblinking, Locked until).
+- `NeonSeeder.accountOf(id)`: the Face's wallet. `NeonSeeder.setOf(id)`: set id, piece, the four token ids.
+- `NeonTrader.price(token)`: Chainlink USD price (8 decimals); reverts when stale (stock feeds pause at weekends).
+- `NeonTrader.strategyOf(account)`, `dailyLimit(account)`, `leftToday(account)`; account `agentConfig()`, `lockedUntil()`.
+
+## Prepare an action (the holder confirms on the page)
+
+`https://neonfaces.xyz/face/<id>?do=...`
+- `do=trade&from=USDG&to=TSLA&amount=20`: trade inside the Face through NeonTrader (amount in `from` units; ETH allowed).
+- `do=withdraw&token=TSLA&amount=0.5` or `do=withdraw&token=all`: to the holder's own wallet only.
+- `do=lock&days=7`: nothing can leave the wallet until then (1 to 365 days, can't be shortened).
+- `do=strategy&kind=accumulate&token=TSLA&funding=USDG&usd=10&every=7d` (every: 1d, 7d, 30d)
+- `do=strategy&kind=keep-liquid&percent=40` · `do=strategy&kind=trim&token=TSLA&percent=50`
+  Optional for strategies: `days` (default 90), `cap` (USD of trades per day), `eth` (ETH budget). Strategies are run by the published NEONFACES strategy agent.
+- `do=stop-agent`
+
+## Rules the contracts enforce
+
+- Trades go through NeonTrader: output always back into the Face, at most 1% worse than Chainlink plus the pool fee, listed tokens only, daily USD limit set by the holder, no trades on stale prices.
+- An agent can call only what the holder allowed, within an ETH budget, can't sign, expires, and stops when the Face is sold.
+- A lock blocks the holder, the agent and signatures until its date, and survives a sale.
+- Sets: 555 faces come in four pieces; three pieces moved into the fourth's wallet assemble the set (whole face in the image, one-time bonus basket).
+- The Gaze: the art blooms after 30, 90 and 365 days with the same holder; a sale resets it.
+
+## How to talk about it
+
+Describe what is inside and what the holder can do. Never promise returns or give investment advice; never say "shares" or "dividends". Stock Tokens give economic exposure only, not legal ownership of shares, and are not available to US persons. Never ask for private keys or seed phrases.

@@ -49,17 +49,38 @@
         <span>NEONFACES</span>
       </a>
       <nav>
-        <a href="/#lore" data-link>Lore</a>
         <a href="/#account" data-link>Native</a>
         <a href="/#sets" data-link>Sets</a>
-        <a href="/#traits" data-link>Traits</a>
-        <a href="/#funds" data-link>Funds</a>
-        <a href="/#principles" data-link>Principles</a>
+        <a href="/#watch" data-link>Watch</a>
         <a href="/#faq" data-link>FAQ</a>
         <a href="/#mint" class="nav-mint" data-link>Mint</a>
       </nav>
+      <button id="sound-btn" class="btn btn-ghost sound-btn" aria-pressed="false" aria-label="Sound"><span aria-hidden="true"><i></i><i></i><i></i></span></button>
       <button id="connect" class="btn btn-ghost">Connect</button>
+      <button id="menu-btn" class="btn btn-ghost menu-btn" aria-expanded="false" aria-controls="menu" aria-label="Open the menu"><span aria-hidden="true">&#9776;</span></button>
     </header>
+
+    <div id="menu" class="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+      <div class="menu-box">
+        <div class="menu-head"><span class="label">Everything, one stare away</span><button class="btn btn-ghost" id="menu-close" aria-label="Close the menu">&#10005;</button></div>
+        <nav class="menu-list">
+          <a href="/#lore" data-link><i>01</i>Lore<small>why they don't blink</small></a>
+          <a href="/#account" data-link><i>02</i>Native<small>a wallet in every Face</small></a>
+          <a href="/#gallery" data-link><i>03</i>Faces<small>drawn from the chain</small></a>
+          <a href="/#sets" data-link><i>04</i>Sets<small>four pieces, one face</small></a>
+          <a href="/#watch" data-link><i>05</i>The watch<small>longest stares, sets completed</small></a>
+          <a href="/#traits" data-link><i>06</i>Traits<small>exact rarities</small></a>
+          <a href="/#onchain" data-link><i>07</i>On-chain<small>what the contracts enforce</small></a>
+          <a href="/#funds" data-link><i>08</i>Funds<small>where the mint goes</small></a>
+          <a href="/#principles" data-link><i>09</i>Principles<small>how this lasts</small></a>
+          <a href="/#roadmap" data-link><i>10</i>Milestones<small>what ships, what's next</small></a>
+          <a href="/#mint" data-link class="neon"><i>11</i>Mint<small>on OpenSea</small></a>
+          <a href="/#faq" data-link><i>12</i>FAQ<small>plain answers</small></a>
+        </nav>
+        <form class="menu-face" id="menu-face"><label for="menu-face-id">Open a Face</label><input id="menu-face-id" type="number" min="1" max="5555" placeholder="#" /><button class="btn btn-neon">Look</button></form>
+        <div class="menu-foot"><a href="/#mint" data-link>My Faces</a><a href="/llms.txt" target="_blank" rel="noopener">For AI assistants</a><a href="/neonfaces-mcp.mjs" download>Talk to your Face (MCP)</a></div>
+      </div>
+    </div>
 
     <main id="app">
       <!-- ================= HOME ================= -->
@@ -114,7 +135,7 @@
             </li>
             <li>
               <b>The stare can work.</b>
-              <p>This chain is built for agents too. You stay the owner and can delegate simple rules: "keep part of it liquid", "accumulate one ticker". Not a landing-page bot: the same idea as a face that never closes its eyes.</p>
+              <p>This chain is built for agents too. You stay the owner and give it a simple rule: accumulate a ticker, keep part of it in USDG, trim a ticker that grew too big. The NEONFACES strategy agent runs it for you and writes the reason for every move in the Face's journal. You can also ask your AI assistant about your Face: it reads the chain and prepares actions you confirm.</p>
             </li>
           </ol>
           <div class="truth">
@@ -191,7 +212,7 @@
             <div class="vs-row" role="row"><b role="cell">Metadata</b><span role="cell">Frozen JSON, stale on day two</span><span role="cell">Live: traits read what the Face actually holds</span></div>
             <div class="vs-row" role="row"><b role="cell">Sets</b><span role="cell">"Collect them all" with no way to check</span><span role="cell">555 four-piece faces. The contract knows every set, deals only whole ones, shows an assembled set as one face and pays its bonus once</span></div>
             <div class="vs-row" role="row"><b role="cell">Holding</b><span role="cell">Nothing rewards patience</span><span role="cell"><b class="neon">Unblinking</b>: an on-chain clock of how long the stare has stayed with its holder; after 30, 90 and 365 days the neon blooms in the art itself. Selling resets it.</span></div>
-            <div class="vs-row" role="row"><b role="cell">Agents</b><span role="cell">A slide</span><span role="cell">Delegation built into every account: allowed calls only, an ETH budget you set, no signatures, expires, dies on sale</span></div>
+            <div class="vs-row" role="row"><b role="cell">Agents</b><span role="cell">A slide</span><span role="cell">Delegation built into every account (allowed calls only, a budget you set, no signatures, expires, dies on sale), ready-made strategies run for you, and a public reason for every move</span></div>
             <div class="vs-row" role="row"><b role="cell">Resale</b><span role="cell">Seller can empty the wallet before the sale lands</span><span role="cell">Account lock that survives the sale, visible in the metadata</span></div>
             <div class="vs-row" role="row"><b role="cell">Control</b><span role="cell">Upgradeable proxy, pausable transfers</span><span role="cell">No proxy, no transfer pause, no blocklist. Supply fixed in bytecode. Safe multisig with a 2-day handover.</span></div>
           </div>
@@ -238,7 +259,7 @@
           <div class="label">10 / Three milestones</div>
           <ol class="roadmap">
             <li><b>Mint + seeding</b><span>Every Face minted with its account and base basket. On-chain reveal, Stare top-ups, sets to complete.</span></li>
-            <li><b>Agent strategies</b><span>Delegation ships in every account from day one. Next: ready-made strategies ("accumulate one ticker", "keep 40% liquid") and a holder dashboard.</span></li>
+            <li><b>Agents</b><span>Ship with the mint: delegation in every account, ready-made strategies (accumulate, keep liquid, trim) run by the NEONFACES strategy agent, and a kit to talk to your Face from an AI assistant. Next: more strategies, proposed by holders.</span></li>
             <li><b>Market + analytics</b><span>HoodMarket listing, account-value analytics, holder votes on which tickers join the pool.</span></li>
           </ol>
         </section>
@@ -271,7 +292,9 @@
             <details><summary>When do I know my Stare tier?</summary><p>At reveal, after the mint closes. The reveal maps every token to one art piece with a keyed permutation (check it with <code>artIdOf(tokenId)</code>) and the art decides the tier. Watch / Heavy Stare top-ups can then be delivered by anyone, in one call.</p></details>
             <details><summary>What is the Gaze?</summary><p>Every Face counts how long it has stayed with its current holder (Unblinking). After 30 days its neon starts to bloom (Steady), after 90 it is Fixed, after a year it is Burning. The glow is drawn by the contract from that clock, so it shows everywhere the Face is shown. A sale resets it: the stare belongs to whoever keeps it.</p></details>
             <details><summary>How do sets work?</summary><p>2220 Faces are the pieces of 555 whole faces. After the reveal each piece shows its set and part. Hold all four, then press <em>Assemble</em> on the Face that should carry the set: the other three move into its account (three transfers from your wallet). That Face shows the whole face and gets the set's one-time bonus basket. To take it apart, press <em>Take apart</em>. If the mint doesn't sell out, fewer sets are dealt, but only whole ones.</p></details>
-            <details><summary>What can an agent do with my Face?</summary><p>Only what you allow, within the ETH and daily limits you set. The ready-made action trades on Uniswap through a guard contract: everything bought comes back into the Face, never more than 1% below the Chainlink price. An agent can never sign for the account, it expires, and it stops the moment the Face changes hands.</p></details>
+            <details><summary>What can an agent do with my Face?</summary><p>Only what you allow, within the ETH and daily limits you set. Trades go through a guard contract: everything bought comes back into the Face, never more than 1% below the Chainlink price. An agent can never sign for the account, it expires, and it stops the moment the Face changes hands.</p></details>
+            <details><summary>Do I need my own bot?</summary><p>No. On your Face's page pick a strategy (buy a ticker every week, keep 40% in USDG, trim a ticker above 50%) and the NEONFACES strategy agent runs it, within the daily limit you choose. Each trade appears in the Face's journal with the reason. Stop it with one click; selling the Face stops it too. Strategies follow simple rules: they don't predict prices and promise nothing.</p></details>
+            <details><summary>Can I ask an AI about my Face?</summary><p>Yes. Give your assistant <a href="/llms.txt">neonfaces.xyz/llms.txt</a>, or add <a href="/neonfaces-mcp.mjs" download>the NEONFACES MCP kit</a> to Claude Desktop or any MCP client. It reads what your Face holds, its set, Gaze and agent, and prepares actions as links: you open the link, read the summary and confirm in your own wallet. It never touches your keys.</p></details>
             <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and delivered as soon as the pool is restocked, usually within minutes; anyone can deliver it with one call from the Face's page. The pool is restocked by the mint itself: 40% of what reaches the split goes to a vault that can only buy the basket tokens for the pool. On weekends, when stock prices don't update, restocking waits for Monday.</p></details>
           </div>
         </section>

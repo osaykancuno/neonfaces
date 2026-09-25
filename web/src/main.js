@@ -5,6 +5,7 @@ import { decode, svgDataURI, setDataURI, PIECES, SINGLES } from "./render.js";
 import { journal, longestStares, completedSets, fmtDay } from "./journal.js";
 import { holderPanel, knownTokens } from "./agent-ui.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
+import { sound, soundToggle } from "./effects/sound.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -20,6 +21,7 @@ const faceURI = (f) => svgDataURI(f.artId, f.record);
 // =====================================================================================
 boot();
 cursor();
+soundToggle($("#sound-btn"));
 tape($("#tape"));
 pixelEye($("#eye"));
 pixelEye($("#nav-eye"), { cols: 24, rows: 12, fade: false });
@@ -49,6 +51,28 @@ renderWatch();
 route();
 
 window.addEventListener("popstate", route);
+
+// ---- menu: open / close, close on navigation, Esc, or a click outside
+const menu = $("#menu");
+const setMenu = (open) => {
+  if (open === menu.hidden) (open ? sound.open : sound.close)();
+  menu.hidden = !open;
+  $("#menu-btn").setAttribute("aria-expanded", String(open));
+  if (open) menu.querySelector("a")?.focus();
+};
+$("#menu-btn").addEventListener("click", () => setMenu(menu.hidden));
+$("#menu-close").addEventListener("click", () => setMenu(false));
+menu.addEventListener("click", (e) => { if (e.target === menu || e.target.closest("a")) setMenu(false); });
+window.addEventListener("keydown", (e) => e.key === "Escape" && !menu.hidden && setMenu(false));
+$("#menu-face").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = Number($("#menu-face-id").value);
+  if (v >= 1 && v <= 5555) {
+    setMenu(false);
+    history.pushState({}, "", `/face/${v}`);
+    route();
+  }
+});
 document.addEventListener("click", (e) => {
   const a = e.target.closest("a[data-link]");
   if (!a || e.metaKey || e.ctrlKey) return;
@@ -143,6 +167,7 @@ function dissolveIn(cv, src) {
   const ctx = cv.getContext("2d");
   const img = new Image();
   img.onload = () => {
+    sound.sweep();
     ctx.imageSmoothingEnabled = false;
     const steps = [4, 8, 16, 32, 64, 480];
     const tmp = document.createElement("canvas");
@@ -486,6 +511,9 @@ async function showFace(id) {
     links.push(`<a href="${meta.image}" download="neonface-${id}.svg">Download SVG</a>`);
     $("#face-links").innerHTML = links.join("");
 
+    if (new URLSearchParams(location.search).get("do") && !(state.account && state.account.toLowerCase() === owner.toLowerCase())) {
+      $("#face-actions").insertAdjacentHTML("beforebegin", `<p class="msg">An action was prepared for this Face. Connect the wallet that holds it to review it; nothing happens without your confirmation.</p>`);
+    }
     if (state.account && state.account.toLowerCase() === owner.toLowerCase() && deployed) {
       const ctx = { state, send, readAt, ABI, toast, reload: () => showFace(id) };
       await holderPanel(ctx, $("#face-links"), id, seed.account, agentInfo, lockedUntil);
@@ -585,10 +613,12 @@ async function send(address, abi, functionName, args, done) {
     toast("Sent. Waiting for the chain…");
     const r = await state.pub.waitForTransactionReceipt({ hash });
     toast(r.status === "success" ? "Done." : "Reverted.");
+    (r.status === "success" ? sound.success : sound.error)();
     done?.();
     return r.status === "success";
   } catch (e) {
     toast(errMsg(e));
+    sound.error();
     return false;
   }
 }

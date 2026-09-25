@@ -1,11 +1,13 @@
-# Runs tools/seed-keeper.mjs every 10 minutes on GitHub's machines: no server, no one at the keyboard.
-# It stocks and delivers seeds, top-ups and set bonuses, pays the split and the team vesting, finalizes a
-# requested reveal as a safety net and refreshes marketplace metadata once a day.
+# Runs tools/seed-keeper.mjs and the strategy agent (tools/agent-runner.mjs) every 10 minutes on GitHub's
+# machines: no server, no one at the keyboard. The keeper stocks and delivers seeds, top-ups and set bonuses,
+# pays the split and the team vesting, finalizes a requested reveal as a safety net and refreshes marketplace
+# metadata once a day. The strategy agent runs the strategies holders delegated to it.
 #
 # Setup (once, after the mainnet deploy; see docs/LAUNCH-RUNBOOK.md, "Automation"):
 #   - commit contracts/deployments/4663.json (public addresses only)
 #   - Settings > Secrets and variables > Actions:
 #       secret   KEEPER_PK        the keeper key (KEEPER_ROLE on NeonSeedVault, a little ETH for gas, nothing else)
+#       secret   RUNNER_PK        the strategy agent key (its address is STRATEGY_AGENT on the site; gas only)
 #       variable KEEPER_CHAIN_ID  4663
 #       variable RPC_URL          optional, defaults to the public Robinhood Chain RPC
 # Public repositories run Actions for free; GitHub may delay scheduled runs by a few minutes.
@@ -37,7 +39,9 @@ jobs:
       # what the keeper already knows (Faces done, sets paid), carried from run to run
       - uses: actions/cache/restore@v4
         with:
-          path: tools/.keeper-state.json
+          path: |
+            tools/.keeper-state.json
+            tools/.runner-state.json
           key: keeper-state-${{ github.run_id }}
           restore-keys: keeper-state-
       - run: node seed-keeper.mjs ${{ vars.KEEPER_CHAIN_ID }} --once
@@ -46,8 +50,20 @@ jobs:
           PK: ${{ secrets.KEEPER_PK }}
           RPC_URL: ${{ vars.RPC_URL }}
           KEEPER_STATE: .keeper-state.json
+      - name: strategy agent
+        if: always()
+        working-directory: tools
+        env:
+          RUNNER_PK: ${{ secrets.RUNNER_PK }}
+          RPC_URL: ${{ vars.RPC_URL }}
+          RUNNER_STATE: .runner-state.json
+        run: |
+          if [ -z "$RUNNER_PK" ]; then echo "RUNNER_PK not set: strategies off"; exit 0; fi
+          node agent-runner.mjs ${{ vars.KEEPER_CHAIN_ID }} --once
       - uses: actions/cache/save@v4
         if: always()
         with:
-          path: tools/.keeper-state.json
+          path: |
+            tools/.keeper-state.json
+            tools/.runner-state.json
           key: keeper-state-${{ github.run_id }}

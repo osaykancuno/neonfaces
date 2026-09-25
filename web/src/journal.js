@@ -2,6 +2,7 @@
 // Plus two public boards: the longest stares (Unblinking) and the sets completed so far (first assemblies).
 import { parseAbi, parseAbiItem, decodeEventLog, encodeEventTopics, formatUnits } from "viem";
 import { state, read, readAt, short } from "./chain.js";
+import { describeStrategy } from "./actions.js";
 
 const EV = {
   transfer: parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"),
@@ -11,6 +12,8 @@ const EV = {
   agentSet: parseAbiItem("event AgentSet(address indexed agent, address indexed grantor, uint64 expiry, uint64 epoch, uint256 valueAllowance)"),
   agentRevoked: parseAbiItem("event AgentRevoked(uint64 epoch)"),
   locked: parseAbiItem("event AccountLocked(uint64 until)"),
+  note: parseAbiItem("event Note(address indexed account, string note)"),
+  strategy: parseAbiItem("event StrategySet(address indexed account, (uint8 kind, address token, address funding, uint16 bps, uint32 every, uint96 usd8) strategy)"),
   traded: parseAbiItem("event Traded(address indexed account, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut, uint256 valueUsd8)"),
 };
 const TOKEN_ABI = parseAbi(["function token() view returns (uint256 chainId, address tokenContract, uint256 tokenId)"]);
@@ -62,7 +65,7 @@ async function who(a) {
 export async function journal(id, account) {
   const d = state.dep;
   const idn = BigInt(id);
-  const [xfers, seeded, upgraded, bonus, agentSet, agentRevoked, locked, traded] = await Promise.all([
+  const [xfers, seeded, upgraded, bonus, agentSet, agentRevoked, locked, traded, notes, strategies] = await Promise.all([
     logs(d.faces, EV.transfer, { tokenId: idn }),
     logs(d.seeder, EV.seeded, { tokenId: idn }),
     logs(d.seeder, EV.upgraded, { tokenId: idn }),
@@ -71,7 +74,10 @@ export async function journal(id, account) {
     logs(account, EV.agentRevoked),
     logs(account, EV.locked),
     d.trader ? logs(d.trader, EV.traded, { account }) : [],
+    d.trader ? logs(d.trader, EV.note, { account }) : [],
+    d.trader ? logs(d.trader, EV.strategy, { account }) : [],
   ]);
+  const why = new Map(notes.map((l) => [l.transactionHash, l.args.note]));
   const out = [];
   const add = async (l, text) => out.push({ t: await when(l), order: [l.blockNumber, l.logIndex], text });
   for (const l of xfers) {
@@ -81,14 +87,17 @@ export async function journal(id, account) {
   for (const l of seeded) await add(l, `Base seed delivered: ${await basketLabel(l.args.basketId)}.`);
   for (const l of upgraded) await add(l, `${TIER[l.args.tier]} top-up delivered: ${await basketLabel(l.args.basketId)}.`);
   for (const l of bonus) await add(l, `Set #${l.args.setId} assembled here for the first time. Set bonus delivered: ${await basketLabel(l.args.basketId)}.`);
-  for (const l of agentSet) await add(l, `Agent ${short(l.args.agent)} appointed until ${new Date(Number(l.args.expiry) * 1000).toISOString().slice(0, 10)}.`);
+  const agentName = (a) => (d.strategyAgent && a.toLowerCase() === d.strategyAgent.toLowerCase() ? "The NEONFACES strategy agent" : `Agent ${short(a)}`);
+  for (const l of agentSet) await add(l, `${agentName(l.args.agent)} appointed until ${new Date(Number(l.args.expiry) * 1000).toISOString().slice(0, 10)}.`);
   for (const l of agentRevoked) await add(l, "Agent revoked.");
   for (const l of locked) await add(l, `Locked until ${new Date(Number(l.args.until) * 1000).toISOString().slice(0, 10)}.`);
   for (const l of traded) {
     const [[si, di], [so, dout]] = await Promise.all([sym(l.args.tokenIn), sym(l.args.tokenOut)]);
     const n = (v, dec) => Number(formatUnits(v, dec)).toLocaleString("en-US", { maximumFractionDigits: 6 });
-    await add(l, `Traded ${n(l.args.amountIn, di)} ${si === "WETH" ? "ETH" : si} for ${n(l.args.amountOut, dout)} ${so} (≈ $${(Number(l.args.valueUsd8) / 1e8).toFixed(2)}).`);
+    const note = why.get(l.transactionHash);
+    await add(l, `Traded ${n(l.args.amountIn, di)} ${si === "WETH" ? "ETH" : si} for ${n(l.args.amountOut, dout)} ${so === "WETH" ? "ETH" : so} (≈ $${(Number(l.args.valueUsd8) / 1e8).toFixed(2)})${note ? `. Why: "${note}"` : ""}.`);
   }
+  for (const l of strategies) await add(l, Number(l.args.strategy.kind) ? `Strategy set: ${describeStrategy(d, l.args.strategy)}` : "Strategy cleared.");
   return out.sort((a, b) => (a.order[0] === b.order[0] ? b.order[1] - a.order[1] : Number(b.order[0] - a.order[0])));
 }
 

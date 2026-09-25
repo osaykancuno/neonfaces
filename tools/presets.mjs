@@ -28,7 +28,10 @@ const presets = [
     needsEth: true,
     approvals: tradable.map((t) => ({ token: getAddress(t.address), spender: trader, label: t.symbol })),
     dailyLimit: { target: trader, signature: "setDailyLimit(uint256)", decimals: 8 },
-    calls: [{ target: trader, signature: "swap(address[],uint24[],uint256,uint256)", label: "Trade on Uniswap through NeonTrader — fair price, back into the Face" }],
+    calls: [
+      { target: trader, signature: "swap(address[],uint24[],uint256,uint256)", label: "Trade on Uniswap through NeonTrader: fair price, back into the Face" },
+      { target: trader, signature: "swapWithNote(address[],uint24[],uint256,uint256,string)", label: "The same trade, with a short public note saying why (shown in the Face's journal)" },
+    ],
   },
 ];
 

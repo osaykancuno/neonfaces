@@ -12,6 +12,7 @@
 # Steps: deploy (mock tokens) -> upload + seal the 5555 Faces -> configure the SeaDrop public stage the way
 # OpenSea Studio does (payout = NeonPayout, OpenSea fee recipient, price) -> export deployment.json for the site
 # -> mint 20 Faces through SeaDrop (what OpenSea's mint button calls) -> reveal -> Stare top-ups.
+# Locally it also deploys NeonTrader on mock feeds, so agents, strategies (tools/agent-runner.mjs) and the keeper run.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -62,27 +63,22 @@ send "$FACES" "updateAllowedFeeRecipient(address,address,bool)" "$SEADROP" "$FEE
 send "$FACES" "updatePublicDrop(address,(uint80,uint48,uint48,uint16,uint16,bool))" "$SEADROP" "($PRICE,$NOW,$((NOW + 30 * 86400)),20,1000,true)"
 echo "== SeaDrop public stage live (price $PRICE wei, 20/wallet, 10% fee), payout -> NeonPayout $PAYOUT"
 
+SEEDER=$(jqr seeder)
+basket_token() { cast call "$SEEDER" "basket(uint32)((address,uint256)[])" "$1" --rpc-url "$RPC" | grep -oE "0x[0-9a-fA-F]{40}" | sed -n "${2}p"; }
+if [[ $LOCAL == 1 ]]; then
+  # NeonTrader on mock feeds + a mock router paying the oracle price: agents, strategies and the keeper run for real
+  export TSLA=$(basket_token 1 1) NVDA=$(basket_token 2 1) SPY=$(basket_token 5 1) USDG=$(basket_token 4 2)
+  forge script script/LocalTrader.s.sol --rpc-url "$RPC" --private-key "$PK" --broadcast >${TMPDIR:-/tmp}/nf-trader.log 2>&1 || { tail -30 ${TMPDIR:-/tmp}/nf-trader.log; exit 1; }
+  cp "deployments/trader.$CHAIN_ID.json" "../config/trader.$CHAIN_ID.json"
+  (cd ../tools && node presets.mjs "$CHAIN_ID" >/dev/null)
+  echo "== local NeonTrader (mock feeds/router) $(jqr trader), agent presets written"
+fi
+
 EXPORT_RPC=$([[ $LOCAL == 1 ]] && echo "$RPC" || echo "")
+# the strategy agent's address (its key runs tools/agent-runner.mjs); locally: anvil account #2
+export STRATEGY_AGENT="${STRATEGY_AGENT:-$([[ $LOCAL == 1 ]] && echo 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC)}"
 (cd ../tools && node export-web.mjs "$CHAIN_ID" $EXPORT_RPC >/dev/null)
 echo "== web/public/deployment.json written"
-
-# demo agent actions (test router + mock tokens) so the holder panel can be tried end to end
-SEEDER=$(jqr seeder)
-TSLA=$(cast call "$SEEDER" "basket(uint32)((address,uint256)[])" 1 --rpc-url "$RPC" | grep -oE "0x[0-9a-fA-F]{40}" | head -1)
-USDG=$(cast call "$SEEDER" "basket(uint32)((address,uint256)[])" 4 --rpc-url "$RPC" | grep -oE "0x[0-9a-fA-F]{40}" | tail -1)
-ROUTER=$(forge create test/mocks/MockRouter.sol:MockRouter --rpc-url "$RPC" --private-key "$PK" --broadcast 2>/dev/null | grep "Deployed to" | awk '{print $3}')
-send "$USDG" "mint(address,uint256)" "$ROUTER" 1000000000000000000000000
-send "$TSLA" "mint(address,uint256)" "$ROUTER" 1000000000000000000000
-cat > ../web/public/agent-presets.json <<JSON
-{ "presets": [
-  { "id": "buy-usdg", "title": "Buy USDG with ETH (test router)", "plain": "Your agent can spend ETH from this Face's wallet, up to your limit, to buy test USDG. What it buys stays in the Face.", "risk": "low", "needsEth": true,
-    "calls": [{ "target": "$ROUTER", "signature": "buyWithETH(address)", "label": "Buy tokens with ETH on the test router" }] },
-  { "id": "swap-tsla", "title": "Swap TSLA into USDG (test router)", "plain": "Your agent can turn test TSLA held by this Face into test USDG. The USDG comes back into the Face.", "risk": "low", "needsEth": false,
-    "approvals": [{ "token": "$TSLA", "spender": "$ROUTER", "label": "test TSLA" }],
-    "calls": [{ "target": "$ROUTER", "signature": "swap(address,address,uint256)", "label": "Swap tokens on the test router" }] }
-] }
-JSON
-echo "== demo agent actions published (test router $ROUTER)"
 
 if [[ "${MINT:-1}" == 1 ]]; then
   for _ in 1 2; do

@@ -7,6 +7,7 @@
 //                  "dailyLimit": { "target", "signature", "decimals" },  // optional: wizard asks a USD/day cap
 //                  "calls": [{ "target", "signature", "label" }] } ] }
 import { formatEther, parseEther, toFunctionSelector, parseAbiItem, encodeFunctionData, parseAbi, maxUint256 } from "viem";
+import { TRADER, tokenList, describeStrategy, parseLink, build, run } from "./actions.js";
 
 const RISKY = {
   "0xa9059cbb": "transfer: can send tokens anywhere",
@@ -108,17 +109,29 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
     } catch {}
   }
 
+  let strategyLine = "";
+  const byStrategyAgent = active && ctx.state.dep.strategyAgent && agent.toLowerCase() === ctx.state.dep.strategyAgent.toLowerCase();
+  if (ctx.state.dep.trader) {
+    try {
+      const s = await ctx.state.pub.readContract({ address: ctx.state.dep.trader, abi: TRADER, functionName: "strategyOf", args: [account] });
+      if (Number(s.kind)) strategyLine = `<p>Strategy${byStrategyAgent ? " (run by the NEONFACES strategy agent)" : ""}: <b>${esc(describeStrategy(ctx.state.dep, s))}</b></p>`;
+    } catch {}
+  }
+  const tokens = tokenList(ctx.state.dep);
+  const opts = (list, sel) => list.map((t) => `<option ${t.symbol === sel ? "selected" : ""}>${esc(t.symbol)}</option>`).join("");
+
   const box = document.createElement("div");
   box.id = "face-holder";
   box.className = "holder-panel";
   box.innerHTML = `
     <h3>Your Face · controls</h3>
+    <section class="hp-card hp-prepared" id="hp-prepared" hidden></section>
 
     <section class="hp-card">
       <h4>Agent</h4>
       ${
         active
-          ? `<p>An agent is working for this Face: <b>${short(agent)}</b></p>
+          ? `<p>An agent is working for this Face: <b>${byStrategyAgent ? "the NEONFACES strategy agent" : short(agent)}</b></p>${strategyLine}
              <p>It can:</p><ul class="hp-list">${perms.length ? perms.map((p) => `<li>${describe(p, presets)}</li>`).join("") : "<li>nothing yet</li>"}</ul>
              ${tradeLine}
              <p>Spending limit left: <b>${formatEther(allowance)} ETH</b> · stops on <b>${niceDate(expiry)}</b>, or immediately if you sell this Face.</p>
@@ -126,6 +139,39 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
           : `<p>No agent. This Face only does what you do.</p>`
       }
     </section>
+
+    ${
+      ctx.state.dep.strategyAgent && tokens.length
+        ? `<details class="hp-card" id="hp-strategy">
+      <summary>Let this Face follow a strategy</summary>
+      <p class="fine">No bot of your own needed: the NEONFACES strategy agent runs it for you, with the same limits as any agent. Every trade is checked against Chainlink, comes back into the Face, and is explained in its journal.</p>
+      <div class="hp-form">
+        <label><input type="radio" name="hp-kind" value="accumulate" checked> <b>Accumulate</b> buy one ticker regularly</label>
+        <label><input type="radio" name="hp-kind" value="keep-liquid"> <b>Keep some liquid</b> hold a minimum share in USDG</label>
+        <label><input type="radio" name="hp-kind" value="trim"> <b>Trim</b> sell a ticker when it grows too big</label>
+        <div class="hp-row" data-k="accumulate">Buy <select id="hp-s-token">${opts(tokens.filter((t) => t.symbol !== "USDG" && t.symbol !== "ETH"), "TSLA")}</select> with $<input id="hp-s-usd" value="10" inputmode="decimal" size="5"> of <select id="hp-s-funding">${opts(tokens.filter((t) => t.symbol === "USDG" || t.symbol === "ETH"), "USDG")}</select> every <select id="hp-s-every"><option value="1d">day</option><option value="7d" selected>week</option><option value="30d">month</option></select></div>
+        <div class="hp-row" data-k="keep-liquid" hidden>Keep at least <input id="hp-s-liquid" value="40" inputmode="decimal" size="3">% in USDG</div>
+        <div class="hp-row" data-k="trim" hidden>Sell <select id="hp-s-trim">${opts(tokens.filter((t) => t.symbol !== "USDG" && t.symbol !== "ETH"), "TSLA")}</select> above <input id="hp-s-cap" value="50" inputmode="decimal" size="3">% of the Face</div>
+        <div class="hp-row">For <select id="hp-s-days"><option>30</option><option selected>90</option><option>180</option><option>365</option></select> days · at most $<input id="hp-s-daily" value="200" inputmode="decimal" size="5"> of trades per day</div>
+      </div>
+      <div class="hp-summary" id="hp-s-summary"></div>
+      <button class="btn btn-neon btn-wide" id="hp-s-go">Review</button>
+    </details>`
+        : ""
+    }
+
+    ${
+      tokens.length
+        ? `<details class="hp-card" id="hp-move">
+      <summary>Withdraw or trade what's inside</summary>
+      <div class="hp-form">
+        <div class="hp-row"><b>Withdraw</b> <select id="hp-w-token"><option value="all">everything</option>${opts(tokens)}</select> amount <input id="hp-w-amount" placeholder="all" inputmode="decimal" size="8"> to your wallet <button class="btn btn-ghost" id="hp-w-go">Review</button></div>
+        <div class="hp-row"><b>Trade</b> <input id="hp-t-amount" value="10" inputmode="decimal" size="8"> <select id="hp-t-from">${opts(tokens, "USDG")}</select> for <select id="hp-t-to">${opts(tokens, "TSLA")}</select> <button class="btn btn-ghost" id="hp-t-go">Review</button></div>
+      </div>
+      <div class="hp-summary" id="hp-m-summary"></div>
+    </details>`
+        : ""
+    }
 
     <details class="hp-card" id="hp-wizard" ${active ? "" : "open"}>
       <summary>${active ? "Replace the agent" : "Set up an agent"}</summary>
@@ -299,6 +345,78 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
     const data = encodeFunctionData({ abi: [item], functionName: item.name, args: [BigInt(Math.round(n * 10 ** limited.dailyLimit.decimals))] });
     ctx.send(account, ctx.ABI.accountExec, "executeBatch", [[{ target: limited.dailyLimit.target, value: 0n, data }], 0], ctx.reload);
   });
+  // ---- actions shared with prepared links (actions.js): review in plain words, then confirm
+  const review = async (el, action, confirmLabel = "Confirm") => {
+    el.innerHTML = `<p class="fine">Preparing…</p>`;
+    try {
+      const built = await build(ctx, account, ctx.state.account, action);
+      el.innerHTML = `<p>${esc(built.text)}</p><button class="btn btn-neon">${confirmLabel} (${built.txs.length} transaction${built.txs.length > 1 ? "s" : ""})</button>`;
+      el.querySelector("button").onclick = () => run(ctx, account, built);
+    } catch (e) {
+      el.innerHTML = `<p class="msg err">${esc(e.shortMessage ?? e.message)}</p>`;
+    }
+  };
+  const q = (s) => box.querySelector(s);
+  if (q("#hp-strategy")) {
+    const kind = () => q('input[name="hp-kind"]:checked').value;
+    q("#hp-strategy").addEventListener("change", () => q("#hp-strategy").querySelectorAll(".hp-row[data-k]").forEach((r) => (r.hidden = r.dataset.k !== kind())));
+    q("#hp-s-go").onclick = () => {
+      const k = kind();
+      const p = new URLSearchParams({ do: "strategy", kind: k, days: q("#hp-s-days").value, cap: q("#hp-s-daily").value, every: k === "accumulate" ? q("#hp-s-every").value : "1d" });
+      if (k === "accumulate") {
+        p.set("token", q("#hp-s-token").value);
+        p.set("funding", q("#hp-s-funding").value);
+        p.set("usd", q("#hp-s-usd").value);
+        if (q("#hp-s-funding").value === "ETH") p.set("eth", "0.05");
+      }
+      if (k === "keep-liquid") p.set("percent", q("#hp-s-liquid").value);
+      if (k === "trim") (p.set("token", q("#hp-s-trim").value), p.set("percent", q("#hp-s-cap").value));
+      try {
+        review(q("#hp-s-summary"), parseLink(ctx.state.dep, p), "Start");
+      } catch (e) {
+        q("#hp-s-summary").innerHTML = `<p class="msg err">${esc(e.message)}</p>`;
+      }
+    };
+  }
+  if (q("#hp-move")) {
+    q("#hp-w-go").onclick = () => {
+      const p = new URLSearchParams({ do: "withdraw", token: q("#hp-w-token").value });
+      if (q("#hp-w-amount").value.trim() && q("#hp-w-token").value !== "all") p.set("amount", q("#hp-w-amount").value.trim());
+      try {
+        review(q("#hp-m-summary"), parseLink(ctx.state.dep, p), "Withdraw");
+      } catch (e) {
+        q("#hp-m-summary").innerHTML = `<p class="msg err">${esc(e.message)}</p>`;
+      }
+    };
+    q("#hp-t-go").onclick = () => {
+      try {
+        review(q("#hp-m-summary"), parseLink(ctx.state.dep, new URLSearchParams({ do: "trade", from: q("#hp-t-from").value, to: q("#hp-t-to").value, amount: q("#hp-t-amount").value })), "Trade");
+      } catch (e) {
+        q("#hp-m-summary").innerHTML = `<p class="msg err">${esc(e.message)}</p>`;
+      }
+    };
+  }
+  // a prepared action from a link (e.g. written by an AI assistant): shown first, never sent without a click
+  const params = new URLSearchParams(location.search);
+  if (params.get("do")) {
+    const el = q("#hp-prepared");
+    el.hidden = false;
+    let action;
+    try {
+      action = parseLink(ctx.state.dep, params);
+    } catch (e) {
+      el.innerHTML = `<h4>Prepared action</h4><p class="msg err">This link asks for something the Face page can't do: ${esc(e.message)}</p>`;
+    }
+    if (action) {
+      el.innerHTML = `<h4>Prepared for you</h4><p class="fine">A link opened this page with an action ready. Read it: nothing happens until you confirm in your wallet.</p><div class="hp-summary"></div><button class="btn btn-ghost" id="hp-p-no">Dismiss</button>`;
+      review(el.querySelector(".hp-summary"), action);
+      q("#hp-p-no").onclick = () => {
+        history.replaceState({}, "", location.pathname);
+        el.hidden = true;
+      };
+    }
+  }
+
   box.querySelector("#hp-lock-go").onclick = () => {
     const days = Number(chosen("hp-lock") || 7);
     const until = Math.max(Date.now() + days * dayMs, Number(lockedUntil) * 1000 + 60_000);

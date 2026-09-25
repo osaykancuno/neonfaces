@@ -37,6 +37,7 @@ contract UploadArt is Script {
             console2.log("uploaded", done);
         }
         if (!art.isSealed()) art.seal(); // reverts unless the art matches the pre-mint provenance
+        if (art.hasRole(art.ARTIST_ROLE(), msg.sender)) art.renounceRole(art.ARTIST_ROLE(), msg.sender); // nothing left to upload
         vm.stopBroadcast();
         console2.log("sealed. running hash:");
         console2.logBytes32(art.runningHash());

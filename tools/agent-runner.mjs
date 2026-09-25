@@ -44,7 +44,7 @@ const abi = parseAbi([
   "function leftToday(address) view returns (uint256)",
   "function swapWithNote(address[] path, uint24[] fees, uint256 amountIn, uint256 slippageBps, string note) payable returns (uint256)",
   "function agentConfig() view returns (address agent, address grantor, uint64 expiry, bool active, uint256 valueAllowance)",
-  "function lockedUntil() view returns (uint64)",
+  "function effectiveLockedUntil() view returns (uint64)",
   "function executeAsAgent(address target, uint256 value, bytes data) returns (bytes)",
   "function token() view returns (uint256 chainId, address tokenContract, uint256 tokenId)",
   "function balanceOf(address) view returns (uint256)",
@@ -165,7 +165,7 @@ async function plan(account, s) {
 async function runAccount(account) {
   const [agent, , , active, allowance] = await read(account, "agentConfig");
   if (!active || agent.toLowerCase() !== me.address.toLowerCase()) return; // not (or no longer) delegated to us
-  if (Number(await read(account, "lockedUntil")) * 1000 > Date.now()) return;
+  if (Number(await read(account, "effectiveLockedUntil")) * 1000 > Date.now()) return;
   const s = await read(dep.trader, "strategyOf", [account]);
   if (s.kind === 0) return;
   const last = st.lastMove[account] ?? 0;

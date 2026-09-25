@@ -137,4 +137,23 @@ contract StrategiesTest is Base {
         vm.expectRevert(bytes("Too little received"));
         acc.execute(address(trader), 0, abi.encodeCall(trader.swapWithNote, (path, fees, 20e6, 100, "dump")), 0);
     }
+    function test_Route_ExpensivePoolsCantWidenThePrice() public {
+        address[] memory path = new address[](2);
+        (path[0], path[1]) = (address(usdg), address(tsla));
+        uint24[] memory fees = new uint24[](1);
+        fees[0] = 10_000; // a 1% pool: allowed, the minimum counts it
+        (uint256 minOut,) = trader.quote(path, fees, 100e6, 100);
+        assertEq(minOut, uint256(100e18) / 400 * 98 / 100);
+        // three 1% hops (pools an agent could seed itself) would widen it to 4%: refused
+        address[] memory hops = new address[](4);
+        (hops[0], hops[1], hops[2], hops[3]) = (address(usdg), address(nvda), address(tsla), address(usdg));
+        hops[3] = weth;
+        uint24[] memory f3 = new uint24[](3);
+        (f3[0], f3[1], f3[2]) = (10_000, 10_000, 10_000);
+        vm.expectRevert(NeonTrader.RouteTooExpensive.selector);
+        trader.quote(hops, f3, 100e6, 100);
+        fees[0] = 10_100;
+        vm.expectRevert(NeonTrader.RouteTooExpensive.selector);
+        trader.quote(path, fees, 100e6, 0);
+    }
 }

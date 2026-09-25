@@ -231,4 +231,86 @@ contract SetsTest is Base {
         faces.transferFrom(address(this), bob, 1);
         assertEq(faces.ownerOf(1), bob);
     }
+
+    // ------------------------------------------------------------------
+    // A set sold as one Face: the lock and the agents follow the outer Face
+    // ------------------------------------------------------------------
+    function _nestedSetup() internal returns (uint256[4] memory m, NeonFaceAccount anchorAcc, NeonFaceAccount pieceAcc) {
+        _mintAndReveal(120);
+        (, m) = _firstSet(120);
+        anchorAcc = NeonFaceAccount(payable(_assemble(m, m[0])));
+        pieceAcc = NeonFaceAccount(payable(seeder.accountOf(m[1])));
+    }
+
+    function _pieceCall(NeonFaceAccount anchorAcc, NeonFaceAccount pieceAcc, bytes memory data) internal {
+        vm.prank(alice);
+        anchorAcc.execute(address(pieceAcc), 0, data, 0);
+    }
+
+    function test_Nested_PieceAgentDiesWhenTheAnchorIsSold() public {
+        (uint256[4] memory m, NeonFaceAccount anchorAcc, NeonFaceAccount pieceAcc) = _nestedSetup();
+        address thief = makeAddr("thief");
+        NeonFaceAccount.Permission[] memory p = new NeonFaceAccount.Permission[](1);
+        p[0] = NeonFaceAccount.Permission(address(tsla), tsla.transfer.selector);
+        // the seller delegates an agent on a piece, through the anchor's account
+        _pieceCall(anchorAcc, pieceAcc, abi.encodeCall(NeonFaceAccount.setAgent, (thief, uint64(block.timestamp + 30 days), p, 0)));
+        assertEq(pieceAcc.holder(), alice, "the holder of a nested piece is the anchor's holder");
+        (, address grantor,, bool active,) = pieceAcc.agentConfig();
+        assertEq(grantor, alice);
+        assertTrue(active);
+
+        vm.prank(alice);
+        faces.transferFrom(alice, bob, m[0]); // the set is sold
+        assertEq(pieceAcc.holder(), bob);
+        (,,, active,) = pieceAcc.agentConfig();
+        assertFalse(active, "the agent died with the sale of the outer Face");
+        uint256 bal = tsla.balanceOf(address(pieceAcc));
+        vm.prank(thief);
+        vm.expectRevert(NeonFaceAccount.AgentNotActive.selector);
+        pieceAcc.executeAsAgent(address(tsla), 0, abi.encodeCall(tsla.transfer, (thief, bal)));
+    }
+
+    function test_Nested_AnchorLockFreezesThePieces() public {
+        (uint256[4] memory m, NeonFaceAccount anchorAcc, NeonFaceAccount pieceAcc) = _nestedSetup();
+        address thief = makeAddr("thief");
+        NeonFaceAccount.Permission[] memory p = new NeonFaceAccount.Permission[](1);
+        p[0] = NeonFaceAccount.Permission(address(tsla), tsla.transfer.selector);
+        _pieceCall(anchorAcc, pieceAcc, abi.encodeCall(NeonFaceAccount.setAgent, (thief, uint64(block.timestamp + 30 days), p, 0)));
+        // an operator approved on a piece before the lock
+        vm.prank(alice);
+        anchorAcc.execute(address(faces), 0, abi.encodeCall(faces.setApprovalForAll, (thief, true)), 0);
+
+        uint64 until = uint64(block.timestamp + 7 days);
+        vm.prank(alice);
+        anchorAcc.lock(until); // listed as locked
+        assertEq(pieceAcc.effectiveLockedUntil(), until, "a piece inside a locked Face is locked");
+        assertTrue(pieceAcc.isLocked());
+        assertEq(pieceAcc.lockedUntil(), 0, "its own lock is untouched");
+
+        uint256 bal = tsla.balanceOf(address(pieceAcc));
+        vm.startPrank(thief);
+        vm.expectRevert(abi.encodeWithSelector(NeonFaceAccount.AccountIsLocked.selector, until));
+        pieceAcc.executeAsAgent(address(tsla), 0, abi.encodeCall(tsla.transfer, (thief, bal)));
+        vm.expectRevert(NeonFaces.FaceAccountLocked.selector);
+        faces.transferFrom(address(anchorAcc), thief, m[1]); // can't pull a piece out of the locked Face
+        vm.stopPrank();
+        assertEq(pieceAcc.isValidSignature(bytes32(0), ""), bytes4(0xffffffff));
+
+        vm.warp(until);
+        vm.prank(thief);
+        faces.transferFrom(address(anchorAcc), thief, m[1]); // after the lock, approvals work again
+        assertEq(faces.ownerOf(m[1]), thief);
+    }
+
+    function test_Nested_DeepStacksHaveNoHolder() public {
+        _mintAndReveal(12);
+        // each move only checks the levels above the receiver: built bottom-up, 1 ends up 9 levels down
+        vm.startPrank(alice);
+        for (uint256 id = 1; id <= 9; ++id) faces.transferFrom(alice, seeder.accountOf(id + 1), id);
+        vm.stopPrank();
+        NeonFaceAccount deep = NeonFaceAccount(payable(seeder.accountOf(1)));
+        assertEq(deep.holder(), address(0));
+        assertTrue(deep.isLocked(), "too deep counts as locked until taken apart from the top");
+        assertEq(NeonFaceAccount(payable(seeder.accountOf(4))).holder(), alice);
+    }
 }

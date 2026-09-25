@@ -114,6 +114,10 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
 
     mapping(uint256 setId => SetBonusPaid) public setBonus;
     uint256 public setBonusCount;
+    /// @notice Top-ups delivered per tier (2 Watch, 3 Heavy Stare).
+    mapping(uint8 tier => uint256) public upgradedIn;
+    /// @notice When the baskets were locked (0 while configurable).
+    uint64 public lockedAt;
 
     // ------------------------------------------------------------------
     // Events / errors
@@ -139,6 +143,8 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     error InsufficientPool(address token, uint256 needed, uint256 available);
     error SetNotAssembled(uint256 anchorId);
     error SetBonusAlreadyPaid(uint256 setId);
+    error NotRevealed();
+    error StillOwed(address token, uint256 owed);
 
     constructor(NeonFaces faces_, IERC6551Registry registry_, address accountImplementation_, address admin)
         AccessControlDefaultAdminRules(2 days, admin)
@@ -238,6 +244,7 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
         s.upgradeBasketId = basketId;
         unchecked {
             ++upgradedCount;
+            ++upgradedIn[tier];
         }
         _deliver(basketId, account);
         emit FaceUpgraded(tokenId, account, tier, basketId);
@@ -360,11 +367,16 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
 
     /// @dev Keyed permutation of [0, m): (c·x + d) mod m with c coprime to m.
     function _perm(uint256 x, uint256 m, uint256 key) internal pure returns (uint256) {
-        uint256 c = 1 + key % (m - 1);
+        (uint256 c, uint256 d) = _permKey(m, key);
+        return (c * x + d) % m;
+    }
+
+    function _permKey(uint256 m, uint256 key) internal pure returns (uint256 c, uint256 d) {
+        c = 1 + key % (m - 1);
         while (_inverse(c, m) == 0) {
             c = c + 1 == m ? 1 : c + 1;
         }
-        return (c * x + (key >> 128) % m) % m;
+        d = (key >> 128) % m;
     }
 
     /// @dev k·inv mod n stays more than `gap` away from 0 for k = 1, 2, 3.
@@ -433,17 +445,88 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
         emit TierBasketsSet(tier, basketIds);
     }
 
-    /// @notice Irreversibly freeze baskets and tier mapping.
+    /// @notice Irreversibly freeze baskets and tier mapping. Only after the reveal, when every Face's tier (and so
+    /// everything the pool owes) is known.
     function lockConfig() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (configLocked) revert ConfigIsLocked();
+        if (faces.revealSeed() == 0) revert NotRevealed();
         configLocked = true;
+        lockedAt = uint64(block.timestamp);
         emit ConfigLocked();
     }
 
-    /// @notice Withdraw surplus from the seed pool. Seeds already delivered are unaffected:
-    /// their tokens live in the Face accounts, not here.
+    /// @notice Withdraw from the seed pool. Seeds already delivered are unaffected: their tokens live in the Face
+    /// accounts, not here. Once the baskets are locked, only what exceeds `owed(token)` can leave: pending seeds,
+    /// top-ups and set bonuses not yet paid stay in the pool, whoever holds the admin key.
     function withdrawPool(address token, address to, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (configLocked) {
+            uint256 bal = IERC20(token).balanceOf(address(this));
+            uint256 keep = owed(token);
+            if (amount > bal || bal - amount < keep) revert StillOwed(token, keep);
+        }
         IERC20(token).safeTransfer(to, amount);
         emit PoolWithdrawn(token, to, amount);
+    }
+
+    // ------------------------------------------------------------------
+    // What the pool still owes
+    // ------------------------------------------------------------------
+
+    /// @notice Faces minted per Stare tier (`c[1]` Glance, `c[2]` Watch, `c[3]` Heavy Stare), all zero until the
+    /// reveal. Counted from the same keyed permutations as `artIdOf`, without walking the token ids.
+    function tierCounts() public view returns (uint256[4] memory c) {
+        uint256 seed = faces.revealSeed();
+        if (seed == 0) return c;
+        uint256 n = faces.totalSupply();
+        uint256 sets = setsIn(n);
+        (uint256 m, uint256 d) = _permKey(SETS, uint256(keccak256(abi.encode(seed, 1))));
+        for (uint256 k; k < sets; ++k) {
+            uint256 set = (m * k + d) % SETS; // set id - 1
+            c[set < SET_GLANCE ? TIER_GLANCE : set < SET_GLANCE + SET_WATCH ? TIER_WATCH : TIER_HEAVY] += 4;
+        }
+        (m, d) = _permKey(SINGLES, uint256(keccak256(abi.encode(seed, 2))));
+        for (uint256 x; x < n - 4 * sets; ++x) {
+            uint256 art = (m * x + d) % SINGLES;
+            c[art < SINGLE_GLANCE ? TIER_GLANCE : art < SINGLE_GLANCE + SINGLE_WATCH ? TIER_WATCH : TIER_HEAVY] += 1;
+        }
+    }
+
+    /// @notice How much of `token` the pool still owes to Faces: base seeds not delivered, Watch / Heavy Stare
+    /// top-ups not delivered (known after the reveal), set bonuses not paid. Each is counted at the largest amount
+    /// of `token` among its tier's baskets, so the figure never falls short.
+    function owed(address token) public view returns (uint256) {
+        return _owed(token, tierCounts());
+    }
+
+    /// @notice True when the pool holds everything it still owes, token by token.
+    function covered() external view returns (bool) {
+        uint256[4] memory c = tierCounts();
+        for (uint32 id = 1; id <= basketCount; ++id) {
+            Leg[] storage legs = _baskets[id];
+            for (uint256 i; i < legs.length; ++i) {
+                if (IERC20(legs[i].token).balanceOf(address(this)) < _owed(legs[i].token, c)) return false;
+            }
+        }
+        return true;
+    }
+
+    function _owed(address token, uint256[4] memory c) internal view returns (uint256) {
+        uint256 n = faces.totalSupply();
+        return (n - fundedCount) * _maxLeg(BASE, token)
+            + (c[TIER_WATCH] - upgradedIn[TIER_WATCH]) * _maxLeg(TIER_WATCH, token)
+            + (c[TIER_HEAVY] - upgradedIn[TIER_HEAVY]) * _maxLeg(TIER_HEAVY, token)
+            + (setsIn(n) - setBonusCount) * _maxLeg(SET_BONUS, token);
+    }
+
+    /// @dev Largest amount of `token` in any basket of `tier`.
+    function _maxLeg(uint8 tier, address token) internal view returns (uint256 max) {
+        uint32[] storage ids = _tierBaskets[tier];
+        for (uint256 j; j < ids.length; ++j) {
+            Leg[] storage legs = _baskets[ids[j]];
+            for (uint256 i; i < legs.length; ++i) {
+                if (legs[i].token == token && legs[i].amount > max) max = legs[i].amount;
+            }
+        }
     }
 
     // ------------------------------------------------------------------

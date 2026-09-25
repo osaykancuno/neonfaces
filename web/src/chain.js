@@ -15,6 +15,7 @@ export const ABI = {
     "function safeTransferFrom(address from, address to, uint256 tokenId)",
     "function transferFrom(address from, address to, uint256 tokenId)",
     "error OwnershipCycle()",
+    "error FaceAccountLocked()",
   ]),
   payout: parseAbi(["function payees() view returns (address[4] accounts, uint256[4] shares)"]),
   seeder: parseAbi([
@@ -45,6 +46,9 @@ export const ABI = {
     "function agentConfig() view returns (address agent, address grantor, uint64 expiry, bool active, uint256 valueAllowance)",
     "function owner() view returns (address)",
     "function lockedUntil() view returns (uint64)",
+    "function effectiveLockedUntil() view returns (uint64)",
+    "function holder() view returns (address)",
+    "function token() view returns (uint256 chainId, address tokenContract, uint256 tokenId)",
     "function isAgentCallAllowed(address target, bytes4 selector) view returns (bool)",
     "function setAgent(address agent, uint64 expiry, (address target, bytes4 selector)[] permissions, uint256 valueAllowance)",
     "function setAgentPermissions((address target, bytes4 selector)[] permissions, bool allowed)",
@@ -66,6 +70,7 @@ export const ABI = {
     "function balanceOf(address) view returns (uint256)",
     "function symbol() view returns (string)",
     "function decimals() view returns (uint8)",
+    "function allowance(address owner, address spender) view returns (uint256)",
   ]),
 };
 

@@ -209,6 +209,7 @@ contract Deploy is Script {
         vm.serializeUint(o, "chainId", block.chainid);
         vm.serializeUint(o, "deployBlock", block.number);
         vm.serializeAddress(o, "registry", REGISTRY);
+        vm.serializeAddress(o, "deployer", msg.sender); // tools/verify-drop.mjs checks it keeps no role
         vm.serializeAddress(o, "accountImplementation", address(d.accountImpl));
         vm.serializeAddress(o, "faces", address(d.faces));
         vm.serializeAddress(o, "seeder", address(d.seeder));

@@ -159,6 +159,7 @@ contract NeonFacesTest is Base {
 
     function test_Security_MintClosesForeverAtRevealRequest() public {
         _openPublic();
+        _allowTestAsSeaDrop();
         _mintPublic(alice, 2);
         vm.prank(admin);
         faces.requestReveal();
@@ -169,7 +170,6 @@ contract NeonFacesTest is Base {
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSignature("MintQuantityExceedsMaxSupply(uint256,uint256)", 3, 2));
         seaDrop.mintPublic{value: PUBLIC_PRICE}(address(faces), openseaFee, address(0), 1);
-        _allowTestAsSeaDrop();
         vm.expectRevert(NeonFaces.MintIsClosed.selector);
         faces.mintSeaDrop(bob, 1);
 
@@ -515,11 +515,53 @@ contract NeonFacesTest is Base {
     }
 
     function test_Seeder_ConfigLock() public {
+        _openPublic();
+        _mintPublic(alice, 1);
+        vm.prank(admin);
+        vm.expectRevert(NeonSeeder.NotRevealed.selector); // tiers, and so what the pool owes, come with the reveal
+        seeder.lockConfig();
+        _reveal();
         vm.prank(admin);
         seeder.lockConfig();
         vm.prank(admin);
         vm.expectRevert(NeonSeeder.ConfigIsLocked.selector);
+        seeder.lockConfig();
+        vm.prank(admin);
+        vm.expectRevert(NeonSeeder.ConfigIsLocked.selector);
         seeder.setBasket(1, _legs1(address(tsla), 1));
+    }
+
+    function test_Security_NoNewMinterOnceTheSaleStarted() public {
+        _openPublic();
+        _mintPublic(alice, 1);
+        address[] memory allowed = new address[](2);
+        (allowed[0], allowed[1]) = (SEADROP, admin);
+        vm.prank(admin);
+        vm.expectRevert(NeonFaces.MintAlreadyStarted.selector);
+        faces.updateAllowedSeaDrop(allowed);
+    }
+
+    function test_Seeder_OwedStaysInThePoolAfterLock() public {
+        _openPublic();
+        _mintPublic(alice, 4);
+        _reveal();
+        uint256[4] memory c = seeder.tierCounts();
+        assertEq(c[1] + c[2] + c[3], 4, "every minted Face counted once");
+        uint256 top;
+        for (uint256 id = 1; id <= 4; ++id) if (seeder.tierOf(id) >= 2) ++top;
+        assertEq(c[2] + c[3], top, "tier counts match tierOf");
+
+        vm.prank(admin);
+        seeder.lockConfig();
+        uint256 owedTsla = seeder.owed(address(tsla));
+        uint256 bal = tsla.balanceOf(address(seeder));
+        assertGt(bal, owedTsla);
+        vm.startPrank(admin);
+        vm.expectRevert(abi.encodeWithSelector(NeonSeeder.StillOwed.selector, address(tsla), owedTsla));
+        seeder.withdrawPool(address(tsla), admin, bal - owedTsla + 1);
+        seeder.withdrawPool(address(tsla), admin, bal - owedTsla); // the surplus can leave
+        vm.stopPrank();
+        assertEq(tsla.balanceOf(address(seeder)), owedTsla);
     }
 
     function test_Seeder_FundFromSelfOnlySelf() public {

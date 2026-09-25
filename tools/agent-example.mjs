@@ -39,7 +39,7 @@ const abi = parseAbi([
   "function accountOf(uint256) view returns (address)",
   "function agentConfig() view returns (address agent, address grantor, uint64 expiry, bool active, uint256 valueAllowance)",
   "function isAgentCallAllowed(address target, bytes4 selector) view returns (bool)",
-  "function lockedUntil() view returns (uint64)",
+  "function effectiveLockedUntil() view returns (uint64)",
   "function executeAsAgent(address target, uint256 value, bytes data) returns (bytes)",
   "error AgentNotActive()",
   "error AgentCallNotAllowed(address target, bytes4 selector)",
@@ -60,7 +60,7 @@ console.log(`delegated by ${grantor} until ${new Date(Number(expiry) * 1000).toI
 // 3. is this call allowed right now?
 const item = parseAbiItem(`function ${signature}`);
 const selector = toFunctionSelector(item);
-const lockedUntil = await pub.readContract({ address: account, abi, functionName: "lockedUntil" });
+const lockedUntil = await pub.readContract({ address: account, abi, functionName: "effectiveLockedUntil" });
 if (Number(lockedUntil) * 1000 > Date.now()) throw new Error(`account locked until ${new Date(Number(lockedUntil) * 1000).toISOString()}`);
 if (!(await pub.readContract({ address: account, abi, functionName: "isAgentCallAllowed", args: [target, selector] }))) {
   throw new Error(`the holder did not allow ${signature} on ${target}`);

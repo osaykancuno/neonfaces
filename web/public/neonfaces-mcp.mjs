@@ -40,7 +40,7 @@ function asString(hex) {
 }
 const SEL = {
   tokenURI: "0xc87b56dd", ownerOf: "0x6352211e", balanceOf: "0x70a08231", price: "0xaea91078", agentConfig: "0x5e6b04f3",
-  strategyOf: "0x120b1912", leftToday: "0xac26de0c", dailyLimit: "0xf3f51415", lockedUntil: "0xce0617ec", decimals: "0x313ce567",
+  strategyOf: "0x120b1912", leftToday: "0xac26de0c", dailyLimit: "0xf3f51415", lockedUntil: "0x338fc0ad", decimals: "0x313ce567",
   totalSupply: "0x18160ddd", setOf: "0x8ad023eb", isAssembled: "0x214f41ee",
 };
 

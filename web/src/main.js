@@ -2,8 +2,9 @@ import { formatEther, formatUnits, encodeFunctionData } from "viem";
 import { ABI, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata, facesOf } from "./chain.js";
 import { pixelEye } from "./effects/eye.js";
 import { decode, svgDataURI, setDataURI, PIECES, SINGLES } from "./render.js";
-import { journal, longestStares, completedSets, fmtDay } from "./journal.js";
+import { journal, longestStares, completedSets, fmtDay, openApprovals } from "./journal.js";
 import { holderPanel, knownTokens } from "./agent-ui.js";
+import { hunt } from "./hunter.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 
@@ -11,6 +12,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let gallery = []; // [{ artId, stare, record }]: on-chain pixel records
+let hunting = 0; // the set hunter shows only its latest lookup
 let sets = []; // [{ set, stare, face, records[4] }]: whole sets for the Sets section
 let placeholder = null;
 let rarity = null;
@@ -48,6 +50,7 @@ document.querySelectorAll(".hero [data-scramble]").forEach((el) => scramble(el, 
 setupMint();
 renderMyFaces();
 renderWatch();
+setupHunter();
 route();
 
 window.addEventListener("popstate", route);
@@ -197,6 +200,37 @@ function renderSets() {
 }
 
 // =====================================================================================
+// set hunter: where the missing pieces are (read live, watched sets remembered in this browser)
+// =====================================================================================
+function setupHunter() {
+  if (state.preview) {
+    $("#hunter-list").innerHTML = `<p class="fine">Opens with the collection: sets are dealt at the reveal.</p>`;
+    $("#hunter-form").hidden = true;
+    return;
+  }
+  $("#hunter-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = Number($("#hunter-id").value);
+    if (id >= 1 && id <= 5555) runHunter([id]);
+  });
+  $("#hunter-mine").addEventListener("click", () => (state.account ? runHunter("mine") : doConnect().catch((e) => e.message !== "cancelled" && toast(errMsg(e)))));
+  runHunter([]); // watched sets and what moved since the last visit
+}
+
+async function runHunter(which) {
+  const ticket = ++hunting;
+  const list = $("#hunter-list");
+  list.innerHTML = `<p class="fine">Looking…</p>`;
+  try {
+    const ids = which === "mine" ? await facesOf(state.account).catch(() => []) : which;
+    if (ticket !== hunting) return;
+    await hunt(list, $("#hunter-alerts"), ids, state.account);
+  } catch (e) {
+    if (ticket === hunting) list.innerHTML = `<p class="fine">${esc(errMsg(e))}</p>`;
+  }
+}
+
+// =====================================================================================
 // the watch: longest stares + sets completed (read live, refreshed with the mint panel)
 // =====================================================================================
 async function renderWatch() {
@@ -335,6 +369,7 @@ $("#connect").addEventListener("click", () => doConnect().catch((e) => e.message
 window.addEventListener("neon:account", () => {
   $("#connect").textContent = state.account ? short(state.account) : "Connect";
   renderMyFaces();
+  if (state.account) runHunter("mine");
   if (!$("#face-page").hidden) route();
 });
 
@@ -492,7 +527,7 @@ async function showFace(id) {
     let lockedUntil = 0n;
     if (deployed) {
       agentInfo = await readAt(seed.account, "account", "agentConfig");
-      lockedUntil = await readAt(seed.account, "account", "lockedUntil");
+      lockedUntil = await readAt(seed.account, "account", "effectiveLockedUntil"); // its own lock or the Face it sits in
     }
     const lockedNow = Number(lockedUntil) * 1000 > Date.now();
     const [agent, , expiry, active, allowance] = agentInfo ?? [];
@@ -502,7 +537,9 @@ async function showFace(id) {
         : active
           ? `<b>agent</b>${agent}<br><b>until</b>${fmtDate(expiry)} · <b>ETH budget</b>${formatEther(allowance)}`
           : `<b>agent</b>none active`) +
-      (lockedNow ? `<br><b>locked until</b><span class="neon">${fmtDate(lockedUntil)}</span>. Nothing can leave this account` : "");
+      (lockedNow ? `<br><b>locked until</b><span class="neon">${fmtDate(lockedUntil)}</span>. The holder, agents and signatures can't move anything out` : "") +
+      `<br><span class="fine" id="face-approvals">Checking token approvals…</span>`;
+    approvalsCheck(id, seed.account, tokens).catch(() => ($("#face-approvals").textContent = ""));
 
     const links = [];
     const tl = explorer(`token/${state.dep.faces}/instance/${id}`);
@@ -522,6 +559,25 @@ async function showFace(id) {
   } catch (e) {
     $("#face-owner").innerHTML = `<b>status</b>${/nonexistent|ERC721NonexistentToken/i.test(String(e)) ? "not minted yet" : esc(errMsg(e))}`;
   }
+}
+
+/** Buyer check: approvals a lock can't stop, on this Face's account and on set pieces sitting inside it. */
+async function approvalsCheck(id, account, tokens) {
+  const accounts = [account];
+  const [setId, , members] = await read("seeder", "setOf", [BigInt(id)]);
+  if (setId) {
+    for (const m of members.map(Number).filter((m) => m !== id)) {
+      if ((await read("faces", "ownerOf", [BigInt(m)])).toLowerCase() === account.toLowerCase()) accounts.push(await read("seeder", "accountOf", [BigInt(m)]));
+    }
+  }
+  const open = await openApprovals(accounts, tokens);
+  const el = $("#face-approvals");
+  if (!el) return;
+  el.innerHTML = open.length
+    ? `<b class="badge warn">Open token approvals</b>: ${open
+        .map((a) => `${short(a.spender)} can take ${esc(a.amount)} ${esc(a.sym)}${a.account === account ? "" : " from a piece inside"}`)
+        .join("; ")}. A lock doesn't stop these: before buying, ask the holder to revoke them.`
+    : "No open token approvals: what is inside can only move with the holder, and not at all while locked.";
 }
 
 /** Legs of the set bonus this Face received (none if it isn't a set's bonus anchor). */

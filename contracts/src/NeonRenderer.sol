@@ -387,10 +387,11 @@ contract NeonRenderer {
         return n + 1;
     }
 
-    /// @dev "Locked until" (date) while the Face account is locked — a buyer's guarantee the contents stay put.
+    /// @dev "Locked until" (date) while the Face account is locked, by its own lock or the lock of a Face it sits
+    /// inside: a buyer's guarantee the contents stay put.
     function _lock(address account) internal view returns (bytes memory) {
         if (account.code.length == 0) return "";
-        (bool ok, bytes memory r) = account.staticcall{gas: 20_000}(abi.encodeWithSignature("lockedUntil()"));
+        (bool ok, bytes memory r) = account.staticcall{gas: 500_000}(abi.encodeWithSignature("effectiveLockedUntil()"));
         if (!ok || r.length < 32) return "";
         uint256 until = abi.decode(r, (uint256));
         if (until <= block.timestamp) return "";
@@ -431,7 +432,7 @@ contract NeonRenderer {
 
     function _attr(string memory t, string memory v, bool comma) internal pure returns (bytes memory) {
         return abi.encodePacked(
-            comma ? "," : "", '{"trait_type":"', t, '","value":"', LibString.escapeJSON(v), '"}'
+            comma ? "," : "", '{"trait_type":"', LibString.escapeJSON(t), '","value":"', LibString.escapeJSON(v), '"}'
         );
     }
 }

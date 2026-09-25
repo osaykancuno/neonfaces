@@ -23,12 +23,13 @@ interface ISeedTrader {
 /// @notice Receives 40% of the creator share of every mint (from NeonPayout). The ETH can only leave as
 /// basket tokens bought through NeonTrader (Uniswap v3, minimum output from Chainlink, ≤ 1% slippage) and
 /// delivered straight to the NeonSeeder pool. The keeper chooses which basket token to buy and when; it
-/// can't send anything anywhere else. Once the baskets are locked (after the reveal top-ups), any surplus
-/// can only go to the treasury.
+/// can't send anything anywhere else. Once the baskets are locked (after the reveal) and the pool holds
+/// everything it owes, any surplus can only go to the treasury.
 contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
+    uint256 public constant OWED_GRACE = 180 days;
 
     address payable public immutable treasury;
     NeonSeeder public seeder;
@@ -44,6 +45,7 @@ contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
     error NotBasketToken(address token);
     error MustPayWithEth();
     error BasketsNotLocked();
+    error SeedsStillOwed();
     error ZeroAddress();
 
     constructor(address payable treasury_, address admin) AccessControlDefaultAdminRules(2 days, admin) {
@@ -90,9 +92,12 @@ contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
         emit Bought(address(token), ethIn, amountOut);
     }
 
-    /// @notice After the baskets are locked, send leftover ETH to the treasury.
+    /// @notice After the baskets are locked, send leftover ETH to the treasury: once the pool holds everything it
+    /// still owes to Faces (`NeonSeeder.covered()`), or after `OWED_GRACE` if some basket token can no longer be
+    /// bought, so the ETH is never stuck.
     function releaseSurplus(uint256 amount) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         if (address(seeder) == address(0) || !seeder.configLocked()) revert BasketsNotLocked();
+        if (!seeder.covered() && block.timestamp < seeder.lockedAt() + OWED_GRACE) revert SeedsStillOwed();
         emit SurplusReleased(amount);
         Address.sendValue(treasury, amount);
     }

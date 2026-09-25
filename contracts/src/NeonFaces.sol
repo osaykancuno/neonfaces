@@ -136,6 +136,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     event AllowedSeaDropUpdated(address[] allowedSeaDrop);
 
     error OwnershipCycle();
+    error FaceAccountLocked();
     error ExceedsPublicAllocation();
     error ExceedsTeamAllocation();
     error MintIsPaused();
@@ -235,16 +236,22 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         emit MintPaused(paused);
     }
 
-    /// @dev Records the "Unblinking" clock on every mint / transfer. No admin hooks; the only transfer ever
-    /// refused is one that would leave a Face owned by itself through Face accounts (A inside its own
-    /// account, or A inside B's account while B is inside A's): nobody could ever move it again. Nesting is
-    /// capped at 4 levels for the same reason. A Face moving into or out of another Face's account refreshes
-    /// that Face's metadata (an assembled set changes its image).
+    /// @dev Records the "Unblinking" clock on every mint / transfer. No admin hooks; the only transfers ever
+    /// refused are one that would leave a Face owned by itself through Face accounts (A inside its own
+    /// account, or A inside B's account while B is inside A's): nobody could ever move it again, and one out
+    /// of a locked Face account (an operator approved before the lock can't pull a set piece out of a Face
+    /// listed as locked). Nesting is capped at 4 levels. A Face moving into or out of another Face's account
+    /// refreshes that Face's metadata (an assembled set changes its image).
     function _update(address to, uint256 tokenId, address auth) internal override returns (address from) {
         from = super._update(to, tokenId, auth);
         heldSince[tokenId] = uint64(block.timestamp);
         uint256 holder = _faceOfAccount(from);
-        if (holder != 0) emit MetadataUpdate(holder);
+        if (holder != 0) {
+            // fail closed: an account that claims to be a Face account must answer, and be unlocked
+            (bool ok, bytes memory r) = from.staticcall(abi.encodeWithSignature("isLocked()"));
+            if (!ok || r.length != 32 || abi.decode(r, (uint256)) != 0) revert FaceAccountLocked();
+            emit MetadataUpdate(holder);
+        }
         holder = _faceOfAccount(to);
         if (holder != 0) emit MetadataUpdate(holder);
         for (uint256 depth; holder != 0; ++depth) {
@@ -420,8 +427,10 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         emit SaleManagerSet(manager);
     }
 
-    /// @notice Which SeaDrop contracts may mint. Admin only: an allowed SeaDrop can mint Faces.
+    /// @notice Which SeaDrop contracts may mint. Admin only, and only before the first mint: an allowed SeaDrop
+    /// can mint Faces, so once the sale has started nobody can add another minter (pausing still works).
     function updateAllowedSeaDrop(address[] calldata allowed) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (totalSupply != 0) revert MintAlreadyStarted();
         for (uint256 i; i < _enumeratedAllowedSeaDrop.length; ++i) {
             _allowedSeaDrop[_enumeratedAllowedSeaDrop[i]] = false;
         }

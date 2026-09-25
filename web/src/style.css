@@ -379,6 +379,27 @@ h3 { font-family: var(--pixel); font-size: 18px; color: var(--neon); margin: 0 0
 .face-set .piece b { display: block; color: #d9e6a8; }
 @media (max-width: 520px) { .face-set .pieces { grid-template-columns: repeat(2, 1fr); } }
 
+/* ---- set hunter ---- */
+.hunter { border-top: 1px solid var(--line); padding-top: 18px; }
+.hunter h3 { margin-top: 0; }
+.hunter-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 14px; font-family: var(--mono); font-size: 12px; }
+.hunter-form input { width: 90px; box-sizing: border-box; background: #050600; border: 1px solid var(--line); color: var(--neon); font-family: var(--mono); padding: 8px; }
+.hunts { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.hunt { border: 1px solid var(--line); background: #050600; padding: 10px; min-width: 0; }
+.hunt-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+.hunt-head b { font-family: var(--pixel); font-weight: 400; color: var(--neon); }
+.hunt-head span { flex: 1; min-width: 0; }
+.hunt-head a { color: inherit; }
+.hunt-watch { padding: 4px 10px; font-size: 11px; }
+.hunt-watch[aria-pressed="true"] { color: var(--neon); border-color: var(--neon); }
+.hunt-pieces { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.hunt-pieces li { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: center; font-family: var(--mono); font-size: 11px; color: var(--dim); overflow-wrap: anywhere; }
+.hunt-pieces li img { width: 44px; height: 44px; image-rendering: pixelated; border: 1px solid var(--line); }
+.hunt-pieces li.mine img { border-color: var(--neon); }
+.hunt-pieces li b { color: #d9e6a8; }
+.hunt-pieces a { color: inherit; }
+#hunter-alerts .msg a { color: inherit; }
+
 /* ---- the watch + journal ---- */
 .watch { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; margin-top: 18px; }
 .watch h3 small { font-family: var(--mono); font-size: 12px; color: var(--dim); }

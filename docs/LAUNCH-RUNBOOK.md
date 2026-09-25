@@ -106,7 +106,7 @@ Never below the self-funding floor (≈ 0.009 ETH at ETH $2,691, see [ECONOMICS.
 - **Payout address = `NeonPayout`** (`payout` in the deployments file). Any other address is rejected on-chain.
 - SeaDrop's stage cap is a ceiling on the collection's total supply (team Faces included), and per-wallet limits count every Face a wallet minted through SeaDrop, across stages. Check how Studio labels both before publishing.
 - Studio publishes with one `multiConfigure` transaction from the sale manager. Allowlists can't be edited once a stage has started minting. The contract refuses stage fees above 10% or without restricted fee recipients.
-- Then check the live configuration: `OPENSEA_FEE_RECIPIENT=<OpenSea's fee address> node tools/verify-drop.mjs 4663` must pass (after every change in Studio too).
+- Then check the live configuration: `ADMIN=<Treasury Safe> OPENSEA_FEE_RECIPIENT=<OpenSea's fee address> node tools/verify-drop.mjs 4663` must pass (after every change in Studio too). It also fails while the Safe hasn't accepted the admin role or the deploy key still holds a role: do not open the sale until it passes.
 
 Site:
 ```bash
@@ -129,7 +129,7 @@ Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers ne
 - The split and the team vesting are paid by the keeper on its own (`node tools/safe-tx.mjs 4663 release` does the same by hand).
 - `node tools/safe-tx.mjs 4663 sale-manager none` — the Safe becomes the collection owner on OpenSea again.
 - OpenSea collection settings: creator earnings 5% (optional for buyers — transfers are never restricted) to the Safe. The collection reads `contractURI()` on-chain. List on HoodMarket too.
-- `lock-seeder` once every top-up is delivered (set bonuses keep working after the lock: they use the locked baskets); then the vault's leftover ETH can go to the treasury: `node tools/safe-tx.mjs 4663 vault-surplus <eth>`. `freeze-metadata` only when no future renderer is planned.
+- `lock-seeder` once every top-up is delivered (it needs the reveal; set bonuses keep working after the lock: they use the locked baskets). From then on nothing owed to Faces can leave the pool. The vault's leftover ETH can go to the treasury once `NeonSeeder.covered()` is true (the pool holds every pending seed and unpaid set bonus): `node tools/safe-tx.mjs 4663 vault-surplus <eth>`. `freeze-metadata` only when no future renderer is planned.
 - Refill pending seeds: `NeonSeeder.fund(id)` is permissionless.
 - Point holders to their Face page (`/face/<id>`): withdraw, lock and agent delegation are there. Agent builders: [AGENTS.md](AGENTS.md).
 

@@ -161,7 +161,7 @@ export async function build(ctx, account, holder, a) {
   }
   if (a.do === "lock") {
     const until = BigInt(Math.floor(Date.now() / 1000) + a.days * 86_400);
-    return { text: `Lock this Face's wallet for ${a.days} day${a.days > 1 ? "s" : ""}: nothing can leave it until then, not even by you. It can't be shortened.`, txs: [{ kind: "account", fn: "lock", args: [until] }] };
+    return { text: `Lock this Face's wallet for ${a.days} day${a.days > 1 ? "s" : ""}: nothing can leave it until then, not even by you. It can't be shortened.${a.days > 30 ? " Only confirm if you chose this length yourself." : ""}`, txs: [{ kind: "account", fn: "lock", args: [until] }] };
   }
   if (a.do === "stop-agent") return { text: "Stop the agent now: it loses every permission immediately.", txs: [{ kind: "account", fn: "revokeAgent", args: [] }] };
   if (a.do === "strategy") {

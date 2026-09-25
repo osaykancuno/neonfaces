@@ -17,7 +17,8 @@ Three ways to put a Face to work, from the simplest:
 | Never the account itself | the account can't be a target (no self-reconfiguration) |
 | Expiry | every delegation has an end date |
 | Dies on sale | a delegation is bound to the holder who granted it; any transfer of the Face voids it |
-| Lock wins | while the account is locked, agent calls revert |
+| Lock wins | while the account is locked (or the Face it sits inside is), agent calls revert |
+| Bound to the top holder | a Face inside another Face's account answers to the outer Face's holder (`holder()`): selling the outer Face voids agents on the pieces too |
 | Atomic batches | `executeBatchAsAgent` succeeds or reverts as a whole |
 
 ## Holder side (no code needed)
@@ -35,7 +36,7 @@ A summary in plain sentences appears before signing (1 transaction, or 2 when an
 
 Never allow an agent to call a DEX router directly: a router's swap takes a `recipient` and a minimum output, so the agent could pay itself or accept any price. The published action allows only **`NeonTrader.swap`**, which enforces on-chain:
 - the output is always paid to the calling Face account;
-- minimum output from Chainlink: at most 1% below the oracle price after pool fees;
+- minimum output from Chainlink: at most 1% below the oracle price after pool fees, with pool fees counted up to 1% (so never more than 2% below the oracle);
 - only the Stock Tokens, USDG and ETH listed in `config/trader.4663.json` (verified feeds and Uniswap v3 pools);
 - prices older than 26 h are refused (equity feeds pause at weekends, so trading does too);
 - a daily USD cap the holder sets in the wizard (`setDailyLimit`, called by the account itself).
@@ -56,7 +57,7 @@ A strategy is a standing instruction stored on `NeonTrader` for the Face's accou
 
 **The strategy agent** is `tools/agent-runner.mjs` with its own key (`RUNNER_PK`; its address is published as `strategyAgent` in the site's `deployment.json`). It runs every 10 minutes in `.github/workflows/keeper.yml`, finds accounts through `StrategySet` events, and acts only where the account's current agent is its own address, the account isn't locked and the strategy is due. It trades with **`swapWithNote`**, which emits `Note(account, text)` (≤ 96 bytes): the Face's journal shows each trade with its reason ("accumulate TSLA: $10.00 every 1w"). On the Face page, **Let this Face follow a strategy** sets everything in two transactions: (1) approvals + daily cap + `setStrategy`, (2) `setAgent(strategyAgent, expiry, [NeonTrader.swapWithNote], ETH budget)`. Stopping: **Stop the agent now** (or selling the Face).
 
-What a stolen strategy-agent key could do: only `swapWithNote` on Faces that delegated to it, inside NeonTrader's rules (fair price ≤ 1% + pool fee, output back into the Face, the holder's daily cap). Holders revoke it in one click; the team rotates the key and republishes `strategyAgent`.
+What a stolen strategy-agent key could do: only `swapWithNote` on Faces that delegated to it, inside NeonTrader's rules (at most 2% under Chainlink, output back into the Face, the holder's daily cap). Holders revoke it in one click; the team rotates the key and republishes `strategyAgent`.
 
 ## AI assistants: talk to your Face
 
@@ -91,7 +92,8 @@ executeBatchAsAgent(Call[] calls) returns (bytes[])        // Call = (address ta
 
 agentConfig() returns (address agent, address grantor, uint64 expiry, bool active, uint256 valueAllowance)
 isAgentCallAllowed(address target, bytes4 selector) returns (bool)   // false while locked
-lockedUntil() returns (uint64)
+effectiveLockedUntil() returns (uint64)                            // its own lock or the lock of the Face it sits in
+holder() returns (address)                                          // who the agent answers to
 ```
 
 Find the account of a Face with `NeonSeeder.accountOf(tokenId)`.
@@ -117,3 +119,4 @@ Generic reference loop for any other allowed call: [`tools/agent-example.mjs`](.
 | `DailyLimitExceeded(requested, left)` | NeonTrader: over the holder's daily USD cap |
 | `StalePrice(token, updatedAt)` | NeonTrader: Chainlink price older than 26 h (market closed) |
 | `SlippageTooHigh()` | NeonTrader: more than 1% requested |
+| `RouteTooExpensive()` | NeonTrader: the pools on the path charge more than 1% in total |

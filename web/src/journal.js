@@ -14,6 +14,7 @@ const EV = {
   locked: parseAbiItem("event AccountLocked(uint64 until)"),
   note: parseAbiItem("event Note(address indexed account, string note)"),
   strategy: parseAbiItem("event StrategySet(address indexed account, (uint8 kind, address token, address funding, uint16 bps, uint32 every, uint96 usd8) strategy)"),
+  approval: parseAbiItem("event Approval(address indexed owner, address indexed spender, uint256 value)"),
   traded: parseAbiItem("event Traded(address indexed account, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut, uint256 valueUsd8)"),
 };
 const TOKEN_ABI = parseAbi(["function token() view returns (uint256 chainId, address tokenContract, uint256 tokenId)"]);
@@ -21,8 +22,8 @@ const ZERO = "0x0000000000000000000000000000000000000000";
 const TIER = ["", "Glance", "Watch", "Heavy Stare"];
 
 /** Logs of one event, from the node (eth_getLogs) or, if the node refuses the range, from Blockscout's API. */
-async function logs(address, event, args = {}) {
-  const fromBlock = BigInt(state.dep.deployBlock ?? 0);
+async function logs(address, event, args = {}, from = null) {
+  const fromBlock = from ?? BigInt(state.dep.deployBlock ?? 0);
   try {
     return await state.pub.getLogs({ address, event, args, fromBlock, toBlock: "latest" });
   } catch {
@@ -59,6 +60,37 @@ async function who(a) {
     if (contract.toLowerCase() === state.dep.faces.toLowerCase()) return `Face #${id}`;
   } catch {}
   return short(a);
+}
+
+/** Transfers of these Faces since `fromBlock` (for the set hunter's "since your last visit"). */
+export async function movesSince(ids, fromBlock) {
+  return (await Promise.all(ids.map((id) => logs(state.dep.faces, EV.transfer, { tokenId: BigInt(id) }, fromBlock)))).flat();
+}
+
+/**
+ * Token approvals still open on Face accounts: a lock can't stop them (they live in the token contracts), so a
+ * buyer should see them. NeonTrader is left out: it only ever trades for the account that calls it, which a lock
+ * blocks. Returns [{ account, sym, spender, amount }].
+ */
+export async function openApprovals(accounts, tokens) {
+  const safe = (state.dep.trader ?? "").toLowerCase();
+  const out = [];
+  await Promise.all(
+    accounts.flatMap((account) =>
+      tokens.map(async (token) => {
+        const spenders = new Set((await logs(token, EV.approval, { owner: account })).map((l) => l.args.spender.toLowerCase()));
+        spenders.delete(safe);
+        for (const spender of spenders) {
+          const amount = await readAt(token, "erc20", "allowance", [account, spender]).catch(() => 0n);
+          if (amount > 0n) {
+            const [s, d] = await sym(token);
+            out.push({ account, sym: s, spender, amount: amount > 10n ** 60n ? "any amount of" : formatUnits(amount, d) });
+          }
+        }
+      }),
+    ),
+  );
+  return out;
 }
 
 /** Journal entries for one Face, newest first: [{ t, text }]. */

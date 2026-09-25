@@ -32,7 +32,8 @@ interface IAggregatorV3 {
 /// does, these rules hold, enforced here and not by the agent:
 ///  - **the output always goes back to the caller** (the Face account) — an agent can't redirect it;
 ///  - **fair price**: the minimum output is computed from Chainlink feeds, at most `MAX_SLIPPAGE_BPS` worse
-///    than the oracle price after pool fees — an agent can't dump the Face's assets or sandwich it;
+///    than the oracle price after pool fees (counted up to `MAX_ROUTE_FEE_BPS`), so at most 2% below the oracle
+///    in total — an agent can't dump the Face's assets or sandwich it;
 ///  - **known tokens only**: Stock Tokens, USDG and WETH/ETH listed at deployment, each with its feed;
 ///  - **fresh prices only**: stale feeds (e.g. equities over the weekend) make trades revert;
 ///  - **daily cap in USD**, set by the account itself (i.e. by the holder through `execute`).
@@ -44,6 +45,9 @@ contract NeonTrader is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint256 public constant MAX_SLIPPAGE_BPS = 100; // 1% beyond pool fees, vs Chainlink
+    /// @notice Most pool fees a route may count in its minimum output (the deepest routes cost 0.01% to 0.6%): an
+    /// agent can't route a Face through expensive pools it seeded itself to widen the price by several percent.
+    uint256 public constant MAX_ROUTE_FEE_BPS = 100;
     uint256 public constant MAX_PRICE_AGE = 26 hours; // feeds heartbeat 24 h (+ margin)
     uint256 public constant MAX_HOPS = 3;
     uint256 private constant USD = 1e8; // prices and limits use 8 decimals
@@ -91,6 +95,7 @@ contract NeonTrader is ReentrancyGuard {
     error UnknownToken(address token);
     error BadPath();
     error SlippageTooHigh();
+    error RouteTooExpensive();
     error StalePrice(address token, uint256 updatedAt);
     error BadPrice(address token);
     error DailyLimitExceeded(uint256 requestedUsd8, uint256 leftUsd8);
@@ -236,7 +241,7 @@ contract NeonTrader is ReentrancyGuard {
         uint256 priceOut = price(tokenOut);
         valueUsd8 = amountIn * priceIn / 10 ** _decimals(tokenIn);
         uint256 fairOut = valueUsd8 * 10 ** _decimals(tokenOut) / priceOut;
-        if (feeBps + slippageBps >= 10_000) revert BadPath();
+        if (feeBps > MAX_ROUTE_FEE_BPS) revert RouteTooExpensive();
         minOut = fairOut * (10_000 - feeBps - slippageBps) / 10_000;
     }
 

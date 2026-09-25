@@ -67,7 +67,7 @@
           <a href="/#lore" data-link><i>01</i>Lore<small>why they don't blink</small></a>
           <a href="/#account" data-link><i>02</i>Native<small>a wallet in every Face</small></a>
           <a href="/#gallery" data-link><i>03</i>Faces<small>drawn from the chain</small></a>
-          <a href="/#sets" data-link><i>04</i>Sets<small>four pieces, one face</small></a>
+          <a href="/#sets" data-link><i>04</i>Sets<small>four pieces, one face, the set hunter</small></a>
           <a href="/#watch" data-link><i>05</i>The watch<small>longest stares, sets completed</small></a>
           <a href="/#traits" data-link><i>06</i>Traits<small>exact rarities</small></a>
           <a href="/#onchain" data-link><i>07</i>On-chain<small>what the contracts enforce</small></a>
@@ -175,6 +175,13 @@
             <li><b>Assemble.</b><p>Move the other three pieces into one piece's account. That Face now shows the whole face, and whoever buys it gets all four pieces in one sale. Take it apart whenever you like.</p></li>
             <li><b>Bonus, once.</b><p>The first time a set is assembled, it receives a one-time bonus basket of Stock Tokens, paid by the mint like the seeds. Once per set, ever: taking it apart and assembling it again earns nothing more.</p></li>
           </ol>
+          <div id="hunter" class="hunter">
+            <h3>Set hunter</h3>
+            <p class="fine">Hold a piece? See where the other three are, who holds them and for how long. Watch a set and the next visit tells you which of its pieces changed hands. Read from the chain; listings are on OpenSea, one click away.</p>
+            <form id="hunter-form" class="hunter-form"><label for="hunter-id">Any Face</label><input id="hunter-id" type="number" min="1" max="5555" placeholder="#" /><button class="btn btn-neon">Hunt</button><button type="button" class="btn btn-ghost" id="hunter-mine">My sets</button></form>
+            <div id="hunter-alerts"></div>
+            <div id="hunter-list" class="hunts"></div>
+          </div>
         </section>
 
         <section id="watch" class="block reveal">

@@ -18,6 +18,10 @@ on:
     - cron: "*/10 * * * *"
   workflow_dispatch:
 
+# the job only reads the repo; the keys live in secrets and never reach a pull request (no pull_request trigger)
+permissions:
+  contents: read
+
 concurrency:
   group: keeper
   cancel-in-progress: false
@@ -34,7 +38,7 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: tools/package-lock.json
-      - run: npm ci
+      - run: npm ci --ignore-scripts # no install scripts run next to the keys
         working-directory: tools
       # what the keeper already knows (Faces done, sets paid), carried from run to run
       - uses: actions/cache/restore@v4

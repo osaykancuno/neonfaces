@@ -15,11 +15,16 @@ import {ERC6551} from "solady/accounts/ERC6551.sol";
 ///  - it expires, and it dies automatically when the Face changes hands (bound to the granting holder).
 /// The holder stays the owner; the agent is only an executor.
 ///
+/// **Faces inside Faces.** A Face can sit in another Face's account (a set piece inside its anchor). Its holder
+/// is then the holder of the outermost Face (`holder()`): an agent is bound to that wallet, so it dies when the
+/// outer Face is sold, and a lock on any Face above also locks this account (`effectiveLockedUntil()`).
+///
 /// **Lock.** The holder can lock the account until a timestamp (e.g. while the Face is listed): until then
 /// nothing leaves the account — no holder call, no agent call, no ERC-1271 signature. The lock survives a
 /// sale, so a buyer can check `lockedUntil()` before buying and be sure the contents can't be drained
 /// between listing and purchase. A lock can only be extended, at most 365 days ahead.
 /// Note: ERC-20 allowances granted *before* locking remain valid at the token level — revoke them first.
+/// Faces approved to an operator before locking can't leave: NeonFaces refuses transfers out of a locked account.
 /// @dev Deployed once; every Face gets a minimal proxy from the canonical ERC-6551 registry.
 contract NeonFaceAccount is ERC6551 {
     struct Permission {
@@ -29,12 +34,15 @@ contract NeonFaceAccount is ERC6551 {
 
     struct AgentConfig {
         address agent;
-        address grantor; // Face holder at grant time; delegation is void once the Face changes hands
+        address grantor; // holder() at grant time; void once the Face (or the Face it sits in) changes hands
         uint64 expiry;
         uint64 epoch; // bumps on every (re)configuration, wiping previous permissions and allowance
     }
 
     uint256 public constant MAX_LOCK = 365 days;
+    /// @notice Face accounts walked above this one. Deeper stacks count as locked, with no holder, until the outer
+    /// Faces are taken apart (NeonFaces caps each move at 4 levels; only a deliberate stack gets deeper).
+    uint256 public constant MAX_DEPTH = 8;
 
     AgentConfig internal _agent;
     mapping(uint64 epoch => mapping(address target => mapping(bytes4 selector => bool))) internal _allowed;
@@ -56,7 +64,8 @@ contract NeonFaceAccount is ERC6551 {
     error InvalidLock();
 
     modifier notLocked() {
-        if (block.timestamp < lockedUntil) revert AccountIsLocked(lockedUntil);
+        (, uint64 until) = _above();
+        if (block.timestamp < until) revert AccountIsLocked(until);
         _;
     }
 
@@ -95,8 +104,42 @@ contract NeonFaceAccount is ERC6551 {
         emit AccountLocked(until);
     }
 
+    /// @notice True while this account, or the account of any Face it sits inside, is locked.
     function isLocked() public view returns (bool) {
-        return block.timestamp < lockedUntil;
+        return block.timestamp < effectiveLockedUntil();
+    }
+
+    /// @notice The latest lock over this account: its own, or a later one on any Face account above it.
+    function effectiveLockedUntil() public view returns (uint64 until) {
+        (, until) = _above();
+    }
+
+    /// @notice The wallet in control: the Face's holder, or the holder of the outermost Face it sits inside.
+    function holder() public view returns (address top) {
+        (top,) = _above();
+    }
+
+    /// @dev Walks up through the Face accounts (same chain, same collection) that hold this Face: the wallet at
+    /// the top and the latest lock on the way. Past MAX_DEPTH: no holder, locked.
+    function _above() internal view returns (address top, uint64 until) {
+        until = lockedUntil;
+        (uint256 chainId, address tokenContract,) = token();
+        top = owner();
+        for (uint256 depth; top.code.length != 0; ++depth) {
+            (bool ok, bytes memory r) = top.staticcall{gas: 30_000}(abi.encodeWithSignature("token()"));
+            if (!ok || r.length != 96) break;
+            (uint256 c, uint256 t, uint256 id) = abi.decode(r, (uint256, uint256, uint256));
+            if (c != chainId || t != uint256(uint160(tokenContract))) break;
+            if (depth == MAX_DEPTH) return (address(0), type(uint64).max);
+            (ok, r) = top.staticcall{gas: 30_000}(abi.encodeWithSignature("lockedUntil()"));
+            if (ok && r.length == 32) {
+                uint256 u = abi.decode(r, (uint256));
+                if (u > until) until = u > type(uint64).max ? type(uint64).max : uint64(u);
+            }
+            (ok, r) = tokenContract.staticcall(abi.encodeWithSignature("ownerOf(uint256)", id));
+            if (!ok || r.length != 32) return (address(0), until);
+            top = address(uint160(abi.decode(r, (uint256))));
+        }
     }
 
     // ------------------------------------------------------------------
@@ -109,13 +152,16 @@ contract NeonFaceAccount is ERC6551 {
         onlyValidSigner
         notLocked
     {
-        if (agent == address(0) || agent == address(this) || expiry <= block.timestamp) revert InvalidAgentConfig();
+        address top = holder();
+        if (agent == address(0) || agent == address(this) || expiry <= block.timestamp || top == address(0)) {
+            revert InvalidAgentConfig();
+        }
         uint64 epoch = _agent.epoch + 1;
-        _agent = AgentConfig({agent: agent, grantor: msg.sender, expiry: expiry, epoch: epoch});
+        _agent = AgentConfig({agent: agent, grantor: top, expiry: expiry, epoch: epoch});
         _setPermissions(epoch, permissions, true);
         _valueAllowance[epoch] = valueAllowance;
         _updateState();
-        emit AgentSet(agent, msg.sender, expiry, epoch, valueAllowance);
+        emit AgentSet(agent, top, expiry, epoch, valueAllowance);
     }
 
     /// @notice Add (`allowed = true`) or remove calls for the current agent without resetting it.
@@ -174,9 +220,10 @@ contract NeonFaceAccount is ERC6551 {
     }
 
     function _checkAgent() internal view returns (AgentConfig memory cfg) {
-        if (block.timestamp < lockedUntil) revert AccountIsLocked(lockedUntil);
+        (address top, uint64 until) = _above();
+        if (block.timestamp < until) revert AccountIsLocked(until);
         cfg = _agent;
-        if (!_agentActive(cfg) || msg.sender != cfg.agent) revert AgentNotActive();
+        if (!_agentActive(cfg, top) || msg.sender != cfg.agent) revert AgentNotActive();
     }
 
     function _agentCall(AgentConfig memory cfg, address target, uint256 value, bytes calldata data)
@@ -209,16 +256,17 @@ contract NeonFaceAccount is ERC6551 {
         returns (address agent, address grantor, uint64 expiry, bool active, uint256 valueAllowance)
     {
         AgentConfig memory cfg = _agent;
-        return (cfg.agent, cfg.grantor, cfg.expiry, _agentActive(cfg), _valueAllowance[cfg.epoch]);
+        return (cfg.agent, cfg.grantor, cfg.expiry, _agentActive(cfg, holder()), _valueAllowance[cfg.epoch]);
     }
 
     function isAgentCallAllowed(address target, bytes4 selector) external view returns (bool) {
         AgentConfig memory cfg = _agent;
-        return _agentActive(cfg) && !isLocked() && _allowed[cfg.epoch][target][selector];
+        (address top, uint64 until) = _above();
+        return _agentActive(cfg, top) && block.timestamp >= until && _allowed[cfg.epoch][target][selector];
     }
 
-    function _agentActive(AgentConfig memory cfg) internal view returns (bool) {
-        return cfg.agent != address(0) && block.timestamp <= cfg.expiry && cfg.grantor == owner();
+    function _agentActive(AgentConfig memory cfg, address top) internal view returns (bool) {
+        return cfg.agent != address(0) && block.timestamp <= cfg.expiry && cfg.grantor == top;
     }
 
     // ------------------------------------------------------------------

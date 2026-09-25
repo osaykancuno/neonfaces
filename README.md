@@ -7,7 +7,7 @@
 - **Every Face is a wallet.** An ERC-6551 Token Bound Account is created through the canonical registry in the mint transaction and filled with a base basket of Stock Tokens from the seed pool.
 - **The mint funds itself.** 40% of the split goes to `NeonSeedVault`, which can only buy basket tokens (Uniswap v3, Chainlink-checked prices) straight into the pool; `tools/seed-keeper.mjs` runs it during the sale. No inventory is needed before the first mint.
 - **Stare tiers set at reveal**: a keyed on-chain mapping assigns tokens their art; the art decides the tier (4444 Glance / 833 Watch / 278 Heavy Stare over the 5555 artworks) and Watch / Heavy Stare Faces get a top-up. Nothing valuable is decided at mint, so it can't be sniped.
-- **Sets of four**: 555 faces come in four pieces (left eye, right eye, left mouth, right mouth; half women, half men; one tier per set). The reveal deals whole sets only, never to a run of consecutive ids. Moving three pieces into the fourth's account assembles the set: that Face shows the whole face, sells as one, and earns a one-time bonus basket.
+- **Sets of four**: 555 faces come in four pieces (left eye, right eye, left mouth, right mouth; half women, half men; one tier per set). The reveal deals whole sets only, never to a run of consecutive ids. Moving three pieces into the fourth's account assembles the set: that Face shows the whole face, sells as one, and earns a one-time bonus basket. The site's **set hunter** shows where the missing pieces are, who holds them and for how long, and on the next visit which pieces of a watched set changed hands.
 - **Unblinking and the Gaze**: an on-chain clock of how long each Face has stayed with its holder; after 30, 90 and 365 days the neon blooms in the art itself (Steady, Fixed, Burning). Selling resets it. Patience shows in the picture, not in a payout.
 - **A journal for every Face**: the site tells each Face's story from the chain's own events (mint, hands, seeds, sets, agents, locks, trades), with public boards for the longest stares and the sets completed.
 - **Runs by itself**: the keeper (seeds, top-ups, set bonuses, payouts, daily metadata refresh) is scheduled on GitHub Actions for free; everything it does is permissionless except the vault's purchases. See the runbook's "After launch" table for the few steps that stay human.
@@ -40,7 +40,7 @@ Requirements: Foundry, Node ≥ 20, Python ≥ 3.11 with `numpy pillow pycryptod
 # 1. art: generate the 5555 Faces (≈9 min) and the site assets
 cd art && python generate.py && python export_site.py && python export_brand.py && cd ..   # brand: icons, link preview, logo, banner
 
-# 2. contracts: build + test (95 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
+# 2. contracts: build + test (102 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
 #    full-supply mapping, whole sets on any sale size, ownership cycles, byte-exact SVG, agents, lock)
 cd contracts && forge test && cd ..
 

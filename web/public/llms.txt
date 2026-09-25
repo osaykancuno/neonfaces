@@ -16,7 +16,7 @@ Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, loc
 - `NeonFaces.tokenURI(id)`: on-chain JSON (image, traits, "account", "Holds <TICKER>", Set, Gaze, Unblinking, Locked until).
 - `NeonSeeder.accountOf(id)`: the Face's wallet. `NeonSeeder.setOf(id)`: set id, piece, the four token ids.
 - `NeonTrader.price(token)`: Chainlink USD price (8 decimals); reverts when stale (stock feeds pause at weekends).
-- `NeonTrader.strategyOf(account)`, `dailyLimit(account)`, `leftToday(account)`; account `agentConfig()`, `lockedUntil()`.
+- `NeonTrader.strategyOf(account)`, `dailyLimit(account)`, `leftToday(account)`; account `agentConfig()`, `effectiveLockedUntil()` (its own lock, or the lock of the Face it sits inside).
 
 ## Prepare an action (the holder confirms on the page)
 
@@ -31,7 +31,7 @@ Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, loc
 
 ## Rules the contracts enforce
 
-- Trades go through NeonTrader: output always back into the Face, at most 1% worse than Chainlink plus the pool fee, listed tokens only, daily USD limit set by the holder, no trades on stale prices.
+- Trades go through NeonTrader: output always back into the Face, at most 2% worse than Chainlink (1% slippage plus pool fees up to 1%), listed tokens only, daily USD limit set by the holder, no trades on stale prices.
 - An agent can call only what the holder allowed, within an ETH budget, can't sign, expires, and stops when the Face is sold.
 - A lock blocks the holder, the agent and signatures until its date, and survives a sale.
 - Sets: 555 faces come in four pieces; three pieces moved into the fourth's wallet assemble the set (whole face in the image, one-time bonus basket).

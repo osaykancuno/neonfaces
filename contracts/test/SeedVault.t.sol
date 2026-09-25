@@ -109,18 +109,51 @@ contract SeedVaultTest is Base {
     }
 
     function test_SurplusOnlyToTreasuryAfterBasketsLock() public {
+        _mintPublic(alice, 2); // empty pool: both seeds pending
+        vm.startPrank(admin);
+        faces.grantRole(faces.METADATA_ROLE(), admin);
+        faces.requestReveal();
+        vm.stopPrank();
+        vm.roll(block.number + 6);
+        faces.reveal();
         vm.deal(address(vault), 1 ether);
         vm.startPrank(admin);
         vm.expectRevert(NeonSeedVault.BasketsNotLocked.selector);
         vault.releaseSurplus(1 ether);
         seeder.lockConfig();
+        vm.expectRevert(NeonSeedVault.SeedsStillOwed.selector); // the ETH must buy the pending seeds first
         vault.releaseSurplus(0.4 ether);
         vm.stopPrank();
+
+        tsla.mint(address(seeder), 2 * 0.002e18);
+        nvda.mint(address(seeder), 2 * 0.003e18);
+        assertTrue(seeder.covered());
+        vm.prank(admin);
+        vault.releaseSurplus(0.4 ether);
         assertEq(treasury.balance, 0.4 ether);
 
         vm.prank(keeper);
         vm.expectRevert();
         vault.releaseSurplus(0.1 ether);
+    }
+
+    function test_SurplusFreeAfterGraceIfSeedsCantBeBought() public {
+        _mintPublic(alice, 1);
+        vm.startPrank(admin);
+        faces.grantRole(faces.METADATA_ROLE(), admin);
+        faces.requestReveal();
+        vm.stopPrank();
+        vm.roll(block.number + 6);
+        faces.reveal();
+        vm.deal(address(vault), 1 ether);
+        vm.startPrank(admin);
+        seeder.lockConfig();
+        vm.expectRevert(NeonSeedVault.SeedsStillOwed.selector);
+        vault.releaseSurplus(1 ether);
+        vm.warp(block.timestamp + vault.OWED_GRACE());
+        vault.releaseSurplus(1 ether);
+        vm.stopPrank();
+        assertEq(treasury.balance, 1 ether);
     }
 
     function test_WiringIsOnce() public {

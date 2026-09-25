@@ -219,7 +219,7 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
 
     <details class="hp-card" ${lockedNow ? "open" : ""}>
       <summary>Selling this Face? Lock its wallet</summary>
-      ${lockedNow ? `<p class="neon">Locked until <b>${niceDate(lockedUntil)}</b>. Nothing can leave this wallet until then, so buyers get exactly what they see.</p>` : ""}
+      ${lockedNow ? `<p class="neon">Locked until <b>${niceDate(lockedUntil)}</b>. Until then nothing leaves this wallet through you, an agent or a signature. Revoke any token approvals too (listed above), so buyers get exactly what they see.</p>` : ""}
       <p class="fine">While locked, nobody (not you, not your agent) can move anything out of this Face's wallet. The Face itself can still be sold, and the lock goes with it, so a buyer knows the contents can't disappear before the sale. You can extend a lock, never shorten it.</p>
       <div class="chips" id="hp-lock">${[1, 3, 7, 30].map((d) => `<button type="button" data-v="${d}" class="${d === 7 ? "on" : ""}">${d === 1 ? "until tomorrow" : `${d} days`}</button>`).join("")}</div>
       <button class="btn btn-neon" id="hp-lock-go">${lockedNow ? "Extend the lock" : "Lock the wallet"}</button>

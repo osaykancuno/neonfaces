@@ -1,4 +1,4 @@
-# NEONFACES — They don't blink.
+# NEONFACES: They don't blink.
 
 5555 close-up faces on **Robinhood Chain** (chain id 4663). Every Face is an account.
 
@@ -11,9 +11,9 @@
 - **Unblinking and the Gaze**: an on-chain clock of how long each Face has stayed with its holder; after 30, 90 and 365 days the neon blooms in the art itself (Steady, Fixed, Burning). Selling resets it. Patience shows in the picture, not in a payout.
 - **A journal for every Face**: the site tells each Face's story from the chain's own events (mint, hands, seeds, sets, agents, locks, trades), with public boards for the longest stares and the sets completed.
 - **Runs by itself**: the keeper (seeds, top-ups, set bonuses, payouts, daily metadata refresh) is scheduled on GitHub Actions for free; everything it does is permissionless except the vault's purchases. See the runbook's "After launch" table for the few steps that stay human.
-- **Scoped agents**: holders delegate an agent in a plain-language wizard; it may only call what they allow, within an ETH budget — no signatures, expiring, void on sale. Trading goes through **NeonTrader**: Uniswap v3 on Robinhood Chain, output always back into the Face, price bounded by Chainlink, daily USD cap. See [docs/AGENTS.md](docs/AGENTS.md).
+- **Scoped agents**: holders delegate an agent in a plain-language wizard; it may only call what they allow, within an ETH budget; no signatures, it expires, and it dies on sale. Trading goes through **NeonTrader**: Uniswap v3 on Robinhood Chain, output always back into the Face, price bounded by Chainlink, daily USD cap. See [docs/AGENTS.md](docs/AGENTS.md).
 - **Lock before listing**: a holder can freeze the account until a date; the lock survives the sale, so buyers get exactly what they see.
-- **Money said before, not after**: after OpenSea's 10% drop fee, SeaDrop can pay mint proceeds only to `NeonPayout` — a 40 / 25 / 20 / 15 split with no owner; team share vests over 6 months.
+- **Money said before, not after**: after OpenSea's 10% drop fee, SeaDrop can pay mint proceeds only to `NeonPayout`, a 40 / 25 / 20 / 15 split with no owner; team share vests over 6 months.
 
 > Plain truth: NEONFACES does not sell shares or shareholder rights. It sells an artwork that can hold on-chain exposure. Stock Tokens give economic exposure only and are not available to US persons.
 
@@ -56,7 +56,7 @@ cd tools && npm install && cd ../web && npm install && npm run dev
 
 The site runs in **preview mode** (art + lore only) until `web/public/deployment.json` exists (`node tools/export-web.mjs <chainId>`).
 
-Launching for real: follow [docs/LAUNCH-RUNBOOK.md](docs/LAUNCH-RUNBOOK.md) — testnet rehearsal first.
+Launching for real: follow [docs/LAUNCH-RUNBOOK.md](docs/LAUNCH-RUNBOOK.md), testnet rehearsal first.
 
 ## Verified facts this build relies on (checked on-chain, 2026-09-24/25)
 
@@ -64,7 +64,7 @@ Launching for real: follow [docs/LAUNCH-RUNBOOK.md](docs/LAUNCH-RUNBOOK.md) — 
 
 - Canonical ERC-6551 registry `0x000000006551c19487814612e58FE06813775758` is deployed on Robinhood Chain mainnet and testnet; its codehash equals Ethereum mainnet's.
 - Safe v1.4.1 (SafeL2, ProxyFactory) is deployed on mainnet and testnet.
-- Stock Tokens (TSLA, AAPL, NVDA, AMZN, MSFT, GOOGL, META, MSTR, SPY, QCOM) are 18-decimals ERC-20s; USDG is 6 decimals — addresses in `config/baskets.plan.json`.
+- Stock Tokens (TSLA, AAPL, NVDA, AMZN, MSFT, GOOGL, META, MSTR, SPY, QCOM) are 18-decimals ERC-20s; USDG is 6 decimals (addresses in `config/baskets.plan.json`).
 - A mainnet-fork test transfers **real** TSLA/NVDA/SPY/USDG into a freshly created Face account at mint and back out by the holder: Stock Tokens are not blocked from TBAs.
 - ArbSys (`0x64`) exposes `arbBlockNumber` / `arbBlockHash`; gas ≈ 0.044 gwei, L1 data fee ≈ 0. Storing the whole art set (1.0 MB) costs ≈ 0.01 ETH.
 - Uniswap v2/v3/v4 are live (addresses from the official Uniswap registry, in `config/trader.4663.json`); every basket ticker has a v3 pool against USDG with $185k–$3.5M liquidity; WETH/USDG 0.01% ≈ $10.9M.

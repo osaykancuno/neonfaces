@@ -11,6 +11,7 @@ import {NeonFaces} from "../src/NeonFaces.sol";
 import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {MockStockToken} from "./mocks/MockStockToken.sol";
 import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
+import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 
 /// @notice Fully on-chain art: storage, provenance seal, byte-exact SVG, JSON metadata.
 contract OnChainTest is Base {
@@ -42,7 +43,7 @@ contract OnChainTest is Base {
             uint256 artId = fixtures.readUint(string.concat(k, ".artId"));
             bytes memory rec = fixtures.readBytes(string.concat(k, ".record"));
             string memory expected = fixtures.readString(string.concat(k, ".svg"));
-            assertEq(renderer.renderSVG(artId, rec), expected);
+            assertEq(renderer.renderSVG(artId, rec, 0), expected);
         }
     }
 
@@ -50,7 +51,11 @@ contract OnChainTest is Base {
         string memory f = vm.readFile("test/fixtures/svg-set-sample.json");
         bytes[] memory recs = new bytes[](4);
         for (uint256 q; q < 4; ++q) recs[q] = f.readBytes(string.concat(".records[", vm.toString(q), "]"));
-        assertEq(renderer.renderSetSVG(f.readUint(".set"), recs), f.readString(".svg"));
+        assertEq(renderer.renderSetSVG(f.readUint(".set"), recs, 0), f.readString(".svg"));
+        for (uint8 g = 1; g <= 3; ++g) {
+            string memory key = string.concat(".gaze", vm.toString(g));
+            assertEq(renderer.renderSetSVG(f.readUint(".set"), recs, g), f.readString(key), "gaze mirrors Python");
+        }
     }
 
     // ---- storage + provenance seal --------------------------------------------
@@ -172,7 +177,7 @@ contract OnChainTest is Base {
         );
         // image is the on-chain SVG of the assigned art
         uint256 artId = seeder.artIdOf(1);
-        string memory svg = renderer.renderSVG(artId, rec);
+        string memory svg = renderer.renderSVG(artId, rec, 0);
         assertTrue(LibString.contains(post, Base64.encode(bytes(svg))));
         assertEq(renderer.svgOf(1), svg);
     }
@@ -193,6 +198,41 @@ contract OnChainTest is Base {
         assertEq(faces.unblinkingFor(1), 0);
         j = _json(faces.tokenURI(1));
         assertTrue(LibString.contains(j, '"trait_type":"Unblinking (days)","display_type":"number","value":0}'));
+    }
+
+    function test_Metadata_GazeBloomsWithTimeAndResetsOnSale() public {
+        _openPublic();
+        _mintPublic(alice, 1);
+        assertEq(renderer.gazeOf(1), 0);
+        assertFalse(LibString.contains(_json(faces.tokenURI(1)), '"Gaze"'));
+        assertFalse(LibString.contains(renderer.svgOf(1), 'filter="url(#b)"'));
+
+        string[3] memory names = ["Steady", "Fixed", "Burning"];
+        uint256[3] memory days_ = [uint256(30), 90, 365];
+        uint256 start = block.timestamp;
+        for (uint256 i; i < 3; ++i) {
+            vm.warp(start + days_[i] * 1 days);
+            assertEq(renderer.gazeOf(1), i + 1);
+            string memory j = _json(faces.tokenURI(1));
+            assertTrue(LibString.contains(j, string.concat('"trait_type":"Gaze","value":"', names[i], '"')));
+            assertTrue(LibString.contains(renderer.svgOf(1), 'filter="url(#b)"'), "the neon blooms");
+        }
+        vm.prank(alice);
+        faces.transferFrom(alice, bob, 1);
+        assertEq(renderer.gazeOf(1), 0, "a sale resets the gaze");
+        assertFalse(LibString.contains(renderer.svgOf(1), 'filter="url(#b)"'));
+    }
+
+    function test_Metadata_DailyRefreshIsPermissionless() public {
+        vm.warp(10 days);
+        vm.expectEmit(address(faces));
+        emit IERC4906.BatchMetadataUpdate(1, 5555);
+        vm.prank(carol); // anyone (the keeper does it daily)
+        faces.refreshMetadata();
+        vm.expectRevert(NeonFaces.RefreshTooSoon.selector);
+        faces.refreshMetadata();
+        vm.warp(block.timestamp + 1 days);
+        faces.refreshMetadata();
     }
 
     function test_Metadata_HoldingsAreLive() public {

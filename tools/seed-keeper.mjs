@@ -1,19 +1,25 @@
-// Keeps the seed pool stocked from the mint itself and delivers every pending seed and top-up.
+// The project's only moving part off-chain: keeps the seed pool stocked from the mint itself, delivers every
+// pending seed, top-up and set bonus, pays the split and the team vesting, and refreshes marketplace metadata daily.
+// Everything it calls is permissionless except the vault's `buy` (KEEPER_ROLE). Run it as a loop, or with --once
+// from a scheduler (.github/workflows/keeper.yml runs it every 10 minutes, no server needed).
 //
 //   PK=<keeper key> node seed-keeper.mjs <chainId> [--once]
 //   env: RPC_URL, INTERVAL (seconds, default 60), BUFFER (Faces to stock ahead, default 25), SLIPPAGE (bps, default 100),
-//        SET_EVERY (rounds between set scans after the reveal, default 5), SET_BUFFER (set bonuses to stock ahead, default 5)
+//        SET_EVERY_MIN (minutes between set scans after the reveal, default 30), SET_BUFFER (set bonuses to stock ahead, default 5),
+//        KEEPER_STATE (JSON file carried between --once runs, so a scheduled run doesn't re-read all 5555 Faces)
 //
 // Each round:
-//   1. pushes the vault's share out of NeonPayout (anyone can),
+//   0. finalizes a requested reveal if its block hash is readable (the watcher's job, as a safety net),
+//   1. pays every payee of NeonPayout and the team's vested share (anyone can),
 //   2. works out what the pool needs: pending base seeds + a buffer for the next Faces, and after the reveal the
 //      exact top-up basket of every Watch / Heavy Stare Face still waiting,
 //   3. makes NeonSeedVault buy the missing tokens (NeonTrader: Uniswap v3, Chainlink-bounded, straight into the pool),
 //   4. delivers pending seeds (activateBatch) and the top-ups the pool can cover (upgradeBatch),
-//   5. after the reveal, delivers the one-time bonus of every assembled set (claimSetBonus), so holders don't have to.
+//   5. after the reveal, delivers the one-time bonus of every assembled set (claimSetBonus), so holders don't have to,
+//   6. once a day, `refreshMetadata()`: Unblinking days and the Gaze change with time, marketplaces need the nudge.
 // The keeper key needs gas only. It can't move the vault's ETH anywhere but into the pool.
 // Stock Token feeds only update on trading days: over a weekend the buys wait, the mint doesn't.
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPublicClient, createWalletClient, http, parseAbi, keccak256, encodeAbiParameters, formatEther } from "viem";
@@ -25,13 +31,14 @@ const once = process.argv.includes("--once");
 const INTERVAL = Number(process.env.INTERVAL ?? 60);
 const BUFFER = Number(process.env.BUFFER ?? 25);
 const SLIPPAGE = BigInt(process.env.SLIPPAGE ?? 100);
-const SET_EVERY = Number(process.env.SET_EVERY ?? 5);
+const SET_EVERY_MIN = Number(process.env.SET_EVERY_MIN ?? 30);
+const STATE = process.env.KEEPER_STATE;
 const SET_BUFFER = Number(process.env.SET_BUFFER ?? 5);
 const MIN_BUY_USD8 = 2n * 10n ** 8n; // skip dust buys
 
 const dep = JSON.parse(readFileSync(resolve(here, `../contracts/deployments/${chainId}.json`), "utf8"));
 const cfg = JSON.parse(readFileSync(resolve(here, `../config/trader.${chainId}.json`), "utf8"));
-const rpc = process.env.RPC_URL ?? { 4663: "https://rpc.mainnet.chain.robinhood.com" }[chainId];
+const rpc = process.env.RPC_URL || { 4663: "https://rpc.mainnet.chain.robinhood.com" }[chainId];
 if (!process.env.PK) throw new Error("set PK (keeper key: KEEPER_ROLE on NeonSeedVault, gas only)");
 if (!dep.seedVault || !dep.trader) throw new Error("deployments file needs seedVault and trader");
 const chain = { id: chainId, name: "robinhood", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [rpc] } } };
@@ -52,6 +59,13 @@ const abi = parseAbi([
   "function claimSetBonus(uint256 anchorId)",
   "function releasable(address) view returns (uint256)",
   "function release(address payee)",
+  "function releaseAll()",
+  "function releasable() view returns (uint256)",
+  "function release()",
+  "function revealBlock() view returns (uint256)",
+  "function reveal()",
+  "function lastMetadataRefresh() view returns (uint64)",
+  "function refreshMetadata()",
   "function price(address) view returns (uint256)",
   "function buy(address[] path, uint24[] fees, uint256 ethIn, uint256 slippageBps) returns (uint256)",
   "function balanceOf(address) view returns (uint256)",
@@ -77,8 +91,28 @@ const route = (token) => (token === USDG ? [[cfg.weth, token], [100]] : [[cfg.we
 // what we know about each Face, refreshed incrementally
 const faces = new Map(); // id -> { funded, tier, upgraded }
 let scanned = 0;
-let rounds = 0;
+let lastSetScan = 0;
 let unpaidSets = null; // setId -> [4 member ids], sets whose bonus is not paid yet (after the reveal)
+
+// state carried between scheduled --once runs (Faces already known to be done are never re-read)
+function loadState() {
+  if (!STATE || !existsSync(STATE)) return;
+  const j = JSON.parse(readFileSync(STATE, "utf8"));
+  if (j.faces !== dep.faces) return; // another deployment
+  scanned = j.scanned;
+  lastSetScan = j.lastSetScan ?? 0;
+  for (const [id, f] of j.known) faces.set(id, f);
+  unpaidSets = j.unpaidSets ? new Map(j.unpaidSets.map(([k, v]) => [BigInt(k), v.map(BigInt)])) : null;
+}
+function saveState() {
+  if (!STATE) return;
+  const known = [...faces].filter(([, f]) => !f.funded || !f.tier || (f.tier >= 2 && !f.upgraded));
+  // done Faces are dropped: `scanned` already marks them as seen
+  writeFileSync(STATE, JSON.stringify({
+    faces: dep.faces, scanned, lastSetScan, known,
+    unpaidSets: unpaidSets && [...unpaidSets].map(([k, v]) => [String(k), v.map(String)]),
+  }));
+}
 
 /** Anchors of assembled sets whose one-time bonus is unpaid: [{ anchor, setId }]. */
 async function assembledSets(supply) {
@@ -91,15 +125,15 @@ async function assembledSets(supply) {
     }
   }
   const due = [];
-  for (const [setId, members] of unpaidSets) {
-    const [anchor] = await read(dep.seeder, "setBonus", [setId]);
-    if (anchor) {
-      unpaidSets.delete(setId);
-      continue;
-    }
-    const flags = await Promise.all(members.map((m) => read(dep.seeder, "isAssembled", [m])));
-    const k = flags.indexOf(true);
-    if (k >= 0) due.push({ anchor: members[k], setId });
+  const sets = [...unpaidSets];
+  for (let i = 0; i < sets.length; i += 100) {
+    await Promise.all(sets.slice(i, i + 100).map(async ([setId, members]) => {
+      const [anchor] = await read(dep.seeder, "setBonus", [setId]);
+      if (anchor) return unpaidSets.delete(setId);
+      const flags = await Promise.all(members.map((m) => read(dep.seeder, "isAssembled", [m])));
+      const k = flags.indexOf(true);
+      if (k >= 0) due.push({ anchor: members[k], setId });
+    }));
   }
   return due;
 }
@@ -110,9 +144,21 @@ async function refresh(ids) {
 }
 
 async function round() {
-  // 1. the vault's share of the mint
+  // 0. a requested reveal nobody finalized yet (reveal-watch.mjs does it within seconds; this is the safety net)
+  if (!(await read(dep.faces, "revealSeed")) && (await read(dep.faces, "revealBlock")) > 0n) {
+    try {
+      log("reveal", await send(dep.faces, "reveal", []));
+    } catch (e) {
+      log(`reveal not possible now (${e.shortMessage ?? e.message}): too early, or the window passed and the Safe must request again`);
+    }
+  }
+
+  // 1. the mint money: every payee of the split (the vault first of all), then the team's vested share
   if ((await read(dep.payout, "releasable", [dep.seedVault])) > 0n) {
-    log("release seed share", await send(dep.payout, "release", [dep.seedVault]));
+    log("pay the split", await send(dep.payout, "releaseAll", []));
+  }
+  if (dep.teamVesting && (await read(dep.teamVesting, "releasable")) > 10n ** 16n) {
+    log("release vested team share", await send(dep.teamVesting, "release", []));
   }
 
   // 2. what the pool needs
@@ -142,7 +188,8 @@ async function round() {
   // sets: the bonus basket of every assembled set still unpaid (same draw as NeonSeeder.claimSetBonus)
   const bonusDue = new Map(); // anchor -> basketId
   let bonusOpts = [];
-  if (revealSeed && rounds++ % SET_EVERY === 0) {
+  if (revealSeed && Date.now() / 1000 - lastSetScan >= SET_EVERY_MIN * 60) {
+    lastSetScan = Math.floor(Date.now() / 1000);
     bonusOpts = (await read(dep.seeder, "tierBaskets", [4])).map(Number);
     if (bonusOpts.length) {
       for (const { anchor, setId } of await assembledSets(supply)) {
@@ -241,15 +288,26 @@ async function round() {
     }
   }
   if (pendingBase.length) await refresh(pendingBase);
+
+  // 6. daily metadata refresh for marketplaces (time-based traits emit no event of their own)
+  if (supply && Date.now() / 1000 >= Number(await read(dep.faces, "lastMetadataRefresh")) + 86_400) {
+    try {
+      log("refresh marketplace metadata", await send(dep.faces, "refreshMetadata", []));
+    } catch (e) {
+      log(`refresh skipped (${e.shortMessage ?? e.message})`);
+    }
+  }
   const stillPending = [...faces].filter(([, f]) => !f.funded).length;
   log(`supply ${supply} · pending seeds ${stillPending} · vault ${formatEther(await pub.getBalance({ address: dep.seedVault }))} ETH`);
 }
 
+loadState();
 do {
   try {
     await round();
   } catch (e) {
     log("round failed:", e.shortMessage ?? e.message);
   }
+  saveState();
   if (!once) await new Promise((r) => setTimeout(r, INTERVAL * 1000));
 } while (!once);

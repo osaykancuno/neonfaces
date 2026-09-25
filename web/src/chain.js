@@ -11,6 +11,7 @@ export const ABI = {
     "function tokenURI(uint256) view returns (string)",
     "function revealSeed() view returns (uint256)",
     "function mintClosed() view returns (bool)",
+    "function heldSince(uint256 tokenId) view returns (uint64)",
     "function safeTransferFrom(address from, address to, uint256 tokenId)",
     "function transferFrom(address from, address to, uint256 tokenId)",
     "error OwnershipCycle()",

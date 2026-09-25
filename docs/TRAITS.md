@@ -131,4 +131,5 @@ Rule: shrink a Face to 48 px. If you can't tell it's a NEONFACE, the trait is to
 | Locked until | date, while the holder has locked the account |
 | Unblinking (days) | days since the Face last changed hands |
 | Eyes open since | date of the last transfer |
+| Gaze | Steady / Fixed / Burning after 30 / 90 / 365 days with the same holder; the neon blooms in the image |
 | Art ID | art piece assigned at reveal |

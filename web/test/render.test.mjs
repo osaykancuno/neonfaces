@@ -15,4 +15,5 @@ for (const f of fixtures) {
 const set = JSON.parse(readFileSync(new URL("../../contracts/test/fixtures/svg-set-sample.json", import.meta.url)));
 test(`assembled set ${set.set} renders byte-identical to NeonRenderer`, () => {
   assert.equal(renderSetSVG(set.set, set.records), set.svg);
+  for (const g of [1, 2, 3]) assert.equal(renderSetSVG(set.set, set.records, g), set[`gaze${g}`], `gaze ${g}`);
 });

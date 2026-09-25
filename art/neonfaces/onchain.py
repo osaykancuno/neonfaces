@@ -122,16 +122,27 @@ def _rand(art_id: int, i: int) -> int:
     return int.from_bytes(keccak256(art_id.to_bytes(32, "big") + i.to_bytes(32, "big")), "big")
 
 
-def render_svg(art_id: int, rec: bytes) -> str:
-    return _svg(art_id, [rec], 1)
+# Gaze: the neon blooms the longer a Face stays with its holder (Unblinking >= 30 / 90 / 365 days).
+# level -> (blur radius in blocks, glow strength); a sale resets it.
+GAZE = {1: ("0.6", ".35"), 2: ("0.9", ".55"), 3: ("1.2", ".8")}
+GAZE_NAMES = {1: "Steady", 2: "Fixed", 3: "Burning"}
+GAZE_DAYS = (30, 90, 365)
 
 
-def render_set_svg(set_id: int, recs: list[bytes]) -> str:
+def gaze_level(days: int) -> int:
+    return sum(days >= d for d in GAZE_DAYS)
+
+
+def render_svg(art_id: int, rec: bytes, gaze: int = 0) -> str:
+    return _svg(art_id, [rec], 1, gaze)
+
+
+def render_set_svg(set_id: int, recs: list[bytes], gaze: int = 0) -> str:
     """Assembled set (set_id 1..555): the 4 pieces side by side on a 2G grid, grain keyed by 5555 + set_id."""
-    return _svg(ART_COUNT + set_id, recs, 2)
+    return _svg(ART_COUNT + set_id, recs, 2, gaze)
 
 
-def _svg(art_id: int, recs: list[bytes], side: int) -> str:
+def _svg(art_id: int, recs: list[bytes], side: int, gaze: int = 0) -> str:
     g, traits, _ = decode_record(recs[0])
     pal = palettes_hex()[traits["Neon"]]
     paths = {c: [] for c in range(8)}
@@ -147,13 +158,20 @@ def _svg(art_id: int, recs: list[bytes], side: int) -> str:
                 p += seg
                 n -= seg
     g *= side
-    s = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {g} {g}" width="1200" height="1200" shape-rendering="crispEdges">',
-        f'<rect width="{g}" height="{g}" fill="{pal[BG]}"/>',
-    ]
+    s = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {g} {g}" width="1200" height="1200" shape-rendering="crispEdges">']
+    if gaze:
+        blur, k = GAZE[gaze]
+        s.append(
+            f'<defs><filter id="b"><feGaussianBlur stdDeviation="{blur}"/><feComponentTransfer>'
+            f'<feFuncR type="linear" slope="{k}"/><feFuncG type="linear" slope="{k}"/><feFuncB type="linear" slope="{k}"/>'
+            '</feComponentTransfer><feBlend in="SourceGraphic" mode="screen"/></filter></defs><g filter="url(#b)">'
+        )
+    s.append(f'<rect width="{g}" height="{g}" fill="{pal[BG]}"/>')
     for c in (0, 1, 2, 3, 4, 6, 7):
         if paths[c]:
             s.append(f'<path fill="{pal[c]}" d="{"".join(paths[c])}"/>')
+    if gaze:
+        s.append("</g>")
 
     grain = traits["Grain"]
     if grain == "Dusty":

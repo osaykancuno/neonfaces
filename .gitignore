@@ -19,3 +19,4 @@ safe/
 web/public/agent-presets.json
 web/public/deployment.json
 config/allowlists/opensea/
+tools/.keeper-state.json

@@ -18,7 +18,8 @@ import {NeonArt} from "./NeonArt.sol";
 ///  - the Stare tier, the Face account (ERC-6551) and the seed basket are read live from NeonSeeder,
 ///  - the basket tickers are read from the Stock Token contracts themselves,
 ///  - set pieces show their set; an assembled set (one piece's account holds the other three) shows the
-///    whole face, drawn from the four records side by side.
+///    whole face, drawn from the four records side by side,
+///  - the Gaze: the neon blooms after 30 / 90 / 365 days with the same holder ("Unblinking"); a sale resets it.
 /// No IPFS, no server. This contract has no owner; its only storage (watchTokens) is set in the constructor.
 contract NeonRenderer {
     using DynamicBufferLib for DynamicBufferLib.DynamicBuffer;
@@ -75,7 +76,7 @@ contract NeonRenderer {
             "underlying shares, and are not available to US persons. Art and metadata are fully on-chain.",
             '","image":"data:image/svg+xml;base64,'
         );
-        j.p(bytes(Base64.encode(bytes(assembled ? renderSetSVG(setId, _setRecords(setId)) : renderSVG(revealed ? artId : PLACEHOLDER_ART_ID, rec)))));
+        j.p(bytes(Base64.encode(bytes(_image(tokenId, revealed ? artId : PLACEHOLDER_ART_ID, rec, assembled ? setId : 0)))));
         j.p('","external_url":"', bytes(siteURL()), "face/", bytes(tokenId.toString()));
         j.p('","account":"', bytes(LibString.toHexStringChecksummed(s.account)), '","attributes":[');
         j.p(_attr("Stare", _tierName(s.tier), false));
@@ -102,11 +103,24 @@ contract NeonRenderer {
     /// @notice Raw SVG of a token (for sites and agents): the whole face when it anchors an assembled set.
     function svgOf(uint256 tokenId) external view returns (string memory) {
         (bool revealed, uint256 artId, bytes memory rec) = _artOf(tokenId);
-        if (revealed) {
-            (uint256 setId, bool assembled,,) = _set(tokenId);
-            if (assembled) return renderSetSVG(setId, _setRecords(setId));
-        }
-        return renderSVG(revealed ? artId : PLACEHOLDER_ART_ID, rec);
+        uint256 setId;
+        bool assembled;
+        if (revealed) (setId, assembled,,) = _set(tokenId);
+        return _image(tokenId, revealed ? artId : PLACEHOLDER_ART_ID, rec, assembled ? setId : 0);
+    }
+
+    /// @notice Gaze level: 0, then 1 "Steady" / 2 "Fixed" / 3 "Burning" after 30 / 90 / 365 days with the same holder.
+    function gazeOf(uint256 tokenId) public view returns (uint8) {
+        uint256 since = faces.heldSince(tokenId);
+        if (since == 0) return 0;
+        uint256 d = (block.timestamp - since) / 1 days;
+        return d >= 365 ? 3 : d >= 90 ? 2 : d >= 30 ? 1 : 0;
+    }
+
+    /// @dev The token's image: its art (or the whole face when `setId` != 0), with its Gaze.
+    function _image(uint256 tokenId, uint256 artId, bytes memory rec, uint256 setId) internal view returns (string memory) {
+        uint8 gaze = gazeOf(tokenId);
+        return setId != 0 ? renderSetSVG(setId, _setRecords(setId), gaze) : renderSVG(artId, rec, gaze);
     }
 
     /// @dev Set attributes: "Set" #n, "Set status" (Assembled here / Inside #id) and the one-time "Set bonus"
@@ -155,7 +169,7 @@ contract NeonRenderer {
             "Tokens. Art and metadata fully on-chain.",
             '","image":"data:image/svg+xml;base64,'
         );
-        j.p(bytes(Base64.encode(bytes(renderSVG(PLACEHOLDER_ART_ID, SSTORE2.read(placeholder))))));
+        j.p(bytes(Base64.encode(bytes(renderSVG(PLACEHOLDER_ART_ID, SSTORE2.read(placeholder), 0)))));
         j.p('","external_link":"', bytes(siteURL()), '","seller_fee_basis_points":', bytes(fee.toString()));
         j.p(',"fee_recipient":"', bytes(LibString.toHexStringChecksummed(receiver)), '"}');
         return string.concat("data:application/json;base64,", Base64.encode(j.data));
@@ -173,18 +187,19 @@ contract NeonRenderer {
     // ------------------------------------------------------------------
     // SVG — mirrored byte for byte by art/neonfaces/onchain.py (render_svg)
     // ------------------------------------------------------------------
-    function renderSVG(uint256 artId, bytes memory rec) public pure returns (string memory) {
+    /// @notice SVG of one art record with a Gaze level (0 = none).
+    function renderSVG(uint256 artId, bytes memory rec, uint8 gaze) public pure returns (string memory) {
         bytes[] memory recs = new bytes[](1);
         recs[0] = rec;
-        return _svg(artId, recs, 1);
+        return _svg(artId, recs, 1, gaze);
     }
 
     /// @notice An assembled set (setId 1..555): its 4 pieces side by side on a 2G grid, grain keyed by 5555 + setId.
-    function renderSetSVG(uint256 setId, bytes[] memory recs) public pure returns (string memory) {
-        return _svg(PLACEHOLDER_ART_ID + setId, recs, 2);
+    function renderSetSVG(uint256 setId, bytes[] memory recs, uint8 gaze) public pure returns (string memory) {
+        return _svg(PLACEHOLDER_ART_ID + setId, recs, 2, gaze);
     }
 
-    function _svg(uint256 grainId, bytes[] memory recs, uint256 side) internal pure returns (string memory) {
+    function _svg(uint256 grainId, bytes[] memory recs, uint256 side, uint8 gaze) internal pure returns (string memory) {
         uint256 g = uint8(recs[0][0]);
         string[8] memory pal = _palette(uint8(recs[0][3])); // byte 3 = Neon trait
 
@@ -197,18 +212,30 @@ contract NeonRenderer {
         bytes memory gs = bytes(g.toString());
         DynamicBufferLib.DynamicBuffer memory out;
         out.p('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ', gs, " ", gs);
-        out.p('" width="1200" height="1200" shape-rendering="crispEdges"><rect width="', gs, '" height="', gs);
+        out.p('" width="1200" height="1200" shape-rendering="crispEdges">');
+        if (gaze != 0) _bloom(out, gaze);
+        out.p('<rect width="', gs, '" height="', gs);
         out.p('" fill="', bytes(pal[BG]), '"/>');
         for (uint256 c; c < 8; ++c) {
             if (c == BG || paths[c].data.length == 0) continue;
             out.p('<path fill="', bytes(pal[c]), '" d="', paths[c].data, '"/>');
         }
+        if (gaze != 0) out.p("</g>");
 
         uint256 grain = uint8(recs[0][5]); // byte 5 = Grain trait
         if (grain == 1) _dusty(out, grainId, g);
         else if (grain == 2) _scan(out, grainId, g, gs);
         out.p("</svg>");
         return out.s();
+    }
+
+    /// @dev Gaze: the image screened with a blurred, dimmed copy of itself, so the neon bleeds into the dark.
+    function _bloom(DynamicBufferLib.DynamicBuffer memory out, uint8 gaze) internal pure {
+        bytes memory k = [bytes(".35"), ".55", ".8"][gaze - 1];
+        out.p('<defs><filter id="b"><feGaussianBlur stdDeviation="', [bytes("0.6"), "0.9", "1.2"][gaze - 1]);
+        out.p('"/><feComponentTransfer><feFuncR type="linear" slope="', k, '"/><feFuncG type="linear" slope="', k);
+        out.p('"/><feFuncB type="linear" slope="', k, '"/></feComponentTransfer><feBlend in="SourceGraphic" mode="screen"/>');
+        out.p('</filter></defs><g filter="url(#b)">');
     }
 
     /// @dev RLE runs of one record -> one path per palette color, offset by (ox, oy), split per row.
@@ -370,16 +397,18 @@ contract NeonRenderer {
         return abi.encodePacked(',{"trait_type":"Locked until","display_type":"date","value":', until.toString(), "}");
     }
 
-    /// @dev "Unblinking": days the current holder has kept the Face + the date its eyes opened.
+    /// @dev "Unblinking": days the current holder has kept the Face + the date its eyes opened + the Gaze it earned.
     function _unblinking(uint256 tokenId) internal view returns (bytes memory) {
         uint256 since = faces.heldSince(tokenId);
         if (since == 0) return "";
+        uint8 gaze = gazeOf(tokenId);
         return abi.encodePacked(
             ',{"trait_type":"Unblinking (days)","display_type":"number","value":',
             ((block.timestamp - since) / 1 days).toString(),
             '},{"trait_type":"Eyes open since","display_type":"date","value":',
             since.toString(),
-            "}"
+            "}",
+            gaze == 0 ? bytes("") : _attr("Gaze", ["Steady", "Fixed", "Burning"][gaze - 1], true)
         );
     }
 

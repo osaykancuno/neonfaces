@@ -52,13 +52,17 @@ export function decode(rec) {
 const rand = (artId, i) => BigInt(keccak256(encodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], [BigInt(artId), BigInt(i)])));
 const dec2 = (v) => `${v / 100n}.${(v % 100n).toString().padStart(2, "0")}`;
 
-/** Exactly the SVG the contract returns for (artId, record). */
-export const renderSVG = (artId, rec) => svg(artId, [rec], 1);
+// Gaze: the neon blooms after 30 / 90 / 365 days with the same holder (NeonRenderer.gazeOf); a sale resets it.
+export const GAZE = ["", "Steady", "Fixed", "Burning"];
+const BLOOM = [null, ["0.6", ".35"], ["0.9", ".55"], ["1.2", ".8"]];
+
+/** Exactly the SVG the contract returns for (artId, record, gaze). */
+export const renderSVG = (artId, rec, gaze = 0) => svg(artId, [rec], 1, gaze);
 
 /** Exactly the SVG the contract returns for an assembled set (setId 1..555, its 4 records in piece order). */
-export const renderSetSVG = (setId, recs) => svg(ART_COUNT + setId, recs, 2);
+export const renderSetSVG = (setId, recs, gaze = 0) => svg(ART_COUNT + setId, recs, 2, gaze);
 
-function svg(artId, recs, side) {
+function svg(artId, recs, side, gaze) {
   const first = bytesOf(recs[0]);
   let g = first[0];
   const pal = PALETTES[first[3]];
@@ -81,8 +85,14 @@ function svg(artId, recs, side) {
     }
   });
   g *= side;
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${g} ${g}" width="1200" height="1200" shape-rendering="crispEdges"><rect width="${g}" height="${g}" fill="${pal[BG]}"/>`;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${g} ${g}" width="1200" height="1200" shape-rendering="crispEdges">`;
+  if (gaze) {
+    const [blur, k] = BLOOM[gaze];
+    s += `<defs><filter id="b"><feGaussianBlur stdDeviation="${blur}"/><feComponentTransfer><feFuncR type="linear" slope="${k}"/><feFuncG type="linear" slope="${k}"/><feFuncB type="linear" slope="${k}"/></feComponentTransfer><feBlend in="SourceGraphic" mode="screen"/></filter></defs><g filter="url(#b)">`;
+  }
+  s += `<rect width="${g}" height="${g}" fill="${pal[BG]}"/>`;
   for (let c = 0; c < 8; c++) if (c !== BG && paths[c].length) s += `<path fill="${pal[c]}" d="${paths[c].join("")}"/>`;
+  if (gaze) s += "</g>";
 
   const grain = first[5];
   const G = BigInt(g);

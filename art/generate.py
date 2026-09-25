@@ -280,6 +280,8 @@ def main():
     set_recs = records[first["artId"]:first["artId"] + 4]
     set_fixture = {"set": first["set"], "artId": first["artId"], "records": ["0x" + r.hex() for r in set_recs],
                    "svg": render_set_svg(first["set"], set_recs)}
+    for gz in (1, 2, 3):
+        set_fixture[f"gaze{gz}"] = render_set_svg(first["set"], set_recs, gz)
     Path(args.fixtures).mkdir(parents=True, exist_ok=True)
     (Path(args.fixtures) / "svg-samples.json").write_text(json.dumps(fixtures, indent=1))
     (Path(args.fixtures) / "svg-set-sample.json").write_text(json.dumps(set_fixture, indent=1))

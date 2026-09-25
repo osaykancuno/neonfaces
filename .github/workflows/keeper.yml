@@ -1,0 +1,53 @@
+# Runs tools/seed-keeper.mjs every 10 minutes on GitHub's machines: no server, no one at the keyboard.
+# It stocks and delivers seeds, top-ups and set bonuses, pays the split and the team vesting, finalizes a
+# requested reveal as a safety net and refreshes marketplace metadata once a day.
+#
+# Setup (once, after the mainnet deploy; see docs/LAUNCH-RUNBOOK.md, "Automation"):
+#   - commit contracts/deployments/4663.json (public addresses only)
+#   - Settings > Secrets and variables > Actions:
+#       secret   KEEPER_PK        the keeper key (KEEPER_ROLE on NeonSeedVault, a little ETH for gas, nothing else)
+#       variable KEEPER_CHAIN_ID  4663
+#       variable RPC_URL          optional, defaults to the public Robinhood Chain RPC
+# Public repositories run Actions for free; GitHub may delay scheduled runs by a few minutes.
+name: keeper
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: keeper
+  cancel-in-progress: false
+
+jobs:
+  round:
+    if: ${{ vars.KEEPER_CHAIN_ID != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: tools/package-lock.json
+      - run: npm ci
+        working-directory: tools
+      # what the keeper already knows (Faces done, sets paid), carried from run to run
+      - uses: actions/cache/restore@v4
+        with:
+          path: tools/.keeper-state.json
+          key: keeper-state-${{ github.run_id }}
+          restore-keys: keeper-state-
+      - run: node seed-keeper.mjs ${{ vars.KEEPER_CHAIN_ID }} --once
+        working-directory: tools
+        env:
+          PK: ${{ secrets.KEEPER_PK }}
+          RPC_URL: ${{ vars.RPC_URL }}
+          KEEPER_STATE: .keeper-state.json
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: tools/.keeper-state.json
+          key: keeper-state-${{ github.run_id }}

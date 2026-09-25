@@ -62,13 +62,17 @@ The deploy script already started a 2-step admin transfer on NeonFaces, NeonSeed
 node tools/safe-tx.mjs 4663 accept-admin     # import safe/4663-accept-admin.json in Safe > Transaction Builder
 ```
 
-## 5. Seed keeper
+## 5. Seed keeper (automated)
 
-Start it before the first stage opens and leave it running after the reveal: it delivers the top-ups, then the set bonuses as holders assemble sets:
-```bash
-PK=<keeper key> node tools/seed-keeper.mjs 4663
-```
-Every minute it pushes the vault's share out of `NeonPayout`, buys what the pool is missing (pending seeds first, then a stock of 25 Faces ahead) and delivers pending seeds; after the reveal it delivers the top-ups and, every few rounds, finds assembled sets and delivers their one-time bonus (keeping 5 bonuses in stock). Tested end to end on a mainnet fork with the live SeaDrop, Uniswap and Chainlink. Open the sale Tuesday–Thursday: over a weekend stock prices go stale and purchases wait.
+The keeper is the project's only off-chain moving part, and it runs by itself on GitHub Actions (`.github/workflows/keeper.yml`, every 10 minutes, free on a public repository, no server). Set it up before the first stage opens:
+
+1. Push the repository to GitHub (public: the contracts are verified on Blockscout anyway; `.env` and keys are git-ignored) and commit `contracts/deployments/4663.json`.
+2. Settings > Secrets and variables > Actions: secret `KEEPER_PK` (the keeper key), variable `KEEPER_CHAIN_ID` = `4663`.
+3. Actions > keeper > Run workflow once and read the log.
+
+Fund the keeper key with ≈ 0.01 ETH: each transaction costs a fraction of a cent, so it lasts for years. To run it by hand instead: `PK=<keeper key> node tools/seed-keeper.mjs 4663` (loops every minute).
+
+Each run it pays the split (`releaseAll`) and the team's vested share, buys what the pool is missing (pending seeds first, then a stock of 25 Faces ahead) and delivers pending seeds; after the reveal it delivers the top-ups and, every 30 minutes, finds assembled sets and delivers their one-time bonus (keeping 5 bonuses in stock); once a day it calls `refreshMetadata()` so marketplaces pick up Unblinking days and the Gaze; and it finalizes a requested reveal if the watcher missed it and the window is still open. Tested end to end on a mainnet fork with the live SeaDrop, Uniswap and Chainlink. Open the sale Tuesday–Thursday: over a weekend stock prices go stale and purchases wait.
 
 ## 6. Team allocation (after the sale, before the reveal)
 
@@ -122,12 +126,25 @@ Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers ne
 
 ## 9. After mint
 
-- `node tools/safe-tx.mjs 4663 release` whenever — pushes 40/25/20/15 (anyone can).
+- The split and the team vesting are paid by the keeper on its own (`node tools/safe-tx.mjs 4663 release` does the same by hand).
 - `node tools/safe-tx.mjs 4663 sale-manager none` — the Safe becomes the collection owner on OpenSea again.
 - OpenSea collection settings: creator earnings 5% (optional for buyers — transfers are never restricted) to the Safe. The collection reads `contractURI()` on-chain. List on HoodMarket too.
 - `lock-seeder` once every top-up is delivered (set bonuses keep working after the lock: they use the locked baskets); then the vault's leftover ETH can go to the treasury: `node tools/safe-tx.mjs 4663 vault-surplus <eth>`. `freeze-metadata` only when no future renderer is planned.
 - Refill pending seeds: `NeonSeeder.fund(id)` is permissionless.
 - Point holders to their Face page (`/face/<id>`): withdraw, lock and agent delegation are there. Agent builders: [AGENTS.md](AGENTS.md).
+
+## After launch: what runs alone, and the few things only a person can do
+
+Runs by itself, forever or until done: art and metadata (on-chain), every Face account, the Gaze and Unblinking (computed at read time), the journal and the boards on the site (read from the chain in the browser), and the keeper on GitHub Actions: seeds, top-ups, set bonuses, split and vesting payments, daily metadata refresh, reveal safety net. Every action it takes is permissionless except the vault's purchases, so if it ever stopped, anyone could run `tools/seed-keeper.mjs` (or call the functions from Blockscout) and nothing would be lost.
+
+Needs a person, on purpose (each is a decision or a key only the team should hold):
+
+| When | What | Why it can't be automatic |
+|---|---|---|
+| Launch week | deploy, Safe accepts admin, OpenSea Studio stages, `verify-drop.mjs` | keys and stage terms are the team's decisions |
+| End of sale | team mint, `reveal-request` from the Safe + `reveal-watch.mjs` | the reveal moment is announced; its 25-second window needs a watcher running at that moment |
+| After the reveal | `sale-manager none`, later `lock-seeder` and `vault-surplus` | one-time Safe transactions |
+| Every year | renew the domain; top up the keeper key if ever low (≈ 0.01 ETH lasts years) | payment and a key |
 
 ## Rehearsal (do this first)
 

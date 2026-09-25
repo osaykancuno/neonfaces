@@ -66,7 +66,7 @@ Holder: `execute` / `executeBatch` (CALL only), receives ETH / ERC-20 / 721 / 11
 
 ## Live metadata
 
-`tokenURI` reads: Stare tier (Unrevealed until reveal), base seed and status, Stare Upgrade, **Set** / **Set status** (Assembled, or Inside #id) / **Set bonus** on set pieces, **Holds <TICKER>** balances, **Unblinking (days)**, **Eyes open since**, **Locked until**, Art ID. Art itself is sealed and static. A future renderer can be plugged via `setRenderer` until `freezeMetadata()`; ERC-4906 events on every change.
+`tokenURI` reads: Stare tier (Unrevealed until reveal), base seed and status, Stare Upgrade, **Set** / **Set status** (Assembled, or Inside #id) / **Set bonus** on set pieces, **Holds <TICKER>** balances, **Unblinking (days)**, **Eyes open since**, **Gaze**, **Locked until**, Art ID. The art is sealed; the only thing time adds to the image is the **Gaze**: after 30 / 90 / 365 days with the same holder the SVG is screened with a blurred copy of itself (Steady / Fixed / Burning bloom, `gazeOf`), reset by a sale. Time-based changes emit no event, so `NeonFaces.refreshMetadata()` (anyone, once a day; the keeper calls it) emits `BatchMetadataUpdate` for marketplaces. A future renderer can be plugged via `setRenderer` until `freezeMetadata()`; ERC-4906 events on every change.
 
 ## Entropy
 

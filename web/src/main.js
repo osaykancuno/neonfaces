@@ -1,7 +1,8 @@
 import { formatEther, formatUnits, encodeFunctionData } from "viem";
 import { ABI, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata, facesOf } from "./chain.js";
 import { pixelEye } from "./effects/eye.js";
-import { decode, svgDataURI, PIECES, SINGLES } from "./render.js";
+import { decode, svgDataURI, setDataURI, PIECES, SINGLES } from "./render.js";
+import { journal, longestStares, completedSets, fmtDay } from "./journal.js";
 import { holderPanel, knownTokens } from "./agent-ui.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 
@@ -44,6 +45,7 @@ reveals();
 document.querySelectorAll(".hero [data-scramble]").forEach((el) => scramble(el, { duration: 1400 }));
 setupMint();
 renderMyFaces();
+renderWatch();
 route();
 
 window.addEventListener("popstate", route);
@@ -167,6 +169,36 @@ function renderSets() {
         <span class="g-meta">Set #${s.set} · ${esc(s.face)} · ${esc(s.stare)}</span></div>`,
     )
     .join("");
+}
+
+// =====================================================================================
+// the watch: longest stares + sets completed (read live, refreshed with the mint panel)
+// =====================================================================================
+async function renderWatch() {
+  if (state.preview) return;
+  try {
+    const top = await longestStares(10);
+    if (top.length)
+      $("#watch-stares").innerHTML = top
+        .map((x) => `<li><a href="/face/${x.id}" data-link>Face #${x.id}</a><span class="fine">${esc(x.owner)}</span><b>${x.days}d</b></li>`)
+        .join("");
+    const [done, sealed, supply, closed] = await Promise.all([
+      completedSets(),
+      readAt(state.dep.art, "art", "isSealed").catch(() => false),
+      read("faces", "totalSupply"),
+      read("faces", "mintClosed"),
+    ]);
+    const dealt = Math.floor((Number(supply) * 555) / 5555);
+    $("#sets-count").textContent = closed ? `${done.length} / ${dealt}` : done.length ? `${done.length}` : "";
+    if (!done.length) return;
+    const shown = done.slice(0, 12);
+    const recs = sealed
+      ? await Promise.all(shown.map((d) => Promise.all([0, 1, 2, 3].map((q) => readAt(state.dep.art, "art", "artData", [BigInt(SINGLES + 4 * (d.setId - 1) + q)])))))
+      : [];
+    $("#watch-sets").innerHTML = shown
+      .map((d, i) => `<a href="/face/${d.anchor}" data-link>${recs[i] ? `<img src="${setDataURI(d.setId, recs[i])}" alt="">` : ""}Set #${d.setId} · Face #${d.anchor}<br>${fmtDay(d.t)}</a>`)
+      .join("");
+  } catch {}
 }
 
 // =====================================================================================
@@ -368,6 +400,7 @@ async function showFace(id) {
   $("#face-title").textContent = `NEONFACES #${id}`;
   $("#face-img").src = placeholder ? svgDataURI(5555, placeholder) : "";
   ["#face-owner", "#face-account", "#face-balances", "#face-traits", "#face-agent", "#face-links", "#face-actions", "#face-set"].forEach((s) => ($(s).innerHTML = ""));
+  $("#face-journal").innerHTML = `<li class="fine">Nothing yet.</li>`;
   $("#face-set").hidden = true;
   $("#face-holder")?.remove();
   $("#face-agent").hidden = $("#face-agent").previousElementSibling.hidden = false;
@@ -423,6 +456,11 @@ async function showFace(id) {
     else if (!seed.funded) act("Seed pending: deliver it", "fund");
     if (seed.tier >= 2 && !seed.upgraded) act(`Deliver the ${TIERS[seed.tier]} top-up`, "upgrade");
     if (seed.tier) await setPanel(id, owner, seed.account).catch(() => {});
+    journal(id, seed.account)
+      .then((entries) => {
+        if (entries.length) $("#face-journal").innerHTML = entries.slice(0, 40).map((e) => `<li><time>${fmtDay(e.t)}</time>${esc(e.text)}</li>`).join("");
+      })
+      .catch(() => {});
 
     // agent + lock
     let agentInfo = null;

@@ -8,7 +8,9 @@
 - **The mint funds itself.** 40% of the split goes to `NeonSeedVault`, which can only buy basket tokens (Uniswap v3, Chainlink-checked prices) straight into the pool; `tools/seed-keeper.mjs` runs it during the sale. No inventory is needed before the first mint.
 - **Stare tiers set at reveal**: a keyed on-chain mapping assigns tokens their art; the art decides the tier (4444 Glance / 833 Watch / 278 Heavy Stare over the 5555 artworks) and Watch / Heavy Stare Faces get a top-up. Nothing valuable is decided at mint, so it can't be sniped.
 - **Sets of four**: 555 faces come in four pieces (left eye, right eye, left mouth, right mouth; half women, half men; one tier per set). The reveal deals whole sets only, never to a run of consecutive ids. Moving three pieces into the fourth's account assembles the set: that Face shows the whole face, sells as one, and earns a one-time bonus basket.
-- **Unblinking**: an on-chain clock of how long each Face has stayed with its holder, shown in the metadata. Selling resets it.
+- **Unblinking and the Gaze**: an on-chain clock of how long each Face has stayed with its holder; after 30, 90 and 365 days the neon blooms in the art itself (Steady, Fixed, Burning). Selling resets it. Patience shows in the picture, not in a payout.
+- **A journal for every Face**: the site tells each Face's story from the chain's own events (mint, hands, seeds, sets, agents, locks, trades), with public boards for the longest stares and the sets completed.
+- **Runs by itself**: the keeper (seeds, top-ups, set bonuses, payouts, daily metadata refresh) is scheduled on GitHub Actions for free; everything it does is permissionless except the vault's purchases. See the runbook's "After launch" table for the few steps that stay human.
 - **Scoped agents**: holders delegate an agent in a plain-language wizard; it may only call what they allow, within an ETH budget — no signatures, expiring, void on sale. Trading goes through **NeonTrader**: Uniswap v3 on Robinhood Chain, output always back into the Face, price bounded by Chainlink, daily USD cap. See [docs/AGENTS.md](docs/AGENTS.md).
 - **Lock before listing**: a holder can freeze the account until a date; the lock survives the sale, so buyers get exactly what they see.
 - **Money said before, not after**: after OpenSea's 10% drop fee, SeaDrop can pay mint proceeds only to `NeonPayout` — a 40 / 25 / 20 / 15 split with no owner; team share vests over 6 months.
@@ -21,6 +23,7 @@
 |---|---|
 | `art/` | Procedural renderer + collection generator (Python). Produces the on-chain records, provenance, previews. |
 | `contracts/` | Foundry project: `NeonFaces` (ERC-721, SeaDrop-compatible), `NeonPayout` (proceeds split), `NeonSeedVault` (seed share -> pool), `NeonSeeder`, `NeonFaceAccount` (ERC-6551), `NeonArt` (SSTORE2), `NeonRenderer` (SVG/JSON), `NeonTrader` (agent trading guard). Tests, deploy + upload + rehearsal scripts. |
+| `.github/workflows/keeper.yml` | The keeper, scheduled every 10 minutes on GitHub Actions. |
 | `tools/` | Node ops tools: seed keeper, drop-config checker, live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
 | `web/` | The site (Vite + viem, static). Draws Faces from the on-chain bytes with a byte-identical JS port of the renderer. Links to the OpenSea drop; Face pages with the holder panel (withdraw, lock, agents). |
 | `config/` | Seed basket plan, verified trading config (Uniswap + Chainlink addresses), allowlist sources. |
@@ -36,7 +39,7 @@ Requirements: Foundry, Node ≥ 20, Python ≥ 3.11 with `numpy pillow pycryptod
 # 1. art: generate the 5555 Faces (≈9 min) and the site assets
 cd art && python generate.py && python export_site.py && python export_brand.py && cd ..   # brand: icons, link preview, logo, banner
 
-# 2. contracts: build + test (89 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
+# 2. contracts: build + test (91 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
 #    full-supply mapping, whole sets on any sale size, ownership cycles, byte-exact SVG, agents, lock)
 cd contracts && forge test && cd ..
 

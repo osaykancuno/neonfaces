@@ -100,6 +100,8 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     /// @notice Minting ends for good when the reveal is requested: nobody can mint once art is knowable.
     bool public mintClosed;
     uint256 public revealRequests;
+    /// @notice Last `refreshMetadata()` (anyone, once a day).
+    uint64 public lastMetadataRefresh;
 
     /// @notice The only address SeaDrop may pay mint proceeds to (NeonPayout, immutable split).
     address public immutable payout;
@@ -140,6 +142,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     error ZeroQuantity();
     error ProvenanceNotSet();
     error MintIsClosed();
+    error RefreshTooSoon();
     error ProvenanceAlreadySet();
     error MintAlreadyStarted();
     error RevealAlreadyDone();
@@ -372,6 +375,14 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     }
 
     /// @notice Irreversibly freeze token metadata (base URI, unrevealed URI, renderer).
+    /// @notice Anyone, once a day: ask marketplaces to re-read every Face. Unblinking days and the Gaze change
+    /// with time, not with transactions, so no other event would tell them. The seed keeper calls it daily.
+    function refreshMetadata() external {
+        if (block.timestamp < lastMetadataRefresh + 1 days) revert RefreshTooSoon();
+        lastMetadataRefresh = uint64(block.timestamp);
+        emit BatchMetadataUpdate(1, MAX_SUPPLY);
+    }
+
     function freezeMetadata() external onlyRole(DEFAULT_ADMIN_ROLE) notFrozen {
         metadataFrozen = true;
         emit MetadataFrozen();

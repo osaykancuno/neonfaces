@@ -364,3 +364,19 @@ h3 { font-family: var(--pixel); font-size: 18px; color: var(--neon); margin: 0 0
 .face-set .piece a { color: inherit; }
 .face-set .piece b { display: block; color: #d9e6a8; }
 @media (max-width: 520px) { .face-set .pieces { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---- the watch + journal ---- */
+.watch { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; margin-top: 18px; }
+.watch h3 small { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+.watch-list { list-style: none; margin: 0; padding: 0; counter-reset: r; }
+.watch-list li { counter-increment: r; display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--line); padding: 8px 0; font-family: var(--mono); font-size: 13px; color: #c7d49a; }
+.watch-list li::before { content: counter(r, decimal-leading-zero); color: var(--dim); }
+.watch-list li.fine::before { content: ""; }
+.watch-list b { font-family: var(--pixel); color: var(--neon); font-weight: 400; }
+.watch-list a { color: inherit; }
+.watch-sets { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.watch-sets a { display: block; font-family: var(--mono); font-size: 11px; color: var(--dim); text-decoration: none; }
+.watch-sets img { width: 100%; display: block; aspect-ratio: 1; image-rendering: pixelated; border: 1px solid var(--line); margin-bottom: 4px; }
+.journal { list-style: none; margin: 0; padding: 0; font-family: var(--mono); font-size: 12px; }
+.journal li { border-left: 2px solid var(--line); padding: 4px 0 8px 12px; color: #c7d49a; }
+.journal li time { display: block; color: var(--dim); font-size: 10px; }

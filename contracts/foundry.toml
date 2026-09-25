@@ -30,6 +30,14 @@ runs = 256
 [profile.ci.fuzz]
 runs = 5000
 
+[profile.default.invariant]
+runs = 64
+depth = 60
+
+[profile.ci.invariant]
+runs = 256
+depth = 100
+
 [rpc_endpoints]
 robinhood = "${ROBINHOOD_RPC_URL}"
 robinhood_testnet = "${ROBINHOOD_TESTNET_RPC_URL}"

@@ -53,7 +53,9 @@ interface INeonSeeder {
 ///  - DEFAULT_ADMIN_ROLE (multisig, 2-step transfer with delay): royalties, roles, team mint, provenance,
 ///    which SeaDrop contract may mint, the sale manager.
 ///  - saleManager: the wallet that runs the drop in OpenSea Studio (`owner()` while set). It can only
-///    configure SeaDrop stages; it cannot mint, change the art, or redirect the proceeds.
+///    configure SeaDrop stages: it cannot mint, change the art or the roles, pay proceeds to anyone but
+///    NeonPayout, or set a stage fee above MAX_FEE_BPS or without restricted fee recipients. Allowlist
+///    Merkle roots (built by Studio) can't be checked here: tools/verify-drop.mjs checks the live config.
 ///  - PAUSER_ROLE: can pause / unpause *minting* (never transfers).
 ///  - METADATA_ROLE: renderer, reveal request, fallback URIs — until metadata is frozen.
 ///
@@ -71,6 +73,9 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     uint96 public constant MAX_ROYALTY_BPS = 500; // 5%
     uint256 public constant REVEAL_DELAY_BLOCKS = 5;
     uint96 private constant BPS = 10_000;
+    /// @notice Highest marketplace fee a SeaDrop stage may carry (OpenSea's drop fee). Stages must also restrict
+    /// fee recipients, so a fee can't be pointed at an arbitrary address to route mint money around NeonPayout.
+    uint256 public constant MAX_FEE_BPS = 1_000;
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant METADATA_ROLE = keccak256("METADATA_ROLE");
@@ -151,6 +156,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     error SeederAlreadySet();
     error SeederMismatch();
     error InvalidConfig();
+    error FeeNotAllowed();
 
     constructor(
         address admin,
@@ -416,12 +422,22 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         _;
     }
 
+    function _checkFee(uint256 feeBps, bool restricted) private pure {
+        if (feeBps > MAX_FEE_BPS || !restricted) revert FeeNotAllowed();
+    }
+
+    /// @dev an empty stage (no per-wallet allowance) removes the stage and is always allowed
+    function _checkGated(TokenGatedDropStage calldata stage) private pure {
+        if (stage.maxTotalMintableByWallet != 0) _checkFee(stage.feeBps, stage.restrictFeeRecipients);
+    }
+
     function _seaDrop(address impl) private view returns (ISeaDrop) {
         if (!_allowedSeaDrop[impl]) revert OnlyAllowedSeaDrop();
         return ISeaDrop(impl);
     }
 
     function updatePublicDrop(address impl, PublicDrop calldata drop) external onlySale {
+        _checkFee(drop.feeBps, drop.restrictFeeRecipients);
         _seaDrop(impl).updatePublicDrop(drop);
     }
 
@@ -433,6 +449,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         external
         onlySale
     {
+        _checkGated(stage);
         _seaDrop(impl).updateTokenGatedDrop(nftToken, stage);
     }
 
@@ -454,6 +471,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         external
         onlySale
     {
+        if (params.maxFeeBps > MAX_FEE_BPS) revert FeeNotAllowed(); // signed mints always restrict recipients
         _seaDrop(impl).updateSignedMintValidationParams(signer, params);
     }
 
@@ -465,7 +483,10 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     /// are ignored: they are fixed or governed on-chain here. Everything else is forwarded to SeaDrop.
     function multiConfigure(MultiConfigureStruct calldata c) external onlySale {
         ISeaDrop sd = _seaDrop(c.seaDropImpl);
-        if (c.publicDrop.startTime != 0 || c.publicDrop.endTime != 0) sd.updatePublicDrop(c.publicDrop);
+        if (c.publicDrop.startTime != 0 || c.publicDrop.endTime != 0) {
+            _checkFee(c.publicDrop.feeBps, c.publicDrop.restrictFeeRecipients);
+            sd.updatePublicDrop(c.publicDrop);
+        }
         if (bytes(c.dropURI).length != 0) sd.updateDropURI(c.dropURI);
         if (c.allowListData.merkleRoot != bytes32(0)) sd.updateAllowList(c.allowListData);
         if (c.creatorPayoutAddress != address(0)) {
@@ -486,6 +507,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         }
         if (c.tokenGatedDropStages.length != c.tokenGatedAllowedNftTokens.length) revert InvalidConfig();
         for (uint256 i; i < c.tokenGatedDropStages.length; ++i) {
+            _checkGated(c.tokenGatedDropStages[i]);
             sd.updateTokenGatedDrop(c.tokenGatedAllowedNftTokens[i], c.tokenGatedDropStages[i]);
         }
         TokenGatedDropStage memory noStage;
@@ -494,6 +516,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         }
         if (c.signedMintValidationParams.length != c.signers.length) revert InvalidConfig();
         for (uint256 i; i < c.signers.length; ++i) {
+            if (c.signedMintValidationParams[i].maxFeeBps > MAX_FEE_BPS) revert FeeNotAllowed();
             sd.updateSignedMintValidationParams(c.signers[i], c.signedMintValidationParams[i]);
         }
         SignedMintValidationParams memory noParams;

@@ -15,6 +15,8 @@ import {
     PublicDrop,
     MintParams,
     MultiConfigureStruct,
+    TokenGatedDropStage,
+    SignedMintValidationParams,
     RoyaltyInfo
 } from "../src/interfaces/ISeaDrop.sol";
 
@@ -381,6 +383,43 @@ contract NeonFacesTest is Base {
         vm.prank(saleManager);
         vm.expectRevert(NeonFaces.OnlySaleManager.selector);
         faces.updatePublicDrop(SEADROP, _publicDrop(5));
+    }
+
+    function test_Studio_FeesCannotRouteMoneyAroundThePayout() public {
+        // the attack: allow your own fee recipient, set a 100% fee, mint directly on SeaDrop with it
+        PublicDrop memory drop = _publicDrop(5);
+        drop.feeBps = 10_000;
+        vm.startPrank(saleManager);
+        vm.expectRevert(NeonFaces.FeeNotAllowed.selector);
+        faces.updatePublicDrop(SEADROP, drop);
+
+        drop.feeBps = 1_000;
+        drop.restrictFeeRecipients = false; // any minter could name itself fee recipient
+        vm.expectRevert(NeonFaces.FeeNotAllowed.selector);
+        faces.updatePublicDrop(SEADROP, drop);
+
+        MultiConfigureStruct memory c;
+        c.seaDropImpl = SEADROP;
+        c.publicDrop = _publicDrop(5);
+        c.publicDrop.feeBps = 5_000;
+        vm.expectRevert(NeonFaces.FeeNotAllowed.selector);
+        faces.multiConfigure(c);
+
+        TokenGatedDropStage memory gated;
+        gated.maxTotalMintableByWallet = 1;
+        gated.feeBps = 2_000;
+        gated.restrictFeeRecipients = true;
+        vm.expectRevert(NeonFaces.FeeNotAllowed.selector);
+        faces.updateTokenGatedDrop(SEADROP, address(tsla), gated);
+
+        SignedMintValidationParams memory signed;
+        signed.maxFeeBps = 10_000;
+        vm.expectRevert(NeonFaces.FeeNotAllowed.selector);
+        faces.updateSignedMintValidationParams(SEADROP, saleManager, signed);
+
+        // OpenSea's own terms pass
+        faces.updatePublicDrop(SEADROP, _publicDrop(5));
+        vm.stopPrank();
     }
 
     function test_SeaDropInterfaces() public view {

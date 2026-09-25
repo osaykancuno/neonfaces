@@ -101,7 +101,8 @@ Never below the self-funding floor (≈ 0.008 ETH at ETH $2,691, see [ECONOMICS.
 
 - **Payout address = `NeonPayout`** (`payout` in the deployments file). Any other address is rejected on-chain.
 - SeaDrop's stage cap is a ceiling on the collection's total supply (team Faces included), and per-wallet limits count every Face a wallet minted through SeaDrop, across stages. Check how Studio labels both before publishing.
-- Studio publishes with one `multiConfigure` transaction from the sale manager. Allowlists can't be edited once a stage has started minting.
+- Studio publishes with one `multiConfigure` transaction from the sale manager. Allowlists can't be edited once a stage has started minting. The contract refuses stage fees above 10% or without restricted fee recipients.
+- Then check the live configuration: `OPENSEA_FEE_RECIPIENT=<OpenSea's fee address> node tools/verify-drop.mjs 4663` must pass (after every change in Studio too).
 
 Site:
 ```bash

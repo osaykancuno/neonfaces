@@ -20,7 +20,7 @@
 |---|---|
 | `art/` | Procedural renderer + collection generator (Python). Produces the on-chain records, provenance, previews. |
 | `contracts/` | Foundry project: `NeonFaces` (ERC-721, SeaDrop-compatible), `NeonPayout` (proceeds split), `NeonSeedVault` (seed share -> pool), `NeonSeeder`, `NeonFaceAccount` (ERC-6551), `NeonArt` (SSTORE2), `NeonRenderer` (SVG/JSON), `NeonTrader` (agent trading guard). Tests, deploy + upload + rehearsal scripts. |
-| `tools/` | Node ops tools: seed keeper, live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
+| `tools/` | Node ops tools: seed keeper, drop-config checker, live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
 | `web/` | The site (Vite + viem, static). Draws Faces from the on-chain bytes with a byte-identical JS port of the renderer. Links to the OpenSea drop; Face pages with the holder panel (withdraw, lock, agents). |
 | `config/` | Seed basket plan, verified trading config (Uniswap + Chainlink addresses), allowlist sources. |
 | `brand/` | Logo (`logo.gif`) and banner (`banner.gif`, `banner.png` for headers that don't animate), drawn from the on-chain art by `art/export_brand.py`. |
@@ -34,7 +34,7 @@ Requirements: Foundry, Node ≥ 20, Python ≥ 3.11 with `numpy pillow pycryptod
 # 1. art: generate the 5555 Faces (≈9 min) and the site assets
 cd art && python generate.py && python export_site.py && python export_brand.py && cd ..   # brand: icons, link preview, logo, banner
 
-# 2. contracts: build + test (71 tests incl. mints through OpenSea's real SeaDrop bytecode, anti-sniping,
+# 2. contracts: build + test (72 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
 #    full-supply permutation, byte-exact SVG, agents, lock)
 cd contracts && forge test && cd ..
 

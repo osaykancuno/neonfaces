@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-09-25T16:42:46.465Z",
+  "rules": {
+    "perNft": 1,
+    "maxPerWallet": 3
+  },
+  "collections": [
+    {
+      "name": "StonkBrokers",
+      "chainId": 4663,
+      "address": "0x539CdD042c2f3d93EbC5BE7DfFf0c79F3B4fAbF0",
+      "snapshotBlock": "72378600",
+      "nfts": 4444,
+      "holders": 672,
+      "contractsLeftOut": 0
+    },
+    {
+      "name": "Rare Friends Genesis",
+      "chainId": 4663,
+      "address": "0x116EaA62241751E0c98dA43d458600c6C17cD361",
+      "snapshotBlock": "72378765",
+      "nfts": 1024,
+      "holders": 338,
+      "contractsLeftOut": 0
+    },
+    {
+      "name": "Chain Mancers",
+      "chainId": 4663,
+      "address": "0x797a2e030B7e49107C8F07bF0300Ea9caE88cA57",
+      "snapshotBlock": "72378795",
+      "nfts": 5000,
+      "holders": 853,
+      "contractsLeftOut": 0
+    },
+    {
+      "name": "The Interns",
+      "chainId": 4663,
+      "address": "0xFc4b0c4F464dC3037cF013934648a8A726d565A5",
+      "snapshotBlock": "72378893",
+      "nfts": 8888,
+      "holders": 3565,
+      "contractsLeftOut": 0
+    }
+  ],
+  "wallets": 4721,
+  "maxFaces": 9081
+}

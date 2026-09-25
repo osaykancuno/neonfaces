@@ -13,6 +13,8 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 
 let gallery = []; // [{ artId, stare, record }]: on-chain pixel records
 let hunting = 0; // the set hunter shows only its latest lookup
+const VIEWS = { "": "view-home", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide" }; // routes of the app
+let lastView = null;
 let sets = []; // [{ set, stare, face, records[4] }]: whole sets for the Sets section
 let placeholder = null;
 let rarity = null;
@@ -87,19 +89,36 @@ document.addEventListener("click", (e) => {
 });
 
 // =====================================================================================
-// routing: "/" (home, with #sections) and "/face/:id"
+// routing: an app of views ("/", "/faces", "/sets", "/mine", "/guide") and "/face/:id"
 // =====================================================================================
 function route() {
   const m = location.pathname.match(/^\/face\/(\d+)/) || location.hash.match(/^#\/face\/(\d+)/);
-  $("#home").hidden = !!m;
-  $("#face-page").hidden = !m;
+  const tab = m ? "faces" : location.pathname.split("/")[1] ?? "";
+  const view = m ? "face-page" : VIEWS[tab] ?? "view-home";
+  document.querySelectorAll("#app > .page").forEach((p) => (p.hidden = p.id !== view));
+  document.querySelectorAll("[data-tab]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.tab === (VIEWS[tab] ? tab : "")));
+  const changed = view !== lastView;
+  lastView = view;
   if (m) {
     window.scrollTo(0, 0);
     showFace(Number(m[1]));
   } else if (location.hash.length > 1) {
-    document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: "smooth" });
+    requestAnimationFrame(() => document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: changed ? "auto" : "smooth" }));
+  } else if (changed) {
+    window.scrollTo(0, 0);
   }
+  if (view === "view-mine") renderMyFaces();
 }
+
+// open a minted Face by number (Faces view)
+$("#faces-open").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = Number($("#faces-open-id").value);
+  if (v >= 1 && v <= 5555) {
+    history.pushState({}, "", `/face/${v}`);
+    route();
+  }
+});
 
 // =====================================================================================
 // gallery + modal
@@ -413,7 +432,7 @@ function setupMint() {
   if (state.preview) {
     $("#phase-pill").textContent = "Coming soon";
     $("#progress-text").textContent = "0 / 5555";
-    $("#my-faces").innerHTML = `<span class="fine">Faces show up here once the collection is deployed.</span>`;
+    $("#my-faces").innerHTML = `<span class="fine">Your Faces show up here once the collection is deployed and you connect your wallet.</span>`;
     return;
   }
   refreshMint();

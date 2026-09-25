@@ -4,7 +4,10 @@
 <!-- Pre-launch page for neonfaces.xyz. Replaced by the full site (web/) at launch. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ccff00">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="canonical" href="https://neonfaces.xyz/">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -173,13 +176,39 @@
   .menu-box nav a i { font: 400 12px/1.6 var(--mono); color: var(--dim); font-style: normal; }
   .menu-box nav a:hover, .menu-box nav a:focus-visible { color: var(--neon); background: var(--panel); outline: none; }
   .menu-box .foot { font: 400 12px/1.5 var(--mono); color: var(--dim); margin-top: 6px; }
+
+  /* the app shell: views, tabs on top (desktop) and a bottom tab bar (phones) */
+  .view { display: grid; gap: 56px; }
+  .view[hidden] { display: none; }
+  .tabs { display: flex; gap: 2px; margin-left: auto; margin-right: 8px; }
+  .tabs a { font: 600 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text); text-decoration: none; padding: 9px 11px; }
+  .tabs a svg { display: none; }
+  .tabs a:hover { color: var(--neon); }
+  .tabs a[aria-current] { background: var(--neon); color: #000; }
+  .tabbar { display: none; }
+  .menu-box nav a small { grid-column: 2; font: 400 11px/1.4 var(--mono); color: var(--dim); }
+  @media (max-width: 760px) {
+    .tabs { display: none; }
+    body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+    .tabbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: grid; grid-template-columns: repeat(5, 1fr);
+      height: calc(62px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: #000; border-top: 2px solid var(--neon);
+    }
+    .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--dim); font: 600 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+    .tabbar svg { width: 22px; height: 22px; }
+    .tabbar a[aria-current] { color: var(--neon); background: #0b0e02; }
+    body { font-size: 17px; }
+    .page, .view { gap: 44px; }
+    .lede { font-size: 19px; }
+  }
 </style>
 
 <style>html,body{margin:0}img{max-width:100%}</style>
 </head>
 <body>
 <div class="topbar">
-  <a class="brand" href="#top">NEONFACES</a>
+  <a class="brand" href="#home">NEONFACES</a>
+  <nav class="tabs" aria-label="Sections"><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
   <span class="bar-right">
     <button class="menu-btn sound-btn" id="sound-btn" aria-pressed="false" aria-label="Sound"><span aria-hidden="true"><i></i><i></i><i></i></span></button>
     <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="menu">MENU</button>
@@ -189,26 +218,17 @@
   <div class="menu-box">
     <div class="head"><span class="label">Everything, one stare away</span><button class="menu-btn" id="menu-close" aria-label="Close the menu">&#10005;</button></div>
     <nav>
-      <a href="#idea"><i>01</i>The idea</a>
-      <a href="#art"><i>02</i>On-chain art</a>
-      <a href="#wallet"><i>03</i>A wallet in every Face</a>
-      <a href="#tiers"><i>04</i>Stare tiers</a>
-      <a href="#sets"><i>05</i>Sets of four</a>
-      <a href="#gaze"><i>06</i>The Gaze</a>
-      <a href="#seeds"><i>07</i>The mint pays for itself</a>
-      <a href="#money"><i>08</i>Where the money goes</a>
-      <a href="#agents"><i>09</i>Agents</a>
-      <a href="#lock"><i>10</i>Lock before you list</a>
-      <a href="#traits"><i>11</i>Live traits</a>
-      <a href="#journal"><i>12</i>The journal</a>
-      <a href="#autonomy"><i>13</i>It runs by itself</a>
-      <a href="#life"><i>14</i>Life of a Face</a>
-      <a href="#check"><i>15</i>Check it yourself</a>
+      <a href="#home"><i>01</i>Home<small>the idea, the life of a Face</small></a>
+      <a href="#faces"><i>02</i>Faces<small>on-chain art, tiers, the Gaze, live traits</small></a>
+      <a href="#sets"><i>03</i>Sets<small>four pieces, one face</small></a>
+      <a href="#wallet"><i>04</i>Wallet<small>what's inside, the mint split, agents, the lock</small></a>
+      <a href="#facts"><i>05</i>Facts<small>what the contracts fix, how it runs by itself</small></a>
     </nav>
     <p class="foot">Mint on OpenSea, Robinhood Chain. Stages and dates are announced before the sale.</p>
   </div>
 </div>
 <main class="page" id="top">
+  <div class="view" data-view="home">
   <header>
     <img class="banner" src="img/banner.gif" width="1500" height="500" alt="A mosaic of pixel-art NEONFACES in neon yellow and black around a pixel eye and the words: They don't blink.">
     <span class="label">Robinhood Chain · 5555 Faces · fully on-chain</span>
@@ -227,21 +247,37 @@
     <span class="label">The idea</span>
     <h2>A portrait that holds something</h2>
     <p>On Robinhood Chain the market never closes, so someone has to keep watching. NEONFACES are the faces of those watchers: no bodies, no costumes, just an eye, a nose, a strip of forehead, cropped so tight that only the stare is left. Every one is drawn in blocks of neon <em>#CCFF00</em> fading to black.</p>
-    <p>What makes them different is behind the image. Each Face is the key to its own wallet, and that wallet is filled when the Face is minted. Sell the Face and you sell the stare, together with everything it has accumulated.</p>
   </section>
 
+  <section id="life" class="col">
+    <span class="label">Life of a Face</span>
+    <h2>From mint to your wallet</h2>
+    <ol class="steps">
+      <li><b>Mint on OpenSea</b>Holders of Robinhood Chain collections go first, then holders of partner collections, then everyone. Stages and prices are announced before the sale.</li>
+      <li><b>Wallet and base basket</b>Your Face gets its wallet in the same transaction and its base basket from the pool.</li>
+      <li><b>Reveal</b>When the mint closes, the chain assigns every Face its art and tier.</li>
+      <li><b>Top-up</b>Watch and Heavy Stare Faces receive their extra basket.</li>
+      <li><b>Complete a set</b>If your Face is a piece, find the other three and assemble the whole face.</li>
+      <li><b>Yours to use</b>Keep it and let the Gaze grow, add to it, withdraw, set up an agent, lock it before listing, or sell it with everything inside.</li>
+    </ol>
+  </section>
+
+  <p class="quote">They don't smile. They don't pose. They don't blink.</p>
+
+  <section class="col">
+    <div class="truth">
+      <span class="label">Plain truth</span>
+      <p>NEONFACES does not sell shares or shareholder rights, and promises no returns. It sells an artwork that can hold on-chain exposure. What's inside a Face is worth whatever those tokens are worth, and the holder can withdraw it at any time.</p>
+    </div>
+  </section>
+  </div>
+
+  <div class="view" data-view="faces" hidden>
   <section id="art" class="col">
     <span class="label">Art</span>
     <h2>The art lives on the chain</h2>
     <p>Most collections keep their images on a server or on IPFS, and the NFT only points at them. NEONFACES stores the pixels themselves on Robinhood Chain: every Face is a grid of 20 to 40 blocks, about 168 bytes, and the contract draws the image and writes its description every time someone asks. No server, no link that can break.</p>
     <p>The full set was sealed against a fingerprint published before the first mint, so nobody can swap the art later. There are twelve traits (crop, light, grain, expression, accessories and more) with exact counts over the 5555 artworks, published before the mint.</p>
-  </section>
-
-  <section id="wallet" class="col">
-    <span class="label">Wallet</span>
-    <h2>Every Face is a wallet</h2>
-    <p>Each Face gets its own account on the chain (the ERC-6551 standard): the NFT is the key. Whoever holds the Face controls the account. Tokens, stablecoins and pieces of tokenized stocks can live inside it.</p>
-    <p>Every Face starts with a <strong>base basket</strong> of about $3 in one of TSLA, NVDA, AAPL, AMZN or MSFT. You can leave it there, add more, or withdraw it at any time from the Face's page. If the Face changes hands, what's inside goes with it.</p>
   </section>
 
   <section id="tiers">
@@ -273,6 +309,28 @@
     <p class="col">Nothing valuable is decided inside the mint transaction, so bots can't mint, peek at the tier and cancel until they land a rare one. Basket values are set from live prices right before launch.</p>
   </section>
 
+  <section id="gaze">
+    <div class="col" style="display:grid;gap:18px">
+      <span class="label">The Gaze</span>
+      <h2>Patience shows in the picture</h2>
+      <p>Every Face counts how long it has stayed with its current holder. After 30, 90 and 365 days its neon starts to burn: the contract draws a glow into the art itself, so it shows on every marketplace and in every wallet. A sale resets it. The stare belongs to whoever keeps it; there is no payout for waiting, only the picture.</p>
+    </div>
+    <div class="gaze">
+      <figure><img src="img/gaze-0.svg" width="300" height="300" alt="An assembled face, no glow"><figcaption><b>Day 0</b>just minted</figcaption></figure>
+      <figure><img src="img/gaze-1.svg" width="300" height="300" alt="The same face with a light glow"><figcaption><b>Steady</b>30 days</figcaption></figure>
+      <figure><img src="img/gaze-2.svg" width="300" height="300" alt="The same face with a stronger glow"><figcaption><b>Fixed</b>90 days</figcaption></figure>
+      <figure><img src="img/gaze-3.svg" width="300" height="300" alt="The same face burning with neon"><figcaption><b>Burning</b>365 days</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="traits" class="col">
+    <span class="label">Live traits</span>
+    <h2>Traits that keep watching</h2>
+    <p>The metadata isn't frozen on day one. It reads each Face as it is now: how long it has stayed with its holder and the Gaze it earned, its set and whether it is assembled, what its wallet holds, and the date its lock opens.</p>
+  </section>
+  </div>
+
+  <div class="view" data-view="sets" hidden>
   <section id="sets">
     <div class="col" style="display:grid;gap:18px">
       <span class="label">Sets</span>
@@ -296,35 +354,25 @@
     <ul class="rules col">
       <li><strong>Collect.</strong> The reveal deals whole sets only, so every set that exists can be completed, and the four pieces always land far apart: nobody gets a finished set by minting several Faces in a row. Each piece shows its set number and part, so you can make an offer on exactly the piece you miss.</li>
       <li><strong>Assemble.</strong> Move the other three pieces into one piece's wallet. That Face now shows the whole face, and whoever buys it gets all four pieces in one sale. You can take it apart whenever you like.</li>
+      <li><strong>Hunt.</strong> The site's set hunter shows where the missing pieces are, who holds them and for how long, and tells you on your next visit which pieces of a set you watch changed hands.</li>
       <li><strong>Bonus, once.</strong> The first time a set is assembled it receives a one-time basket of about $10 (SPY and USDG), paid by the mint like every other basket. Once per set, ever.</li>
     </ul>
   </section>
+  </div>
 
-  <section id="gaze">
-    <div class="col" style="display:grid;gap:18px">
-      <span class="label">The Gaze</span>
-      <h2>Patience shows in the picture</h2>
-      <p>Every Face counts how long it has stayed with its current holder. After 30, 90 and 365 days its neon starts to burn: the contract draws a glow into the art itself, so it shows on every marketplace and in every wallet. A sale resets it. The stare belongs to whoever keeps it; there is no payout for waiting, only the picture.</p>
-    </div>
-    <div class="gaze">
-      <figure><img src="img/gaze-0.svg" width="300" height="300" alt="An assembled face, no glow"><figcaption><b>Day 0</b>just minted</figcaption></figure>
-      <figure><img src="img/gaze-1.svg" width="300" height="300" alt="The same face with a light glow"><figcaption><b>Steady</b>30 days</figcaption></figure>
-      <figure><img src="img/gaze-2.svg" width="300" height="300" alt="The same face with a stronger glow"><figcaption><b>Fixed</b>90 days</figcaption></figure>
-      <figure><img src="img/gaze-3.svg" width="300" height="300" alt="The same face burning with neon"><figcaption><b>Burning</b>365 days</figcaption></figure>
-    </div>
-  </section>
-
-  <section id="seeds" class="col">
-    <span class="label">The mint pays for itself</span>
-    <h2>Part of every sale fills the Faces</h2>
-    <p>The mint happens on OpenSea. OpenSea keeps its 10% fee, and the rest goes to a split written into the contract. 40% of it goes to a <strong>seed vault</strong>: a contract that can only buy the basket tokens, at prices checked against Chainlink, and deliver them straight to the Faces' pool. That money can't be spent on anything else.</p>
-    <p>Most Faces are born with their basket. A Face minted in the first minutes, before the pool is restocked, gets it shortly after; anyone can deliver a pending basket with one click from the Face's page.</p>
+  <div class="view" data-view="wallet" hidden>
+  <section id="wallet" class="col">
+    <span class="label">Wallet</span>
+    <h2>Every Face is a wallet</h2>
+    <p>Each Face gets its own account on the chain (the ERC-6551 standard): the NFT is the key. Whoever holds the Face controls the account. Tokens, stablecoins and pieces of tokenized stocks can live inside it.</p>
+    <p>Every Face starts with a <strong>base basket</strong> of about $3 in one of TSLA, NVDA, AAPL, AMZN or MSFT. You can leave it there, add more, or withdraw it at any time from the Face's page. If the Face changes hands, what's inside goes with it.</p>
   </section>
 
   <section id="money">
     <div class="col" style="display:grid;gap:18px">
-      <span class="label">Where the money goes</span>
+      <span class="label">The mint pays for itself</span>
       <h2>Said before, not after</h2>
+      <p>The mint happens on OpenSea. OpenSea keeps its 10% fee, and the rest goes to a split written into the contract. 40% of it goes to a <strong>seed vault</strong>: a contract that can only buy the basket tokens, at prices checked against Chainlink, and deliver them straight to the Faces' pool. That money can't be spent on anything else.</p>
       <p>The shares and the addresses are fixed in the contract. Nobody can change them, and anyone can trigger the payout.</p>
     </div>
     <div class="bar" role="img" aria-label="Mint split: 40% seed vault, 25% treasury, 20% team, 15% growth">
@@ -336,6 +384,7 @@
       <div><i style="background:#677920"></i><b>20%</b><span>Team: released slowly over 6 months, so no dumping on the floor</span></div>
       <div><i style="background:var(--olive)"></i><b>15%</b><span>Growth and collaborations</span></div>
     </div>
+    <p class="col">Most Faces are born with their basket. A Face minted in the first minutes, before the pool is restocked, gets it shortly after; anyone can deliver a pending basket with one click from the Face's page.</p>
     <p class="col">Resale royalties are 5%, suggested and optional: transfers are never restricted.</p>
   </section>
 
@@ -345,7 +394,7 @@
     <p>Robinhood Chain is built for agents too. From your Face's page you can give it a simple rule, and the NEONFACES strategy agent runs it for you: buy one ticker every week, keep part of the Face in USDG, or trim a ticker that grew too big. Every move is written in the Face's journal with its reason. You can also bring your own agent (a bot, an app or an AI service), or simply ask your AI assistant about your Face: it reads the chain and prepares actions that you confirm in your wallet. You stay the owner.</p>
     <ul class="rules">
       <li>It can only do the actions you allow, like trading the Face's tokens.</li>
-      <li>Trades go through a guard contract: what it buys always comes back into the Face, never more than 1% worse than the Chainlink price, and never beyond the daily limit you set.</li>
+      <li>Trades go through a guard contract: what it buys always comes back into the Face, never more than 2% worse than the Chainlink price, and never beyond the daily limit you set.</li>
       <li>It can spend ETH only up to the budget you give it.</li>
       <li>It can never sign for the Face, it expires on the date you choose, and it stops the moment the Face is sold.</li>
       <li>Strategies follow simple rules: they don't predict prices and promise nothing.</li>
@@ -358,45 +407,14 @@
     <p>A seller could empty a Face's wallet right before a sale goes through. NEONFACES prevents that: the holder can <strong>lock</strong> the wallet until a date. Until then nothing can leave it, not by the holder, not by an agent, not by a signature, not even from the set pieces sitting inside it, and the lock stays in place after the sale. Buyers see "Locked until" in the traits, and the Face page lists any token approval left open.</p>
   </section>
 
-  <section id="traits" class="col">
-    <span class="label">Live traits</span>
-    <h2>Traits that keep watching</h2>
-    <p>The metadata isn't frozen on day one. It reads the Face as it is now:</p>
-    <ul class="rules">
-      <li><strong>Unblinking</strong> and <strong>Gaze</strong>: how many days the Face has stayed with its current holder, and the glow it has earned. Selling resets both.</li>
-      <li><strong>Set</strong> and <strong>Set status</strong>: which set a piece belongs to, and whether it is assembled.</li>
-      <li><strong>Holds TSLA, NVDA…</strong>: what the Face's wallet actually contains.</li>
-      <li><strong>Locked until</strong>: the date its wallet opens again, if it is locked.</li>
-    </ul>
-  </section>
-
   <section id="journal" class="col">
     <span class="label">A journal for every Face</span>
     <h2>Every Face has a story</h2>
     <p>Each Face's page tells what happened to it, read straight from the chain: when it was minted, every change of hands, the baskets it received, the set it completed, the agents it trusted, the locks and the trades. Public boards show the longest stares and every set completed so far, with the Face that holds it.</p>
   </section>
+  </div>
 
-  <section id="autonomy" class="col">
-    <span class="label">Built to last without us</span>
-    <h2>It runs by itself</h2>
-    <p>The art, the wallets, the Gaze and the metadata live on the chain and need nobody. The moving parts are two small programs: a keeper that restocks and delivers the baskets, pays the set bonuses and the split, and tells marketplaces once a day to refresh the traits; and the strategy agent that runs the strategies holders chose. They run on a free schedule; every keeper step can be done by anyone from a block explorer, and any holder can stop the strategy agent at any time, so nothing depends on a single person or server. People are needed only for real decisions: the launch, the reveal and renewing the domain.</p>
-  </section>
-
-  <p class="quote">They don't smile. They don't pose. They don't blink.</p>
-
-  <section id="life" class="col">
-    <span class="label">Life of a Face</span>
-    <h2>From mint to your wallet</h2>
-    <ol class="steps">
-      <li><b>Mint on OpenSea</b>Holders of Robinhood Chain collections go first, then holders of partner collections, then everyone. Stages and prices are announced before the sale.</li>
-      <li><b>Wallet and base basket</b>Your Face gets its wallet in the same transaction and its base basket from the pool.</li>
-      <li><b>Reveal</b>When the mint closes, the chain assigns every Face its art and tier.</li>
-      <li><b>Top-up</b>Watch and Heavy Stare Faces receive their extra basket.</li>
-      <li><b>Complete a set</b>If your Face is a piece, find the other three and assemble the whole face.</li>
-      <li><b>Yours to use</b>Keep it and let the Gaze grow, add to it, withdraw, set up an agent, lock it before listing, or sell it with everything inside.</li>
-    </ol>
-  </section>
-
+  <div class="view" data-view="facts" hidden>
   <section id="check" class="col">
     <span class="label">Check it yourself</span>
     <h2>Everything important is on the chain</h2>
@@ -416,12 +434,12 @@
     </div>
   </section>
 
-  <section class="col">
-    <div class="truth">
-      <span class="label">Plain truth</span>
-      <p>NEONFACES does not sell shares or shareholder rights, and promises no returns. It sells an artwork that can hold on-chain exposure. What's inside a Face is worth whatever those tokens are worth, and the holder can withdraw it at any time.</p>
-    </div>
+  <section id="autonomy" class="col">
+    <span class="label">Built to last without us</span>
+    <h2>It runs by itself</h2>
+    <p>The art, the wallets, the Gaze and the metadata live on the chain and need nobody. The moving parts are two small programs: a keeper that restocks and delivers the baskets, pays the set bonuses and the split, and tells marketplaces once a day to refresh the traits; and the strategy agent that runs the strategies holders chose. They run on a free schedule; every keeper step can be done by anyone from a block explorer, and any holder can stop the strategy agent at any time, so nothing depends on a single person or server. People are needed only for real decisions: the launch, the reveal and renewing the domain.</p>
   </section>
+  </div>
 
   <footer class="col">
     <div class="links">
@@ -431,6 +449,7 @@
     <p>Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
   </footer>
 </main>
+<nav class="tabbar" aria-label="Sections"><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
 <script>
   // sound in the NEONFACES style: synthesized in the browser (no music, no files), off by default, remembered
   const sound = (() => {
@@ -472,6 +491,22 @@
     if (sound.on) addEventListener("pointerdown", sound.resume, { once: true });
     document.addEventListener("pointerover", (e) => e.target.closest?.("a, button") && sound.hover());
     document.addEventListener("click", (e) => e.target.closest?.("a, button") && e.target.closest("button") !== b && sound.click());
+  })();
+
+  // views: #home, #faces, #sets, #wallet, #facts; any other #id opens the view that holds it and scrolls to it
+  (() => {
+    const views = [...document.querySelectorAll(".view")];
+    const show = () => {
+      const id = decodeURIComponent(location.hash.slice(1)) || "home";
+      const target = document.getElementById(id);
+      const view = views.find((v) => v.dataset.view === id) || target?.closest(".view") || views[0];
+      views.forEach((v) => (v.hidden = v !== view));
+      document.querySelectorAll("[data-tab]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.tab === view.dataset.view));
+      if (target && !target.classList.contains("view") && view.dataset.view !== id) target.scrollIntoView();
+      else window.scrollTo(0, 0);
+    };
+    addEventListener("hashchange", show);
+    show();
   })();
 
   // menu: open, close on a link, Esc or a click outside

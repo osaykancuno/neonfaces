@@ -6,15 +6,15 @@ Everything below has been rehearsed end-to-end on a local node with the canonica
 
 | Who | What | Notes |
 |---|---|---|
-Set up for a solo founder: three keys you hold on different devices, two of which sign.
+Set up for a solo founder with no hardware wallet: one Safe whose three keys live on different devices (two of them sign), and MetaMask accounts for everything that only needs one signature.
 
 | Who | What | Notes |
 |---|---|---|
-| **Safe 2/3** ("Treasury") | final admin of every contract, treasury (25%), royalty receiver | signers: hardware wallet, phone wallet, offline backup key. Losing one key loses nothing; one stolen key can't sign alone. Safe v1.4.1 is deployed on Robinhood Chain |
-| Safe 2/3 ("Growth") | growth (15%) | same three signers; a separate address because the split's payees must differ |
+| **Safe 2/3** ("Treasury") | final admin of every contract, treasury (25%), royalty receiver | signers: MetaMask on the computer, a wallet app on the phone, an offline backup key (written on paper, never typed into a connected device until needed). Each signer must come from a **different seed phrase**: two accounts of the same MetaMask are one key, not two. Losing one key loses nothing; one stolen key can't sign alone. Safe v1.4.1 is deployed on Robinhood Chain |
+| Growth | growth (15%) | a dedicated MetaMask account (not the personal one, not a Safe signer): money for collabs and growth, one signature is enough. It must differ from the Treasury address |
 | Team beneficiary | receives the vested 20% | your personal wallet; the payee is a `VestingWallet` deployed by the script |
 | `NeonSeedVault` | receives 40%, buys the basket tokens into the pool | deployed by the script, no address to prepare |
-| Sale manager | runs the drop in OpenSea Studio (`owner()` of the collection while set) | a second account on the hardware wallet. It can only configure SeaDrop stages: no minting, no art, no roles, proceeds always go to `NeonPayout`. Cleared after the sale |
+| Sale manager | runs the drop in OpenSea Studio (`owner()` of the collection while set) | a dedicated MetaMask account, used only in OpenSea Studio (never to sign on other sites). It can only configure SeaDrop stages: no minting, no art, no roles, proceeds always go to `NeonPayout`. Cleared after the sale |
 | Keeper | runs `tools/seed-keeper.mjs` | a hot key with a little ETH for gas; it can only make the vault buy basket tokens for the pool |
 | Deployer | deploys, uploads the art (≈ 0.03 ETH total gas, the only money needed before the sale) | holds nothing after hand-over |
 
@@ -92,6 +92,8 @@ node tools/snapshot.mjs config/allowlists/partners.json      # holders of collec
 node tools/allowlist.mjs config/allowlists/robinhood.csv      # -> config/allowlists/opensea/robinhood.csv
 node tools/allowlist.mjs config/allowlists/partners.csv       # -> config/allowlists/opensea/partners.csv
 ```
+
+The two configs list the chosen collections (4 on Robinhood Chain, 22 on Ethereum plus the two wrapped-Punk contracts). They read every token's owner through Multicall3 (`"method": "ownerOf"`; CryptoPunks through `punkIndexToAddress`). Holders that are contracts on Ethereum (Safes, staking or escrow contracts) are left out: the same address on Robinhood Chain is usually no wallet at all. Announce a snapshot block, set it as `snapshotBlock` in both files and run them again; a block older than a few minutes needs an archive RPC in `rpc`.
 
 In OpenSea Studio, connected with the sale manager: create the drop from the existing contract (Robinhood Chain, `faces` in `contracts/deployments/4663.json`), then set:
 

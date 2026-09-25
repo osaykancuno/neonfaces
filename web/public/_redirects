@@ -1,1 +1,2 @@
-/face/*  /index.html  200
+# single-page app: every route is index.html (files that exist are served as they are)
+/*  /index.html  200

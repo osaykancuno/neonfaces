@@ -1,0 +1,287 @@
+{
+  "_readme": "Holders snapshot for one OpenSea presale stage. Run: node tools/snapshot.mjs <this file>, then node tools/allowlist.mjs <phase>.csv. Pin snapshotBlock to an announced block before the final run (ownerOf at a past block needs an archive RPC).",
+  "rules": {
+    "perNft": 1,
+    "maxPerWallet": 3
+  },
+  "exclude": [],
+  "mintChainId": 4663,
+  "phase": "partners",
+  "collections": [
+    {
+      "name": "CryptoPunks",
+      "opensea": "https://opensea.io/collection/cryptopunks",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb",
+      "standard": "punks",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "CryptoPunks (wrapped, V1 wrapper)",
+      "opensea": "https://opensea.io/collection/cryptopunks",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xb7f7f6c52f2e2fdb1963eab30438024864c313f6",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "CryptoPunks (wrapped, 721)",
+      "opensea": "https://opensea.io/collection/cryptopunks",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x000000000000003607fce1ac9e043a86675c5c2f",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Bored Ape Yacht Club",
+      "opensea": "https://opensea.io/collection/boredapeyachtclub",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Argonauts",
+      "opensea": "https://opensea.io/collection/argonauts",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x387c41b0b2f1128de44db1bcf8baad085f26392c",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Creepz by OVERLORD",
+      "opensea": "https://opensea.io/collection/genesis-creepz",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x5946aeaab44e65eb370ffaa6a7ef2218cff9b47d",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Pudgy Penguins",
+      "opensea": "https://opensea.io/collection/pudgypenguins",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xbd3531da5cf5857e7cfaa92426877b022e612cf8",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Mutant Ape Yacht Club",
+      "opensea": "https://opensea.io/collection/mutant-ape-yacht-club",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x60e4d786628fea6478f785a6d7e704777c86a7c6",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Milady Maker",
+      "opensea": "https://opensea.io/collection/milady",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x5af0d9827e0c53e4799bb226655a1de152a425a5",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "VeeFriends",
+      "opensea": "https://opensea.io/collection/veefriends",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xa3aee8bce55beea1951ef834b99f3ac60d1abeeb",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Good Vibes Club",
+      "opensea": "https://opensea.io/collection/good-vibes-club",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xb8ea78fcacef50d41375e44e6814ebba36bb33c4",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Lil Pudgys",
+      "opensea": "https://opensea.io/collection/lilpudgys",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x524cab2ec69124574082676e6f654a18df49a048",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Azuki",
+      "opensea": "https://opensea.io/collection/azuki",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xed5af388653567af2f388e6224dc7c4b3241c544",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Nakamigos",
+      "opensea": "https://opensea.io/collection/nakamigos",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xd774557b647330c91bf44cfeab205095f7e6c367",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "CLONE X",
+      "opensea": "https://opensea.io/collection/clonex",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x49cf6f5d44e70224e2e23fdcdd2c053f30ada28b",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Meebits",
+      "opensea": "https://opensea.io/collection/meebits",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x7bd29408f11d2bfc23c34f18275bbf23bb716bc7",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "rektguy",
+      "opensea": "https://opensea.io/collection/rektguy",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xb852c6b5892256c264cc2c888ea462189154d8d7",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "mfers",
+      "opensea": "https://opensea.io/collection/mfers",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x79fcdef22feed20eddacbb2587640e45491b757f",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Chimpers Genesis",
+      "opensea": "https://opensea.io/collection/chimpersgenesis",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x4d55109a17a6914130ace90325dc98cf66ebfa00",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "NORMIES",
+      "opensea": "https://opensea.io/collection/normies",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x9eb6e2025b64f340691e424b7fe7022ffde12438",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Normies Yacht Club",
+      "opensea": "https://opensea.io/collection/normies-yacht-club",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x87306c282ebd62fe1c80aa69dd9408331dc11f64",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "ON THE WALL",
+      "opensea": "https://opensea.io/collection/on-the-wall",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x21fa4c00e1d6d3cc0237a7dfe3e107f1b2896c85",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "JPEG Frens",
+      "opensea": "https://opensea.io/collection/jpeg-frens",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xe31703379e32cad7502a594a854a76f9bb0be0e5",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "a KID called BEAST",
+      "opensea": "https://opensea.io/collection/akidcalledbeast",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x77372a4cc66063575b05b44481f059be356964a4",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "BOOA",
+      "opensea": "https://opensea.io/collection/booa",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0xbc48fd45aaaf6549293056606397d351a100b222",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    }
+  ]
+}

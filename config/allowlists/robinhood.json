@@ -1,0 +1,56 @@
+{
+  "_readme": "Holders snapshot for one OpenSea presale stage. Run: node tools/snapshot.mjs <this file>, then node tools/allowlist.mjs <phase>.csv. Pin snapshotBlock to an announced block before the final run (ownerOf at a past block needs an archive RPC).",
+  "rules": {
+    "perNft": 1,
+    "maxPerWallet": 3
+  },
+  "exclude": [],
+  "mintChainId": 4663,
+  "phase": "robinhood",
+  "collections": [
+    {
+      "name": "StonkBrokers",
+      "opensea": "https://opensea.io/collection/stonkbrokers-434284142",
+      "chainId": 4663,
+      "rpc": "https://rpc.mainnet.chain.robinhood.com",
+      "address": "0x539cdd042c2f3d93ebc5be7dfff0c79f3b4fabf0",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Rare Friends Genesis",
+      "opensea": "https://opensea.io/collection/rare-friends-genesis",
+      "chainId": 4663,
+      "rpc": "https://rpc.mainnet.chain.robinhood.com",
+      "address": "0x116eaa62241751e0c98da43d458600c6c17cd361",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Chain Mancers",
+      "opensea": "https://opensea.io/collection/chain-mancers",
+      "chainId": 4663,
+      "rpc": "https://rpc.mainnet.chain.robinhood.com",
+      "address": "0x797a2e030b7e49107c8f07bf0300ea9cae88ca57",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "The Interns",
+      "opensea": "https://opensea.io/collection/interns",
+      "chainId": 4663,
+      "rpc": "https://rpc.mainnet.chain.robinhood.com",
+      "address": "0xfc4b0c4f464dc3037cf013934648a8a726d565a5",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    }
+  ]
+}

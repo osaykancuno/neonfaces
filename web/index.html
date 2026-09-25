@@ -2,10 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>NEONFACES: They don't blink.</title>
     <meta name="description" content="5555 close-up faces on Robinhood Chain. Every Face is an account (ERC-6551) seeded with Stock Tokens. Art and metadata fully on-chain." />
-    <meta name="theme-color" content="#ccff00" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="NEONFACES" />
     <link rel="canonical" href="%VITE_SITE_URL%" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -48,12 +52,12 @@
         <canvas id="nav-eye" width="24" height="12"></canvas>
         <span>NEONFACES</span>
       </a>
-      <nav>
-        <a href="/#account" data-link>Native</a>
-        <a href="/#sets" data-link>Sets</a>
-        <a href="/#watch" data-link>Watch</a>
-        <a href="/#faq" data-link>FAQ</a>
-        <a href="/#mint" class="nav-mint" data-link>Mint</a>
+      <nav class="app-nav" aria-label="App">
+        <a href="/" data-link data-tab="">Home</a>
+        <a href="/faces" data-link data-tab="faces">Faces</a>
+        <a href="/sets" data-link data-tab="sets">Sets</a>
+        <a href="/mine" data-link data-tab="mine">Mine</a>
+        <a href="/guide" data-link data-tab="guide">Guide</a>
       </nav>
       <button id="sound-btn" class="btn btn-ghost sound-btn" aria-pressed="false" aria-label="Sound"><span aria-hidden="true"><i></i><i></i><i></i></span></button>
       <button id="connect" class="btn btn-ghost">Connect</button>
@@ -64,27 +68,20 @@
       <div class="menu-box">
         <div class="menu-head"><span class="label">Everything, one stare away</span><button class="btn btn-ghost" id="menu-close" aria-label="Close the menu">&#10005;</button></div>
         <nav class="menu-list">
-          <a href="/#lore" data-link><i>01</i>Lore<small>why they don't blink</small></a>
-          <a href="/#account" data-link><i>02</i>Native<small>a wallet in every Face</small></a>
-          <a href="/#gallery" data-link><i>03</i>Faces<small>drawn from the chain</small></a>
-          <a href="/#sets" data-link><i>04</i>Sets<small>four pieces, one face, the set hunter</small></a>
-          <a href="/#watch" data-link><i>05</i>The watch<small>longest stares, sets completed</small></a>
-          <a href="/#traits" data-link><i>06</i>Traits<small>exact rarities</small></a>
-          <a href="/#onchain" data-link><i>07</i>On-chain<small>what the contracts enforce</small></a>
-          <a href="/#funds" data-link><i>08</i>Funds<small>where the mint goes</small></a>
-          <a href="/#principles" data-link><i>09</i>Principles<small>how this lasts</small></a>
-          <a href="/#roadmap" data-link><i>10</i>Milestones<small>what ships, what's next</small></a>
-          <a href="/#mint" data-link class="neon"><i>11</i>Mint<small>on OpenSea</small></a>
-          <a href="/#faq" data-link><i>12</i>FAQ<small>plain answers</small></a>
+          <a href="/" data-link><i>01</i>Home<small>the stare, the mint, the watch</small></a>
+          <a href="/faces" data-link><i>02</i>Faces<small>drawn from the chain</small></a>
+          <a href="/sets" data-link><i>03</i>Sets<small>four pieces, one face, the set hunter</small></a>
+          <a href="/mine" data-link class="neon"><i>04</i>Mine<small>your Faces</small></a>
+          <a href="/guide" data-link><i>05</i>Guide<small>lore, tiers, the Gaze, traits, the contracts, FAQ</small></a>
         </nav>
         <form class="menu-face" id="menu-face"><label for="menu-face-id">Open a Face</label><input id="menu-face-id" type="number" min="1" max="5555" placeholder="#" /><button class="btn btn-neon">Look</button></form>
-        <div class="menu-foot"><a href="/#mint" data-link>My Faces</a><a href="/llms.txt" target="_blank" rel="noopener">For AI assistants</a><a href="/neonfaces-mcp.mjs" download>Talk to your Face (MCP)</a></div>
+        <div class="menu-foot"><a href="/llms.txt" target="_blank" rel="noopener">For AI assistants</a><a href="/neonfaces-mcp.mjs" download>Talk to your Face (MCP)</a></div>
       </div>
     </div>
 
     <main id="app">
       <!-- ================= HOME ================= -->
-      <section id="home" class="page">
+      <section id="view-home" class="page view">
         <section class="hero">
           <div id="mosaic" class="mosaic" aria-hidden="true"></div>
           <div class="hero-inner">
@@ -94,7 +91,7 @@
             <p class="sub">5555 close-up faces on Robinhood Chain.<br />Every one is an account.</p>
             <div class="hero-cta">
               <a href="/#mint" class="btn btn-neon" data-link>Mint on OpenSea</a>
-              <a href="/#account" class="btn btn-ghost" data-link>What's inside</a>
+              <a href="/faces" class="btn btn-ghost" data-link>See the Faces</a>
             </div>
             <div class="hero-stats">
               <div><b data-stat="minted">...</b><span>minted</span></div>
@@ -107,22 +104,8 @@
 
         <div class="tape" aria-hidden="true"><div class="tape-track" id="tape"></div></div>
 
-        <section id="lore" class="block reveal">
-          <div class="label">01 / Lore</div>
-          <div class="lore">
-            <p class="big">On Robinhood Chain the market never closes. <em>Someone has to keep watching.</em></p>
-            <div class="lore-cols">
-              <p>NEONFACES are not portraits of people. They are the faces of agents. No bodies. They don't need them: an eye, a nose, a strip of forehead. Everything else is out of frame. The crop is this tight because the only thing that matters is the ticker.</p>
-              <p>Every Face is born with a Token Bound Account. Inside that wallet lives a piece of the real market: Stock Tokens, USDG, whatever the holder or the agent puts there. Sell the Face and you sell the stare, and everything it has accumulated.</p>
-              <p>First there were portraits. Then PFPs. Then pixel brokers with stocks in their pockets. NEONFACES strips the costume. What's left is zero distance: skin reduced to blocks, light reduced to <span class="neon">#CCFF00</span>, identity reduced to an account.</p>
-              <p>5555 is not random. Five, like the fingers holding a phone open all night. Five thousand and more, because a 24/7 market needs more than one watcher. Some faces are darker. Some carry more neon. That's not cosmetic rarity: it's how long that stare has stayed on.</p>
-            </div>
-            <p class="whisper" data-scramble>They don't smile. They don't pose. They don't blink.</p>
-          </div>
-        </section>
-
         <section id="account" class="block reveal">
-          <div class="label">02 / Native to the chain</div>
+          <div class="label">Native to the chain</div>
           <h2>Three things. No jargon.</h2>
           <ol class="native">
             <li>
@@ -142,6 +125,115 @@
             <span>Plain truth</span>
             <p>We don't sell real shares or shareholder rights. We sell an artwork that can hold on-chain exposure.</p>
           </div>
+          <nav class="guide-links" aria-label="In the guide">
+            <span>In the guide</span>
+            <a href="/guide#guide-details" data-link>Stare tiers</a><a href="/guide#guide-details" data-link>The Gaze</a><a href="/guide#guide-details" data-link>Lock before you list</a><a href="/guide#guide-traits" data-link>Traits</a><a href="/guide#guide-onchain" data-link>What the contracts enforce</a><a href="/guide#guide-funds" data-link>Where the mint goes</a>
+          </nav>
+        </section>
+        <section id="mint" class="block reveal">
+          <div class="label">Mint</div>
+          <div class="mint">
+            <div class="mint-art">
+              <img id="mint-preview" alt="" />
+            </div>
+            <div class="mint-panel">
+              <div class="phase-row"><span class="pill" id="phase-pill">Loading…</span></div>
+              <div class="progress"><div id="progress-bar"></div></div>
+              <div class="progress-label"><span id="progress-text">... / 5555</span><span id="seeded-text"></span></div>
+              <a id="opensea-btn" class="btn btn-neon btn-wide" target="_blank" rel="noopener">Mint on OpenSea ↗</a>
+              <p class="fine">The mint happens on OpenSea: stages, prices and your allowlist spot are shown there. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only and are not available to US persons.</p>
+            </div>
+          </div>
+        </section>
+        <section id="watch" class="block reveal">
+          <div class="label">The watch</div>
+          <h2>Who keeps staring.</h2>
+          <p class="lead">Read live from the chain. Every Face also keeps a journal on its page: mint, hands, seeds, sets, agents, locks and trades, in plain words.</p>
+          <div class="watch">
+            <div>
+              <h3>Longest stares</h3>
+              <ol id="watch-stares" class="watch-list"><li class="fine">Starts at mint.</li></ol>
+            </div>
+            <div>
+              <h3>Sets completed <small id="sets-count"></small></h3>
+              <div id="watch-sets" class="watch-sets"><span class="fine">The first assembly of each set is recorded here, with the Face that holds it.</span></div>
+            </div>
+          </div>
+        </section>
+        <section id="lore" class="block reveal lore-teaser">
+          <div class="label">Lore</div>
+          <div class="lore">
+            <p class="big">On Robinhood Chain the market never closes. <em>Someone has to keep watching.</em></p>
+            <p class="whisper" data-scramble>They don't smile. They don't pose. They don't blink.</p>
+            <a href="/guide#guide-lore" data-link class="more-link">Read the lore →</a>
+          </div>
+        </section>
+      </section>
+      <section id="view-faces" class="page view" hidden>
+        <section id="gallery" class="block reveal">
+          <div class="label">Faces</div>
+          <h2>Distance zero.</h2>
+          <p class="lead">Drawn from the same bytes that live on-chain. <span id="gallery-source" class="neon"></span></p>
+          <form id="faces-open" class="open-face"><label for="faces-open-id">Open a minted Face</label><input id="faces-open-id" type="number" min="1" max="5555" placeholder="#" inputmode="numeric" /><button class="btn btn-neon">Open</button></form>
+          <div id="gallery-grid" class="gallery"></div>
+        </section>
+      </section>
+      <section id="view-sets" class="page view" hidden>
+        <section id="sets" class="block reveal">
+          <div class="label">Sets</div>
+          <h2>Four pieces. One face.</h2>
+          <p class="lead">555 faces were cut in four: left eye, right eye, left mouth, right mouth. Each piece is a Face of its own, with its own account. Half of them are women, half are men, and the four pieces of a set share its Stare tier.</p>
+          <div id="hunter" class="hunter">
+            <h3>Set hunter</h3>
+            <p class="fine">Hold a piece? See where the other three are, who holds them and for how long. Watch a set and the next visit tells you which of its pieces changed hands. Read from the chain; listings are on OpenSea, one click away.</p>
+            <form id="hunter-form" class="hunter-form"><label for="hunter-id">Any Face</label><input id="hunter-id" type="number" min="1" max="5555" placeholder="#" /><button class="btn btn-neon">Hunt</button><button type="button" class="btn btn-ghost" id="hunter-mine">My sets</button></form>
+            <div id="hunter-alerts"></div>
+            <div id="hunter-list" class="hunts"></div>
+          </div>
+          <ol class="native sets-steps">
+            <li><b>Collect.</b><p>The reveal deals whole sets to random tokens, so every set that exists can be completed. Nobody is dealt a finished one: the pieces land far apart. Each piece shows <em>Set #n</em> and its part in the metadata, so you can make an offer on exactly the piece you miss.</p></li>
+            <li><b>Assemble.</b><p>Move the other three pieces into one piece's account. That Face now shows the whole face, and whoever buys it gets all four pieces in one sale. Take it apart whenever you like.</p></li>
+            <li><b>Bonus, once.</b><p>The first time a set is assembled, it receives a one-time bonus basket of Stock Tokens, paid by the mint like the seeds. Once per set, ever: taking it apart and assembling it again earns nothing more.</p></li>
+          </ol>
+          <h3 class="sets-title">The 555 faces</h3>
+          <div id="sets-grid" class="sets"></div>
+        </section>
+      </section>
+      <section id="view-mine" class="page view" hidden>
+        <section id="mine" class="block">
+          <div class="label">Mine</div>
+          <h2>Your Faces.</h2>
+          <p class="lead">Open a Face to see what's inside, withdraw, trade, lock it before listing, or let it follow a strategy.</p>
+          <div id="my-faces" class="mint-result"></div>
+          <div class="mine-links">
+            <a href="/sets#hunter" data-link class="btn btn-ghost">Hunt my sets</a>
+            <a href="/llms.txt" target="_blank" rel="noopener" class="btn btn-ghost">Ask an AI about my Face</a>
+          </div>
+        </section>
+      </section>
+      <section id="view-guide" class="page view" hidden>
+        <section class="block guide-head">
+          <div class="label">Guide</div>
+          <h2>Everything, checkable.</h2>
+          <nav class="guide-toc" aria-label="Guide sections">
+            <a href="#guide-lore">Lore</a><a href="#guide-details">Tiers, the Gaze, the lock</a><a href="#guide-traits">Traits</a><a href="#guide-onchain">The contracts</a><a href="#guide-funds">Funds</a><a href="#guide-faq">FAQ</a><a href="#guide-next">Next</a>
+          </nav>
+        </section>
+        <section id="guide-lore" class="block reveal">
+          <div class="label">Guide / Lore</div>
+          <div class="lore">
+            <p class="big">On Robinhood Chain the market never closes. <em>Someone has to keep watching.</em></p>
+            <div class="lore-cols">
+              <p>NEONFACES are not portraits of people. They are the faces of agents. No bodies. They don't need them: an eye, a nose, a strip of forehead. Everything else is out of frame. The crop is this tight because the only thing that matters is the ticker.</p>
+              <p>First there were portraits. Then PFPs. Then pixel brokers with stocks in their pockets. NEONFACES strips the costume. What's left is zero distance: skin reduced to blocks, light reduced to <span class="neon">#CCFF00</span>, identity reduced to an account.</p>
+              <p>5555 is not random. Five, like the fingers holding a phone open all night. Five thousand and more, because a 24/7 market needs more than one watcher. Some faces are darker. Some carry more neon. That's not cosmetic rarity: it's how long that stare has stayed on.</p>
+            </div>
+            <p class="whisper" data-scramble>They don't smile. They don't pose. They don't blink.</p>
+          </div>
+        </section>
+        <section id="guide-details" class="block reveal">
+          <div class="label">Guide / Tiers, the Gaze, the lock</div>
+          <h2>What the reveal, time and a lock do.</h2>
           <div class="cards">
             <article class="card">
               <h3>Stare tiers</h3>
@@ -157,58 +249,14 @@
             </article>
           </div>
         </section>
-
-        <section id="gallery" class="block reveal">
-          <div class="label">03 / Faces</div>
-          <h2>Distance zero.</h2>
-          <p class="lead">Drawn from the same bytes that live on-chain. <span id="gallery-source" class="neon"></span></p>
-          <div id="gallery-grid" class="gallery"></div>
-        </section>
-
-        <section id="sets" class="block reveal">
-          <div class="label">04 / Sets</div>
-          <h2>Four pieces. One face.</h2>
-          <p class="lead">555 faces were cut in four: left eye, right eye, left mouth, right mouth. Each piece is a Face of its own, with its own account. Half of them are women, half are men, and the four pieces of a set share its Stare tier.</p>
-          <div id="sets-grid" class="sets"></div>
-          <ol class="native sets-steps">
-            <li><b>Collect.</b><p>The reveal deals whole sets to random tokens, so every set that exists can be completed. Nobody is dealt a finished one: the pieces land far apart. Each piece shows <em>Set #n</em> and its part in the metadata, so you can make an offer on exactly the piece you miss.</p></li>
-            <li><b>Assemble.</b><p>Move the other three pieces into one piece's account. That Face now shows the whole face, and whoever buys it gets all four pieces in one sale. Take it apart whenever you like.</p></li>
-            <li><b>Bonus, once.</b><p>The first time a set is assembled, it receives a one-time bonus basket of Stock Tokens, paid by the mint like the seeds. Once per set, ever: taking it apart and assembling it again earns nothing more.</p></li>
-          </ol>
-          <div id="hunter" class="hunter">
-            <h3>Set hunter</h3>
-            <p class="fine">Hold a piece? See where the other three are, who holds them and for how long. Watch a set and the next visit tells you which of its pieces changed hands. Read from the chain; listings are on OpenSea, one click away.</p>
-            <form id="hunter-form" class="hunter-form"><label for="hunter-id">Any Face</label><input id="hunter-id" type="number" min="1" max="5555" placeholder="#" /><button class="btn btn-neon">Hunt</button><button type="button" class="btn btn-ghost" id="hunter-mine">My sets</button></form>
-            <div id="hunter-alerts"></div>
-            <div id="hunter-list" class="hunts"></div>
-          </div>
-        </section>
-
-        <section id="watch" class="block reveal">
-          <div class="label">05 / The watch</div>
-          <h2>Who keeps staring.</h2>
-          <p class="lead">Read live from the chain. Every Face also keeps a journal on its page: mint, hands, seeds, sets, agents, locks and trades, in plain words.</p>
-          <div class="watch">
-            <div>
-              <h3>Longest stares</h3>
-              <ol id="watch-stares" class="watch-list"><li class="fine">Starts at mint.</li></ol>
-            </div>
-            <div>
-              <h3>Sets completed <small id="sets-count"></small></h3>
-              <div id="watch-sets" class="watch-sets"><span class="fine">The first assembly of each set is recorded here, with the Face that holds it.</span></div>
-            </div>
-          </div>
-        </section>
-
-        <section id="traits" class="block reveal">
-          <div class="label">06 / Traits</div>
+        <section id="guide-traits" class="block reveal">
+          <div class="label">Guide / Traits</div>
           <h2>Twelve traits. Exact rarities.</h2>
           <p class="lead">Every count is fixed and published before mint. Face (woman or man) belongs to set pieces only.</p>
           <div id="trait-explorer" class="traits"></div>
         </section>
-
-        <section id="onchain" class="block reveal">
-          <div class="label">07 / Different by construction</div>
+        <section id="guide-onchain" class="block reveal">
+          <div class="label">Guide / Different by construction</div>
           <h2>Everything here is checkable on-chain.</h2>
           <p class="lead">A busy chain means a lot of drops that look alike. Every line below is enforced by the contracts, not by a promise.</p>
           <div class="versus" role="table">
@@ -224,93 +272,42 @@
             <div class="vs-row" role="row"><b role="cell">Control</b><span role="cell">Upgradeable proxy, pausable transfers</span><span role="cell">No proxy, no transfer pause, no blocklist. Supply fixed in bytecode. Safe multisig with a 2-day handover.</span></div>
           </div>
         </section>
-
-        <section id="funds" class="block reveal">
-          <div class="label">08 / Where the mint goes</div>
+        <section id="guide-funds" class="block reveal">
+          <div class="label">Guide / Where the mint goes</div>
           <h2>Said before, not after.</h2>
-          <p class="lead">A major share turns the Faces on: the content of their wallets. A share stays in the treasury for art, site, presence and liquidity. A share is the team's, with rules against dumping on the floor. A share goes to growth and collaborations. If the Faces were born empty, NEONFACES would be just an aesthetic. The aesthetic is strong. It isn't enough.</p>
+          <p class="lead">Fixed in a contract before the first sale: the biggest share fills the Faces' wallets, and nobody can change the split.</p>
           <div class="split">
             <svg id="donut" viewBox="0 0 200 200" aria-label="Mint proceeds split"></svg>
             <ul id="split-list" class="split-list"></ul>
           </div>
           <p class="lead">The mint runs on OpenSea, which keeps 10% of primary sales. The rest can only be paid to <code>NeonPayout</code>: shares and addresses are immutable, and anyone can push the split with <code>releaseAll()</code>. Resale royalties: 5% suggested on-chain (ERC-2981) to the treasury multisig, optional because transfers are never restricted.</p>
         </section>
-
-        <section id="principles" class="block reveal">
-          <div class="label">09 / Principles</div>
-          <h2>How this lasts. And how it fails.</h2>
-          <div class="principles">
-            <div class="works">
-              <h3>It works if</h3>
-              <ul>
-                <li>the art stays iron-clad and recognizable</li>
-                <li>the Face lit at mint is real, not a slide</li>
-                <li>the community is chosen, not inflated</li>
-                <li>the tone stays adult: market, stare, neon, no mascots</li>
-              </ul>
-            </div>
-            <div class="fails">
-              <h3>It fails if</h3>
-              <ul>
-                <li>it becomes "yet another pixel broker"</li>
-                <li>it promises returns</li>
-                <li>it grows the supply or the allowlist out of fear <small>(the supply is 5555 in bytecode: it can't grow even if we wanted it to)</small></li>
-                <li>the team disappears after mint and only the listings feed is left</li>
-              </ul>
-            </div>
-          </div>
-          <p class="lead">The reference isn't the biggest collection on the chain. It's the one that proved a portrait can carry a piece of the market. NEONFACES takes that intuition and moves it to art: less character, more close-up, the chain's color, a stare instead of a costume.</p>
-        </section>
-
-        <section id="roadmap" class="block reveal">
-          <div class="label">10 / Three milestones</div>
-          <ol class="roadmap">
-            <li><b>Mint + seeding</b><span>Every Face minted with its account and base basket. On-chain reveal, Stare top-ups, sets to complete.</span></li>
-            <li><b>Agents</b><span>Ship with the mint: delegation in every account, ready-made strategies (accumulate, keep liquid, trim) run by the NEONFACES strategy agent, and a kit to talk to your Face from an AI assistant. Next: more strategies, proposed by holders.</span></li>
-            <li><b>Market + analytics</b><span>HoodMarket listing, account-value analytics, holder votes on which tickers join the pool.</span></li>
-          </ol>
-        </section>
-
-        <section id="mint" class="block reveal">
-          <div class="label">11 / Mint</div>
-          <div class="mint">
-            <div class="mint-art">
-              <img id="mint-preview" alt="" />
-            </div>
-            <div class="mint-panel">
-              <div class="phase-row"><span class="pill" id="phase-pill">Loading…</span></div>
-              <div class="progress"><div id="progress-bar"></div></div>
-              <div class="progress-label"><span id="progress-text">... / 5555</span><span id="seeded-text"></span></div>
-              <a id="opensea-btn" class="btn btn-neon btn-wide" target="_blank" rel="noopener">Mint on OpenSea ↗</a>
-              <p class="fine">The mint happens on OpenSea: stages, prices and your allowlist spot are shown there. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only and are not available to US persons.</p>
-              <h3 class="mine-title">Your Faces</h3>
-              <div id="my-faces" class="mint-result"></div>
-              <p class="fine">Open a Face to see what's inside, withdraw, lock it before listing, or set up an agent.</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="faq" class="block reveal">
-          <div class="label">12 / FAQ</div>
+        <section id="guide-faq" class="block reveal">
+          <div class="label">Guide / FAQ</div>
           <div class="faq">
-            <details><summary>Where do I mint?</summary><p>On OpenSea, on Robinhood Chain: the button above opens the drop. This site is where you look inside your Face and manage it: withdraw, lock, delegate an agent.</p></details>
+            <details><summary>Where do I mint?</summary><p>On OpenSea, on Robinhood Chain: the Mint button on Home opens the drop. This app is where you look inside your Faces and manage them: withdraw, trade, lock, assemble sets, delegate an agent.</p></details>
             <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT: a base basket from mint, a top-up after reveal for Watch / Heavy Stare, plus anything you add. You can withdraw everything, add more, delegate an agent or lock it, all from the Face's page.</p></details>
             <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure. Stock Tokens are tokenized instruments that track the underlying; they give no legal ownership and no shareholder rights.</p></details>
-            <details><summary>When do I know my Stare tier?</summary><p>At reveal, after the mint closes. The reveal maps every token to one art piece with a keyed permutation (check it with <code>artIdOf(tokenId)</code>) and the art decides the tier. Watch / Heavy Stare top-ups can then be delivered by anyone, in one call.</p></details>
-            <details><summary>What is the Gaze?</summary><p>Every Face counts how long it has stayed with its current holder (Unblinking). After 30 days its neon starts to bloom (Steady), after 90 it is Fixed, after a year it is Burning. The glow is drawn by the contract from that clock, so it shows everywhere the Face is shown. A sale resets it: the stare belongs to whoever keeps it.</p></details>
-            <details><summary>How do sets work?</summary><p>2220 Faces are the pieces of 555 whole faces. After the reveal each piece shows its set and part. Hold all four, then press <em>Assemble</em> on the Face that should carry the set: the other three move into its account (three transfers from your wallet). That Face shows the whole face and gets the set's one-time bonus basket. To take it apart, press <em>Take apart</em>. If the mint doesn't sell out, fewer sets are dealt, but only whole ones.</p></details>
-            <details><summary>What can an agent do with my Face?</summary><p>Only what you allow, within the ETH and daily limits you set. Trades go through a guard contract: everything bought comes back into the Face, never more than 1% below the Chainlink price. An agent can never sign for the account, it expires, and it stops the moment the Face changes hands.</p></details>
-            <details><summary>Do I need my own bot?</summary><p>No. On your Face's page pick a strategy (buy a ticker every week, keep 40% in USDG, trim a ticker above 50%) and the NEONFACES strategy agent runs it, within the daily limit you choose. Each trade appears in the Face's journal with the reason. Stop it with one click; selling the Face stops it too. Strategies follow simple rules: they don't predict prices and promise nothing.</p></details>
+            <details><summary>How do I assemble a set?</summary><p>Hold all four pieces, open the Face that should carry the set and press <em>Assemble</em>: the other three move into its account (three transfers from your wallet) and the bonus is delivered. <em>Take apart</em> gives them back. If the mint doesn't sell out, fewer sets are dealt, but only whole ones.</p></details>
+            <details><summary>Can my Face trade by itself?</summary><p>Yes, if you want. On your Face's page pick a strategy (buy a ticker every week, keep 40% in USDG, trim a ticker above 50%) and the NEONFACES strategy agent runs it within the daily limit you choose, or delegate your own agent. Trades go through a guard contract: everything bought comes back into the Face, never more than 2% below the Chainlink price. An agent can never sign for the account, it expires, and it stops the moment the Face changes hands. Each trade appears in the Face's journal with its reason. Strategies follow simple rules: they don't predict prices and promise nothing.</p></details>
             <details><summary>Can I ask an AI about my Face?</summary><p>Yes. Give your assistant <a href="/llms.txt">neonfaces.xyz/llms.txt</a>, or add <a href="/neonfaces-mcp.mjs" download>the NEONFACES MCP kit</a> to Claude Desktop or any MCP client. It reads what your Face holds, its set, Gaze and agent, and prepares actions as links: you open the link, read the summary and confirm in your own wallet. It never touches your keys.</p></details>
             <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and delivered as soon as the pool is restocked, usually within minutes; anyone can deliver it with one call from the Face's page. The pool is restocked by the mint itself: 40% of what reaches the split goes to a vault that can only buy the basket tokens for the pool. On weekends, when stock prices don't update, restocking waits for Monday.</p></details>
           </div>
+        </section>
+        <section id="guide-next" class="block reveal">
+          <div class="label">Guide / Next</div>
+          <h2>After the mint.</h2>
+          <ul class="next-list">
+            <li><b>More strategies</b><span>proposed by holders, run by the same agent under the same on-chain rules.</span></li>
+            <li><b>Market + analytics</b><span>HoodMarket listing, account-value analytics, holder votes on which tickers join the pool.</span></li>
+          </ul>
         </section>
       </section>
 
       <!-- ================= FACE PAGE ================= -->
       <section id="face-page" class="page" hidden>
         <div class="face-wrap">
-          <a href="/" data-link class="back">← all faces</a>
+          <a href="/faces" data-link class="back">← all faces</a>
           <div class="face-grid">
             <div class="face-art"><img id="face-img" alt="" /></div>
             <div class="face-info">
@@ -346,6 +343,13 @@
       <p class="disclaimer">Stock Tokens are tokenized debt instruments that provide economic exposure to the underlying security; they do not confer legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
     </footer>
 
+    <nav id="tabbar" class="tabbar" aria-label="App">
+      <a href="/" data-link data-tab="" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a>
+      <a href="/faces" data-link data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a>
+      <a href="/sets" data-link data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a>
+      <a href="/mine" data-link data-tab="mine" aria-label="Mine"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Mine</span></a>
+      <a href="/guide" data-link data-tab="guide" aria-label="Guide"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Guide</span></a>
+    </nav>
     <div id="toast" class="toast" role="status"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

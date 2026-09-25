@@ -3,9 +3,11 @@ pragma solidity ^0.8.28;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {NeonTrader, ISwapRouter02} from "../src/NeonTrader.sol";
+import {NeonSeedVault, ISeedTrader} from "../src/NeonSeedVault.sol";
 
 /// @notice Deploys NeonTrader (no owner, no upgrade) from config/trader.<chainid>.json and records it in
-/// deployments/<chainid>.json under "trader".
+/// deployments/<chainid>.json under "trader". Wires it into NeonSeedVault while the deployer is still its admin
+/// (run it right after Deploy.s.sol, before the Safe accepts the admin role).
 ///   forge script script/DeployTrader.s.sol --rpc-url robinhood --private-key $DEPLOYER_PK --broadcast
 contract DeployTrader is Script {
     function run() external returns (NeonTrader trader) {
@@ -21,11 +23,15 @@ contract DeployTrader is Script {
             tokens[i] = vm.parseJsonAddress(cfg, string.concat(k, ".address"));
             feeds[i] = vm.parseJsonAddress(cfg, string.concat(k, ".feed"));
         }
-        vm.startBroadcast();
-        trader = new NeonTrader(ISwapRouter02(router), weth, tokens, feeds);
-        vm.stopBroadcast();
         string memory path = string.concat("deployments/", vm.toString(block.chainid), ".json");
         if (!vm.exists(path)) vm.writeJson("{}", path);
+        string memory dep = vm.readFile(path);
+        vm.startBroadcast();
+        trader = new NeonTrader(ISwapRouter02(router), weth, tokens, feeds);
+        if (vm.keyExistsJson(dep, ".seedVault")) {
+            NeonSeedVault(payable(vm.parseJsonAddress(dep, ".seedVault"))).setTrader(ISeedTrader(address(trader)));
+        }
+        vm.stopBroadcast();
         vm.writeJson(vm.toString(address(trader)), path, ".trader");
         console2.log("NeonTrader", address(trader));
     }

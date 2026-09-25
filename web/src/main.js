@@ -178,7 +178,7 @@ function renderTraits() {
 // =====================================================================================
 async function renderSplit() {
   const parts = [
-    { pct: 40, name: "Seed vault", desc: "Buys Stock Tokens / USDG that refill the seed pool. The product promise." },
+    { pct: 40, name: "Seed vault", desc: "A contract that can only buy the basket tokens for the Faces, at Chainlink-checked prices. The product promise." },
     { pct: 25, name: "Treasury", desc: "Multisig: art, site, market making." },
     { pct: 20, name: "Team", desc: "Streams through a 6-month linear vesting contract. No floor dumps." },
     { pct: 15, name: "Growth", desc: "Collabs and growth." },

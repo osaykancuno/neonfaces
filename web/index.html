@@ -108,8 +108,8 @@
               <p>Not an image sitting in an account: the image <em>is the key</em> to an account. Tokens, stablecoins and pieces of tokenized stocks can live inside it.</p>
             </li>
             <li>
-              <b>A Face is never born empty.</b>
-              <p>Part of the mint turns the stare on: a small, visible basket, different from piece to piece. Leave it there, add to it, or withdraw it. If the Face changes hands, what's inside follows.</p>
+              <b>A Face is never left empty.</b>
+              <p>The mint pays for what's inside: part of every sale can only buy a small, visible basket of Stock Tokens for the Faces. Most Faces are born with it; one minted before the pool is restocked gets it minutes later. Leave it there, add to it, or withdraw it. If the Face changes hands, what's inside follows.</p>
             </li>
             <li>
               <b>The stare can work.</b>
@@ -153,7 +153,7 @@
           <div class="versus" role="table">
             <div class="vs-row vs-head" role="row"><span role="columnheader"></span><span role="columnheader">Typical drop</span><span role="columnheader">NEONFACES</span></div>
             <div class="vs-row" role="row"><b role="cell">Art</b><span role="cell">An image on IPFS or a server that can go dark</span><span role="cell">Pixels stored on-chain and drawn by the contract itself, sealed against a hash committed before mint</span></div>
-            <div class="vs-row" role="row"><b role="cell">Wallet</b><span role="cell">None, or an empty one</span><span role="cell">An ERC-6551 account created <em>and funded</em> in the mint transaction</span></div>
+            <div class="vs-row" role="row"><b role="cell">Wallet</b><span role="cell">None, or an empty one</span><span role="cell">An ERC-6551 account created in the mint transaction and filled by the mint itself: the seed share can only buy the Faces' Stock Tokens</span></div>
             <div class="vs-row" role="row"><b role="cell">Rarity</b><span role="cell">An off-chain script and a spreadsheet</span><span role="cell">Published exact counts; each token's art and tier set at reveal by an on-chain permutation anyone can recompute</span></div>
             <div class="vs-row" role="row"><b role="cell">Metadata</b><span role="cell">Frozen JSON, stale on day two</span><span role="cell">Live: traits read what the Face actually holds</span></div>
             <div class="vs-row" role="row"><b role="cell">Holding</b><span role="cell">Nothing rewards patience</span><span role="cell"><b class="neon">Unblinking</b>: an on-chain clock of how long the stare has stayed with its holder. Selling resets it.</span></div>
@@ -236,7 +236,7 @@
             <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure. Stock Tokens are tokenized instruments that track the underlying; they give no legal ownership and no shareholder rights.</p></details>
             <details><summary>When do I know my Stare tier?</summary><p>At reveal, after the mint closes. The reveal maps every token to one art piece with a keyed permutation (check it with <code>artIdOf(tokenId)</code>) and the art decides the tier. Watch / Heavy Stare top-ups can then be delivered by anyone, in one call.</p></details>
             <details><summary>What can an agent do with my Face?</summary><p>Only what you allow, within the ETH and daily limits you set. The ready-made action trades on Uniswap through a guard contract: everything bought comes back into the Face, never more than 1% below the Chainlink price. An agent can never sign for the account, it expires, and it stops the moment the Face changes hands.</p></details>
-            <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and anyone can deliver it with one call once the pool is refilled. The seed vault receives 40% of mint proceeds for exactly this.</p></details>
+            <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and delivered as soon as the pool is restocked, usually within minutes; anyone can deliver it with one call from the Face's page. The pool is restocked by the mint itself: 40% of what reaches the split goes to a vault that can only buy the basket tokens for the pool. On weekends, when stock prices don't update, restocking waits for Monday.</p></details>
           </div>
         </section>
       </section>

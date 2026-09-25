@@ -29,7 +29,7 @@ The chain's agents can be delegated to a Face's account. The holder stays the ow
 ## Native to the chain — three things, no jargon
 
 1. **Every Face has its own wallet.** Not an image sitting in an account: the image is the key to an account. Tokens, stablecoins and pieces of tokenized stocks can live inside it.
-2. **A Face is never born empty.** Part of the mint turns the stare on: a small, visible basket, different from piece to piece. The holder can leave it there, add to it, or withdraw it. If the Face changes hands, what's inside follows.
+2. **A Face is never left empty.** The mint pays for what's inside: part of every sale can only buy a small, visible basket for the Faces, different from piece to piece. Most Faces are born with it; one minted before the pool is restocked gets it minutes later. The holder can leave it there, add to it, or withdraw it. If the Face changes hands, what's inside follows.
 3. **The stare can work.** The chain is built for agents too. The holder stays the owner and can delegate simple rules ("keep part of it liquid", "accumulate one ticker"). Not a landing-page bot: the same idea as a face that never closes its eyes.
 
 **Mandatory clarity:** we don't sell real shares or shareholder rights. We sell an artwork that can hold on-chain exposure. The language stays honest — otherwise the project dies at the first serious question.
@@ -38,7 +38,7 @@ The chain's agents can be delegated to a Face's account. The holder stays the ow
 
 | Share | Destination | Enforced by |
 |---|---|---|
-| 40% | Seed vault — turns the Faces on (the content of their wallets) | `NeonPayout.SEED_BPS`, immutable payee |
+| 40% | Seed vault — turns the Faces on (the content of their wallets) | `NeonPayout.SEED_BPS`, paid to `NeonSeedVault`, which can only buy basket tokens for the pool |
 | 25% | Treasury multisig — art, site, presence, liquidity | `NeonPayout.TREASURY_BPS` |
 | 20% | Team — rules against dumping on the floor: 6-month linear vesting | OpenZeppelin `VestingWallet` as payee |
 | 15% | Growth and collaborations | `NeonPayout.GROWTH_BPS` |

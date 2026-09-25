@@ -1,6 +1,6 @@
 {
-  "_readme": "Copy to collections.json, list the collections whose holders get the allowlist, run: node tools/snapshot.mjs (writes <phase>.csv + <phase>.report.json), then node tools/allowlist.mjs config/allowlists/<phase>.csv (writes config/allowlists/opensea/<phase>.csv to upload in OpenSea Studio). fromBlock = collection deploy block (speeds up the scan). Pin snapshotBlock to a number and announce it before taking the snapshot.",
-  "phase": "allowlist",
+  "_readme": "One config per OpenSea stage: robinhood (holders of Robinhood Chain collections, first) and partners (collections on other chains, chainId + rpc of that chain). Copy to robinhood.json / partners.json, list the collections whose holders get the allowlist, run: node tools/snapshot.mjs (writes <phase>.csv + <phase>.report.json), then node tools/allowlist.mjs config/allowlists/<phase>.csv (writes config/allowlists/opensea/<phase>.csv to upload in OpenSea Studio). fromBlock = collection deploy block (speeds up the scan). Pin snapshotBlock to a number and announce it before taking the snapshot.",
+  "phase": "robinhood",
   "rules": { "perNft": 1, "maxPerWallet": 3 },
   "collections": [
     { "name": "Collection name", "chainId": 4663, "rpc": "https://rpc.mainnet.chain.robinhood.com", "address": "0x0000000000000000000000000000000000000000", "standard": "erc721", "fromBlock": 0, "snapshotBlock": "latest", "weight": 1 }

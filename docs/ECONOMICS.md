@@ -14,25 +14,29 @@ Why these numbers: a base that is visible in the wallet without weighing on the 
 
 Full-supply pool ≈ **$42,507**: base ≈ $16,665 (delivered as Faces are minted — pre-fund in steps), top-ups ≈ $25,842 (needed only at reveal, and only for Faces actually minted).
 
-## Funding rule
+## Funding rule: the mint pays for its own seeds
 
-The mint runs on OpenSea, which keeps 10% of paid mints (free mints pay no fee). The seed vault receives 40% of the rest, i.e. 36% of what buyers pay. To seed everything from proceeds alone, total mint revenue must be ≥ pool / 0.36 ≈ **$118k**. Below that, the treasury tops up. Base seeds for the team Faces and the free Builders stage (up to 1222 Faces ≈ $3.7k) are in the pool **before** they are minted — a Face is never born empty. Top-ups are only needed after the reveal.
+There is no inventory before the sale. OpenSea keeps 10% of paid mints; `NeonPayout` sends 40% of the rest, i.e. **36% of what buyers pay**, to `NeonSeedVault`, which can only buy basket tokens (Uniswap v3 through NeonTrader, Chainlink-checked) straight into the seed pool. `tools/seed-keeper.mjs` runs it during the sale: it delivers the seeds still pending and keeps a small stock ahead, so most Faces are born seeded and the first ones get their basket minutes after mint.
+
+Because tiers come in fixed proportions, every Face costs the pool the same on average: ≈ $42,507 / 5555 ≈ **$7.65** (base basket now, its share of the top-ups at reveal). So each paid Face must bring at least $7.65 / 0.36 ≈ **$21.3**, about **0.008 ETH** at ETH $2,691, and then the seeds are covered however many Faces sell. Use **≥ 0.01 ETH** everywhere for a margin against ETH moving between mint and purchase. Free Faces are paid by the others: keep them to the 111 team Faces, minted at the end of the sale.
+
+Stock Token prices only update on trading days (NeonTrader refuses prices older than 26 h): open the sale Tuesday–Thursday, so restocking never waits a weekend.
 
 ## Example sale plan (tune to market)
 
-| OpenSea stage | Faces | Price | Revenue |
-|---|---|---|---|
-| Team (not sold) | 111 | — | — |
-| Builders (allowlist, free) | ≤ 1111 | 0 | 0 |
-| Allowlist | ≤ 2000 | 0.012 ETH | 24 ETH |
-| Public | rest (≈ 2333) | 0.02 ETH | ≈ 46.7 ETH |
+| OpenSea stage | Who | Faces | Price | Revenue |
+|---|---|---|---|---|
+| 1. Robinhood Chain | holders of Robinhood Chain collections | ≤ 1500 | 0.01 ETH | 15 ETH |
+| 2. Partners | holders of partner collections on other chains | ≤ 2000 | 0.012 ETH | 24 ETH |
+| 3. Public | everyone | rest (≈ 1944) | 0.02 ETH | ≈ 38.9 ETH |
+| Team | minted after the sale, before the reveal | 111 | — | — |
 
-On a sell-out buyers pay ≈ 70.7 ETH; OpenSea keeps ≈ 7.1 ETH; `NeonPayout` receives ≈ 63.6 ETH and the seed vault 40% of it, ≈ 25.4 ETH (≈ $68k at ETH $2,691): the baskets use ≈ 62% of it; the rest is a reserve against price moves and pending seeds, and can fund later holder-voted additions — never promised in advance.
+On a sell-out buyers pay ≈ 77.9 ETH; OpenSea keeps ≈ 7.8 ETH; `NeonPayout` receives ≈ 70.1 ETH and the seed vault 40% of it, ≈ 28 ETH (≈ $75k at ETH $2,691): the baskets use ≈ 57% of it. The rest stays in the vault as a reserve against price moves until the baskets are locked; then it can only go to the treasury.
 
 ## What keeps running, and what costs money
 
 - **Runs on its own, at no cost to anyone:** art and metadata (on-chain), every Face account, seed retries and Stare top-ups (permissionless), the split, `NeonTrader` (no owner — it relies on Chainlink feeds and Uniswap pools, run by third parties). If the team disappeared, every Face would still render, hold its tokens and trade through its agent.
-- **Costs money:** the static site and its domain (tens of dollars a year), the independent audit (once, before mainnet), gas for operations (cents). The treasury's 25% covers them many times over.
+- **Costs money:** the domain and static hosting (tens of dollars a year), contract deployment (≈ 0.03 ETH, the only cost before the sale), gas for the keeper and operations (cents), an audit once the treasury can pay for it. The treasury's 25% covers them many times over.
 - **Recurring income:** only resale royalties — 5% suggested on-chain and in OpenSea's settings, optional for sellers because transfers are never restricted. They go to the treasury Safe. There is no fee on holders' trades and no other revenue.
 - **Not automatic:** new baskets or tickers, the site, the community. People do that, paid from the treasury and royalties; nothing about it is promised.
 

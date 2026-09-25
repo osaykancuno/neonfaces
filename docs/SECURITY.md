@@ -2,7 +2,7 @@
 
 Internal review, 2026-09-25. It is not a substitute for an independent audit before mainnet.
 
-**Scope:** `contracts/src/*` (NeonFaces, NeonPayout, NeonSeeder, NeonFaceAccount, NeonArt, NeonRenderer, NeonTrader, ChainEntropy), the SeaDrop integration, deploy/upload scripts, site transaction flows.
+**Scope:** `contracts/src/*` (NeonFaces, NeonPayout, NeonSeedVault, NeonSeeder, NeonFaceAccount, NeonArt, NeonRenderer, NeonTrader, ChainEntropy), the SeaDrop integration, deploy/upload scripts, site transaction flows.
 **Method:** line-by-line manual review with an attacker's model; 71 Foundry tests including attack scenarios (tier re-roll contract, rogue agent, front-run drain, full-supply permutation, sale-manager limits, payout redirection); every test mint goes through OpenSea's real SeaDrop bytecode; mainnet-fork tests with the live SeaDrop, real Stock Tokens, the real Uniswap v3 router/pools and Chainlink feeds; `forge lint` (every warning reviewed); end-to-end rehearsal on a local node with the canonical registry and SeaDrop bytecode, including the holder panel and a live agent.
 
 ## Findings
@@ -25,6 +25,7 @@ Internal review, 2026-09-25. It is not a substitute for an independent audit bef
 | I-05 | Info | NeonTrader trusts Chainlink; there is no L2 sequencer-uptime feed on Robinhood Chain. | Accepted: prices older than 26 h are refused; the worst an agent can do inside the rules is ≤ 1% + fees per trade, bounded by the holder's daily cap. |
 | I-06 | Info | Lint: calls in loops, events after calls, `encodePacked` with dynamic args, ETH sends. | Reviewed: trusted immutable targets, strings only (never hashed), sends only to immutable payees or within the agent budget. |
 | I-07 | Info | **Sale manager.** The wallet that runs the drop in OpenSea Studio can set stages, prices and allowlists (e.g. open a free public stage). | By design, narrowed on-chain: it cannot mint by itself, change the art, royalties or roles, allow another minter, or send proceeds anywhere but `NeonPayout`. The admin can pause minting and remove it; it is cleared after the sale. Test: `test_Studio_SaleManagerPowersAreNarrow`. |
+| I-08 | Info | **Seed vault keeper.** A hot key triggers the seed purchases. | By design, narrowed on-chain: it can only make `NeonSeedVault` buy tokens used by a basket, through NeonTrader (Chainlink-bounded, ≤ 1%), delivered to the pool. A stolen keeper key can at worst buy the wrong mix of basket tokens; the admin revokes it. Tests: `SeedVault.t.sol`, `test_Fork_SeedVaultBuysBasketTokensIntoThePool`. |
 
 ## What holders do NOT have to trust
 
@@ -38,7 +39,7 @@ Internal review, 2026-09-25. It is not a substitute for an independent audit bef
 
 | Area | Trust | Mitigation |
 |---|---|---|
-| Seed pool | the team funds `NeonSeeder` and may withdraw *unused* inventory | delivered seeds live in Face accounts; `coverage()`, `fundedCount()`, `upgradedCount()` are public; `lockConfig()` freezes baskets |
+| Seed pool | the seed share of the mint buys the inventory (`NeonSeedVault`); the admin may withdraw *unused* inventory, and the vault's leftover ETH once baskets are locked (to the treasury only) | delivered seeds live in Face accounts; `coverage()`, `fundedCount()`, `upgradedCount()` are public; `lockConfig()` freezes baskets |
 | Reveal timing | the metadata role requests the reveal | M-03 above |
 | Renderer | the metadata role can swap the renderer until `freezeMetadata()` | art bytes are sealed regardless; swaps emit ERC-4906 events |
 | Sale configuration | the sale manager sets OpenSea stages, prices and allowlists; OpenSea runs SeaDrop and the drop page | I-07 above; SeaDrop is OpenSea's audited, immutable contract |
@@ -46,6 +47,6 @@ Internal review, 2026-09-25. It is not a substitute for an independent audit bef
 
 ## Before mainnet
 
-1. Independent audit of the seven contracts (≈ 1.5k lines of Solidity), focusing on H-01/H-02/M-01 fixes, the SeaDrop entrypoints (`mintSeaDrop`, `multiConfigure`), `NeonTrader` price math, `NeonFaceAccount`, `NeonArt.artData` offsets and `NeonRenderer` JSON escaping.
+1. An independent audit of the eight contracts (≈ 1.6k lines of Solidity) as soon as the treasury can pay for it, focusing on H-01/H-02/M-01 fixes, the SeaDrop entrypoints (`mintSeaDrop`, `multiConfigure`), `NeonTrader` price math, `NeonFaceAccount`, `NeonArt.artData` offsets and `NeonRenderer` JSON escaping.
 2. Testnet rehearsal with the real Safe and real wallets (`contracts/script/rehearsal.sh`), then a test drop in OpenSea Studio if it lists Robinhood Chain testnet.
 3. Configure base baskets with equal value (I-04).

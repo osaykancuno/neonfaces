@@ -4,7 +4,8 @@
 
 - **Fully on-chain pixel art.** Each Face is a 20–40 block grid (~168 bytes, RLE) stored in contract bytecode (SSTORE2). `tokenURI` draws the SVG and writes the JSON on-chain. No IPFS, no server.
 - **Minted on OpenSea.** The drop runs on OpenSea through SeaDrop; the token itself creates each Face's account and seed during that mint. The site presents the project and is where holders manage their Faces.
-- **Every Face is a wallet.** An ERC-6551 Token Bound Account is created through the canonical registry *and funded* with a base basket of Stock Tokens in the mint transaction.
+- **Every Face is a wallet.** An ERC-6551 Token Bound Account is created through the canonical registry in the mint transaction and filled with a base basket of Stock Tokens from the seed pool.
+- **The mint funds itself.** 40% of the split goes to `NeonSeedVault`, which can only buy basket tokens (Uniswap v3, Chainlink-checked prices) straight into the pool; `tools/seed-keeper.mjs` runs it during the sale. No inventory is needed before the first mint.
 - **Stare tiers set at reveal**: a keyed on-chain permutation maps tokens to art; the art decides the tier (exactly 4444 Glance / 833 Watch / 278 Heavy Stare) and Watch / Heavy Stare Faces get a top-up. Nothing valuable is decided at mint, so it can't be sniped.
 - **Unblinking**: an on-chain clock of how long each Face has stayed with its holder, shown in the metadata. Selling resets it.
 - **Scoped agents**: holders delegate an agent in a plain-language wizard; it may only call what they allow, within an ETH budget — no signatures, expiring, void on sale. Trading goes through **NeonTrader**: Uniswap v3 on Robinhood Chain, output always back into the Face, price bounded by Chainlink, daily USD cap. See [docs/AGENTS.md](docs/AGENTS.md).
@@ -18,8 +19,8 @@
 | Path | What |
 |---|---|
 | `art/` | Procedural renderer + collection generator (Python). Produces the on-chain records, provenance, previews. |
-| `contracts/` | Foundry project: `NeonFaces` (ERC-721, SeaDrop-compatible), `NeonPayout` (proceeds split), `NeonSeeder`, `NeonFaceAccount` (ERC-6551), `NeonArt` (SSTORE2), `NeonRenderer` (SVG/JSON), `NeonTrader` (agent trading guard). Tests, deploy + upload + rehearsal scripts. |
-| `tools/` | Node ops tools: live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
+| `contracts/` | Foundry project: `NeonFaces` (ERC-721, SeaDrop-compatible), `NeonPayout` (proceeds split), `NeonSeedVault` (seed share -> pool), `NeonSeeder`, `NeonFaceAccount` (ERC-6551), `NeonArt` (SSTORE2), `NeonRenderer` (SVG/JSON), `NeonTrader` (agent trading guard). Tests, deploy + upload + rehearsal scripts. |
+| `tools/` | Node ops tools: seed keeper, live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
 | `web/` | The site (Vite + viem, static). Draws Faces from the on-chain bytes with a byte-identical JS port of the renderer. Links to the OpenSea drop; Face pages with the holder panel (withdraw, lock, agents). |
 | `config/` | Seed basket plan, verified trading config (Uniswap + Chainlink addresses), allowlist sources. |
 | `brand/` | Logo (`logo.gif`) and banner (`banner.gif`, `banner.png` for headers that don't animate), drawn from the on-chain art by `art/export_brand.py`. |

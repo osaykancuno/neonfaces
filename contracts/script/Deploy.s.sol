@@ -5,6 +5,7 @@ import {Script, console2} from "forge-std/Script.sol";
 import {VestingWallet} from "@openzeppelin/contracts/finance/VestingWallet.sol";
 import {NeonFaces} from "../src/NeonFaces.sol";
 import {NeonPayout} from "../src/NeonPayout.sol";
+import {NeonSeedVault} from "../src/NeonSeedVault.sol";
 import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
 import {NeonArt} from "../src/NeonArt.sol";
@@ -15,10 +16,11 @@ import {MockStockToken} from "../test/mocks/MockStockToken.sol";
 /// @notice Deploys the full, fully on-chain NEONFACES system.
 ///
 /// Environment (see contracts/.env.example):
-///   ADMIN              final admin (Safe multisig 3/5)
+///   ADMIN              final admin (Safe multisig, 2 of 3 keys for a solo founder)
 ///   SALE_MANAGER       wallet that runs the drop in OpenSea Studio (optional; default: ADMIN)
 ///   ROYALTY_RECEIVER   5% royalty receiver (Safe)
-///   SEED_VAULT, TREASURY, GROWTH   split payees (40 / 25 / 15)
+///   TREASURY, GROWTH   split payees (25 / 15); the 40% seed share goes to NeonSeedVault (deployed here)
+///   KEEPER             hot key of tools/seed-keeper.mjs: may only make the vault buy basket tokens for the pool
 ///   TEAM_BENEFICIARY   receives the team 20% through a 6-month VestingWallet
 ///   SITE_URL           e.g. https://neonfaces.xyz/  (external_url prefix in the on-chain metadata)
 ///   USE_MOCK_TOKENS    true on testnet/local: deploys mock TSLA/NVDA/AAPL/SPY/USDG and fills the pool
@@ -40,6 +42,7 @@ contract Deploy is Script {
         NeonFaces faces;
         NeonSeeder seeder;
         NeonPayout payout;
+        NeonSeedVault seedVault;
         NeonArt art;
         NeonRenderer renderer;
         VestingWallet teamVesting;
@@ -64,8 +67,9 @@ contract Deploy is Script {
             uint64(vm.envOr("VESTING_START", block.timestamp)),
             uint64(vm.envOr("VESTING_DURATION", uint256(180 days)))
         );
+        d.seedVault = new NeonSeedVault(payable(vm.envAddress("TREASURY")), deployer);
         d.payout = new NeonPayout(
-            payable(vm.envAddress("SEED_VAULT")),
+            payable(address(d.seedVault)),
             payable(vm.envAddress("TREASURY")),
             payable(address(d.teamVesting)),
             payable(vm.envAddress("GROWTH"))
@@ -77,6 +81,8 @@ contract Deploy is Script {
 
         // ---- wiring ----
         d.faces.setSeeder(address(d.seeder)); // every mint creates the account + base seed
+        d.seedVault.setSeeder(d.seeder); // the seed share of the mint can only become pool inventory
+        d.seedVault.grantRole(d.seedVault.KEEPER_ROLE(), vm.envOr("KEEPER", deployer));
         d.faces.setSaleManager(vm.envOr("SALE_MANAGER", admin)); // OpenSea Studio wallet
         d.faces.grantRole(d.faces.PAUSER_ROLE(), admin);
         d.faces.grantRole(d.faces.METADATA_ROLE(), admin);
@@ -97,6 +103,7 @@ contract Deploy is Script {
         if (admin != deployer) {
             d.faces.beginDefaultAdminTransfer(admin);
             d.seeder.beginDefaultAdminTransfer(admin);
+            d.seedVault.beginDefaultAdminTransfer(admin);
             d.art.beginDefaultAdminTransfer(admin);
         }
 
@@ -202,12 +209,14 @@ contract Deploy is Script {
         vm.serializeAddress(o, "renderer", address(d.renderer));
         vm.serializeAddress(o, "teamVesting", address(d.teamVesting));
         vm.serializeAddress(o, "seaDrop", SEADROP);
+        vm.serializeAddress(o, "seedVault", address(d.seedVault));
         string memory out = vm.serializeAddress(o, "payout", address(d.payout));
         string memory path = string.concat("deployments/", vm.toString(block.chainid), ".json");
         vm.writeJson(out, path);
         console2.log("NeonFaces     ", address(d.faces));
         console2.log("NeonSeeder    ", address(d.seeder));
         console2.log("NeonPayout    ", address(d.payout));
+        console2.log("NeonSeedVault ", address(d.seedVault));
         console2.log("NeonArt       ", address(d.art));
         console2.log("NeonRenderer  ", address(d.renderer));
         console2.log("FaceAccount   ", address(d.accountImpl));

@@ -10,6 +10,7 @@ import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
 import {NeonTrader, ISwapRouter02} from "../src/NeonTrader.sol";
 import {IERC6551Registry} from "../src/interfaces/IERC6551Registry.sol";
+import {NeonSeedVault, ISeedTrader} from "../src/NeonSeedVault.sol";
 
 /// @notice NeonTrader against the REAL Uniswap v3 router, pools and Chainlink feeds on Robinhood Chain mainnet.
 /// Run: ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com forge test --match-contract TraderForkTest -vv
@@ -23,6 +24,7 @@ contract TraderForkTest is Test {
     address constant WHALE = 0x8366a39CC670B4001A1121B8F6A443A643e40951; // Uniswap v4 PoolManager
 
     NeonTrader trader;
+    NeonSeeder seeder;
     NeonFaceAccount acc;
     address alice = makeAddr("alice");
     address agent = makeAddr("agent");
@@ -46,7 +48,7 @@ contract TraderForkTest is Test {
         address admin = makeAddr("admin");
         NeonFaceAccount impl = new NeonFaceAccount();
         NeonFaces faces = new NeonFaces(admin, admin, makeAddr("payout"), address(0), "", "");
-        NeonSeeder seeder = new NeonSeeder(faces, REGISTRY, address(impl), admin);
+        seeder = new NeonSeeder(faces, REGISTRY, address(impl), admin);
         vm.startPrank(admin);
         faces.setProvenanceHash(keccak256("fork"));
         faces.setSeeder(address(seeder));
@@ -165,5 +167,40 @@ contract TraderForkTest is Test {
         vm.stopPrank();
         assertEq(IERC20(USDG).balanceOf(address(acc)), 1_000e6, "the Face's USDG untouched");
         assertGt(IERC20(TSLA).balanceOf(agent), 0);
+    }
+
+    function test_Fork_SeedVaultBuysBasketTokensIntoThePool() public {
+        if (!forked) return;
+        address admin = makeAddr("admin");
+        address keeper = makeAddr("keeper");
+        vm.startPrank(admin);
+        seeder.grantRole(seeder.CONFIG_ROLE(), admin);
+        NeonSeeder.Leg[] memory legs = new NeonSeeder.Leg[](1);
+        legs[0] = NeonSeeder.Leg(NVDA, 0.01e18);
+        seeder.setBasket(1, legs);
+        NeonSeedVault vault = new NeonSeedVault(payable(makeAddr("treasury")), admin);
+        vault.setSeeder(seeder);
+        vault.setTrader(ISeedTrader(address(trader)));
+        vault.grantRole(vault.KEEPER_ROLE(), keeper);
+        vm.stopPrank();
+        vm.deal(address(vault), 1 ether); // the seed share of some mints
+
+        address[] memory path = new address[](3);
+        (path[0], path[1], path[2]) = (WETH, USDG, NVDA);
+        uint24[] memory fees = new uint24[](2);
+        (fees[0], fees[1]) = (100, 500);
+        uint256 before = IERC20(NVDA).balanceOf(address(seeder));
+        vm.prank(keeper);
+        uint256 out = vault.buy(path, fees, 0.05 ether, 100);
+        console2.log("NVDA bought into the seed pool for 0.05 ETH (1e18):", out);
+        assertGt(out, 0);
+        assertEq(IERC20(NVDA).balanceOf(address(seeder)) - before, out, "everything lands in the pool");
+        assertEq(IERC20(NVDA).balanceOf(address(vault)), 0);
+        assertEq(address(vault).balance, 0.95 ether);
+
+        // USDG is not a basket token here: the vault refuses to buy it
+        vm.prank(keeper);
+        vm.expectRevert(abi.encodeWithSelector(NeonSeedVault.NotBasketToken.selector, USDG));
+        vault.buy(_path2(WETH, USDG), _fees1(100), 0.01 ether, 100);
     }
 }

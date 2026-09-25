@@ -1,7 +1,7 @@
 // Turn an allowlist into the CSV OpenSea Studio accepts for a presale stage.
 //
 //   node allowlist.mjs <input.csv> [stage-name]
-//   node allowlist.mjs ../config/allowlists/builders.csv
+//   node allowlist.mjs ../config/allowlists/robinhood.csv
 //
 // Input: `address,allowance` per line (header optional, allowance defaults to 1) — what tools/snapshot.mjs writes.
 // Output: ../config/allowlists/opensea/<stage>.csv — `address,limit` per line, no header, no duplicates,

@@ -3,7 +3,7 @@
 //   node safe-tx.mjs <chainId> <action> [args]
 //
 // actions
-//   accept-admin                         acceptDefaultAdminTransfer() on faces, seeder, art
+//   accept-admin                         acceptDefaultAdminTransfer() on faces, seeder, seed vault, art
 //   sale-manager <address|none>          NeonFaces.setSaleManager: the wallet that runs the OpenSea Studio drop
 //                                        (`none` after the sale: the Safe is the collection owner again)
 //   pause | unpause                      NeonFaces.setMintPaused (emergency brake for the OpenSea mint)
@@ -11,14 +11,15 @@
 //   reveal-request                       NeonFaces.requestReveal (then anyone calls reveal() after 5 blocks)
 //   lock-seeder                          NeonSeeder.lockConfig (baskets become immutable)
 //   freeze-metadata                      NeonFaces.freezeMetadata (renderer can never change again)
-//   release                              NeonPayout.releaseAll (push the 40/25/20/15 split — anyone can)
+//   release                              NeonPayout.releaseAll (push the 40/25/20/15 split; anyone can)
+//   vault-surplus <eth>                  NeonSeedVault.releaseSurplus: leftover seed ETH to the treasury (after lock-seeder)
 //
 // Sale stages, prices and allowlists are configured in OpenSea Studio, not here.
 // Output: ../safe/<chainId>-<action>.json -> import it in the Safe app (Apps > Transaction Builder).
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { encodeFunctionData, parseAbi, getAddress, zeroAddress } from "viem";
+import { encodeFunctionData, parseAbi, parseEther, getAddress, zeroAddress } from "viem";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const [chainIdArg, action, ...args] = process.argv.slice(2);
@@ -38,6 +39,7 @@ const abi = parseAbi([
   "function lockConfig()",
   "function freezeMetadata()",
   "function releaseAll()",
+  "function releaseSurplus(uint256 amount)",
 ]);
 const tx = (to, functionName, args = []) => ({
   to,
@@ -51,7 +53,7 @@ const tx = (to, functionName, args = []) => ({
 let txs = [];
 switch (action) {
   case "accept-admin":
-    txs = [dep.faces, dep.seeder, dep.art].map((a) => tx(a, "acceptDefaultAdminTransfer"));
+    txs = [dep.faces, dep.seeder, dep.seedVault, dep.art].map((a) => tx(a, "acceptDefaultAdminTransfer"));
     break;
   case "sale-manager": {
     if (!args[0]) throw new Error("sale-manager <address|none>");
@@ -82,6 +84,10 @@ switch (action) {
     break;
   case "release":
     txs = [tx(dep.payout, "releaseAll")];
+    break;
+  case "vault-surplus":
+    if (!args[0]) throw new Error("vault-surplus <eth>");
+    txs = [tx(dep.seedVault, "releaseSurplus", [parseEther(args[0])])];
     break;
   default:
     throw new Error(`unknown action ${action}`);

@@ -1,4 +1,4 @@
-// JavaScript port of NeonRenderer.renderSVG — byte-identical output (checked against the Solidity
+// JavaScript port of NeonRenderer.renderSVG: byte-identical output (checked against the Solidity
 // fixtures by web/test/render.test.mjs). The site draws every Face from the same bytes that live
 // on-chain in NeonArt: [grid][10 trait bytes][RLE (color<<5 | len-1)...]
 import { keccak256, encodeAbiParameters, hexToBytes } from "viem";
@@ -92,7 +92,7 @@ export function renderSVG(artId, rec) {
 
 export const svgDataURI = (artId, rec) => `data:image/svg+xml;base64,${btoa(renderSVG(artId, rec))}`;
 
-/** Draw a record's blocks onto a canvas (no grain) — used by the live mosaic. */
+/** Draw a record's blocks onto a canvas (no grain), used by the live mosaic. */
 export function drawBlocks(ctx, rec, size) {
   const { g, cells, palette } = decode(rec);
   const s = size / g;

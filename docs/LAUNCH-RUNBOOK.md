@@ -16,7 +16,7 @@ Everything below has been rehearsed end-to-end on a local node with the canonica
 ## 1. Freeze the art (before anything is public)
 
 ```bash
-cd art && python generate.py && python export_site.py
+cd art && python generate.py && python export_site.py && python export_brand.py
 ```
 Keep `art/output/onchain/chunks.json`, `placeholder.hex`, `provenance.json`, `art.json`, `rarity.csv` forever (commit them). Publish the rarity table.
 
@@ -96,7 +96,7 @@ Site:
 ```bash
 OPENSEA_URL=https://opensea.io/collection/<slug> node tools/export-web.mjs 4663
 ```
-`web/public/{deployment.json, agent-presets.json}` are generated (git-ignored). `npm run build` and host `dist/` on Vercel / Cloudflare Pages / Netlify (`/face/:id` rewrites included; on IPFS use `/#/face/:id`).
+`web/public/{deployment.json, agent-presets.json}` are generated (git-ignored). Set `VITE_SITE_URL` in `web/.env` to the final domain (same as `SITE_URL`): link previews on X, Telegram, WhatsApp and Discord need that absolute URL. `npm run build` and host `dist/` on Vercel / Cloudflare Pages / Netlify (`/face/:id` rewrites included; on IPFS use `/#/face/:id`).
 
 Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers never pause).
 

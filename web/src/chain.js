@@ -56,7 +56,7 @@ export const ABI = {
   ]),
 };
 
-export const TIERS = ["—", "Glance", "Watch", "Heavy Stare"];
+export const TIERS = ["Unrevealed", "Glance", "Watch", "Heavy Stare"];
 
 export const state = {
   dep: null, // deployment.json

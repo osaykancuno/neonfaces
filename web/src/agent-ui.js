@@ -9,13 +9,13 @@
 import { formatEther, parseEther, toFunctionSelector, parseAbiItem, encodeFunctionData, parseAbi, maxUint256 } from "viem";
 
 const RISKY = {
-  "0xa9059cbb": "transfer — can send tokens anywhere",
-  "0x23b872dd": "transferFrom — can move tokens",
-  "0x095ea7b3": "approve — can let anyone spend your tokens, including itself",
-  "0x39509351": "increaseAllowance — same risk as approve",
-  "0xa22cb465": "setApprovalForAll — hands over whole NFT collections",
-  "0x42842e0e": "safeTransferFrom — can move NFTs out",
-  "0xd505accf": "permit — signature-based approvals",
+  "0xa9059cbb": "transfer: can send tokens anywhere",
+  "0x23b872dd": "transferFrom: can move tokens",
+  "0x095ea7b3": "approve: can let anyone spend your tokens, including itself",
+  "0x39509351": "increaseAllowance: same risk as approve",
+  "0xa22cb465": "setApprovalForAll: hands over whole NFT collections",
+  "0x42842e0e": "safeTransferFrom: can move NFTs out",
+  "0xd505accf": "permit: signature-based approvals",
 };
 
 const ERC20_APPROVE = parseAbi(["function approve(address spender, uint256 amount) returns (bool)"]);
@@ -173,8 +173,8 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
 
     <details class="hp-card" ${lockedNow ? "open" : ""}>
       <summary>Selling this Face? Lock its wallet</summary>
-      ${lockedNow ? `<p class="neon">Locked until <b>${niceDate(lockedUntil)}</b>. Nothing can leave this wallet until then — buyers get exactly what they see.</p>` : ""}
-      <p class="fine">While locked, nobody — not you, not your agent — can move anything out of this Face's wallet. The Face itself can still be sold, and the lock goes with it, so a buyer knows the contents can't disappear before the sale. You can extend a lock, never shorten it.</p>
+      ${lockedNow ? `<p class="neon">Locked until <b>${niceDate(lockedUntil)}</b>. Nothing can leave this wallet until then, so buyers get exactly what they see.</p>` : ""}
+      <p class="fine">While locked, nobody (not you, not your agent) can move anything out of this Face's wallet. The Face itself can still be sold, and the lock goes with it, so a buyer knows the contents can't disappear before the sale. You can extend a lock, never shorten it.</p>
       <div class="chips" id="hp-lock">${[1, 3, 7, 30].map((d) => `<button type="button" data-v="${d}" class="${d === 7 ? "on" : ""}">${d === 1 ? "until tomorrow" : `${d} days`}</button>`).join("")}</div>
       <button class="btn btn-neon" id="hp-lock-go">${lockedNow ? "Extend the lock" : "Lock the wallet"}</button>
     </details>`;
@@ -232,8 +232,8 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
       lines.push(`<li>It stops in <b>${p.days} day${p.days > 1 ? "s" : ""}</b>, or the moment you sell this Face. You can stop it any time.</li>`);
       lines.push(`<li>It can't sign for you, can't take the Face, and can't do anything else.</li>`);
       if (p.limits.length) lines.push(`<li>It can trade at most <b>$${esc(Number(p.usd).toLocaleString("en-US"))} per day</b>, at prices checked against Chainlink.</li>`);
-      if (p.approvals.length || p.limits.length) lines.push(`<li>First, one setup transaction${p.approvals.length ? ` lets the trading contract use ${[...new Set(p.approvals.map((a) => esc(a.label)))].join(", ")} — it can only ever pay this Face back` : ""}${p.limits.length ? `${p.approvals.length ? " and" : ""} sets the daily limit` : ""}.</li>`);
-      if (p.risky.length) lines.push(`<li class="risk">Careful — your advanced lines include: ${p.risky.map(esc).join("; ")}.</li>`);
+      if (p.approvals.length || p.limits.length) lines.push(`<li>First, one setup transaction${p.approvals.length ? ` lets the trading contract use ${[...new Set(p.approvals.map((a) => esc(a.label)))].join(", ")}, and it can only ever pay this Face back` : ""}${p.limits.length ? `${p.approvals.length ? " and" : ""} sets the daily limit` : ""}.</li>`);
+      if (p.risky.length) lines.push(`<li class="risk">Careful: your advanced lines include ${p.risky.map(esc).join("; ")}.</li>`);
     }
     el.innerHTML = `<ul>${lines.join("")}</ul>`;
     const btn = box.querySelector("#hp-confirm");
@@ -302,7 +302,7 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
   box.querySelector("#hp-lock-go").onclick = () => {
     const days = Number(chosen("hp-lock") || 7);
     const until = Math.max(Date.now() + days * dayMs, Number(lockedUntil) * 1000 + 60_000);
-    const msg = `Lock this Face's wallet until ${new Date(until).toLocaleString("en-GB")}?\n\nUntil then nobody — not even you — can move anything out of it. It can't be undone or shortened.`;
+    const msg = `Lock this Face's wallet until ${new Date(until).toLocaleString("en-GB")}?\n\nUntil then nobody, not even you, can move anything out of it. It can't be undone or shortened.`;
     if (confirm(msg)) ctx.send(account, ctx.ABI.account, "lock", [BigInt(Math.floor(until / 1000))], ctx.reload);
   };
 }

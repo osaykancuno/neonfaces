@@ -22,6 +22,7 @@
 | `tools/` | Node ops tools: live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
 | `web/` | The site (Vite + viem, static). Draws Faces from the on-chain bytes with a byte-identical JS port of the renderer. Links to the OpenSea drop; Face pages with the holder panel (withdraw, lock, agents). |
 | `config/` | Seed basket plan, verified trading config (Uniswap + Chainlink addresses), allowlist sources. |
+| `brand/` | Logo (`logo.gif`) and banner (`banner.gif`, `banner.png` for headers that don't animate), drawn from the on-chain art by `art/export_brand.py`. |
 | `docs/` | Lore, architecture, agents, launch runbook, security review, economics, traits. |
 
 ## Quick start
@@ -30,7 +31,7 @@ Requirements: Foundry, Node ≥ 20, Python ≥ 3.11 with `numpy pillow pycryptod
 
 ```bash
 # 1. art: generate the 5555 Faces (≈9 min) and the site assets
-cd art && python generate.py && python export_site.py && cd ..
+cd art && python generate.py && python export_site.py && python export_brand.py && cd ..   # brand: icons, link preview, logo, banner
 
 # 2. contracts: build + test (71 tests incl. mints through OpenSea's real SeaDrop bytecode, anti-sniping,
 #    full-supply permutation, byte-exact SVG, agents, lock)

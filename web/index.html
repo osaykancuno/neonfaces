@@ -3,14 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NEONFACES — They don't blink.</title>
+    <title>NEONFACES: They don't blink.</title>
     <meta name="description" content="5555 close-up faces on Robinhood Chain. Every Face is an account (ERC-6551) seeded with Stock Tokens. Art and metadata fully on-chain." />
     <meta name="theme-color" content="#ccff00" />
-    <meta property="og:title" content="NEONFACES — They don't blink." />
+    <link rel="canonical" href="%VITE_SITE_URL%" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <!-- link previews (X, Telegram, WhatsApp, Discord, LinkedIn): absolute URLs, set VITE_SITE_URL in web/.env -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="NEONFACES" />
+    <meta property="og:url" content="%VITE_SITE_URL%" />
+    <meta property="og:title" content="NEONFACES: They don't blink." />
     <meta property="og:description" content="5555 faces. Every one is an account. Fully on-chain on Robinhood Chain." />
-    <meta property="og:image" content="/og.png" />
+    <meta property="og:image" content="%VITE_SITE_URL%og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A mosaic of pixel-art NEONFACES in neon yellow and black, with the words: They don't blink." />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="twitter:title" content="NEONFACES: They don't blink." />
+    <meta name="twitter:description" content="5555 faces. Every one is an account. Fully on-chain on Robinhood Chain." />
+    <meta name="twitter:image" content="%VITE_SITE_URL%og.png" />
+    <meta name="twitter:image:alt" content="A mosaic of pixel-art NEONFACES in neon yellow and black, with the words: They don't blink." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -59,9 +75,9 @@
               <a href="/#account" class="btn btn-ghost" data-link>What's inside</a>
             </div>
             <div class="hero-stats">
-              <div><b data-stat="minted">—</b><span>minted</span></div>
+              <div><b data-stat="minted">...</b><span>minted</span></div>
               <div><b>5555</b><span>supply</span></div>
-              <div><b data-stat="seeded">—</b><span>seeded accounts</span></div>
+              <div><b data-stat="seeded">...</b><span>seeded accounts</span></div>
               <div><b>100%</b><span>on-chain</span></div>
             </div>
           </div>
@@ -74,8 +90,8 @@
           <div class="lore">
             <p class="big">On Robinhood Chain the market never closes. <em>Someone has to keep watching.</em></p>
             <div class="lore-cols">
-              <p>NEONFACES are not portraits of people. They are the faces of agents. No bodies — they don't need them: an eye, a nose, a strip of forehead. Everything else is out of frame. The crop is this tight because the only thing that matters is the ticker.</p>
-              <p>Every Face is born with a Token Bound Account. Inside that wallet lives a piece of the real market: Stock Tokens, USDG, whatever the holder or the agent puts there. Sell the Face and you sell the stare — and everything it has accumulated.</p>
+              <p>NEONFACES are not portraits of people. They are the faces of agents. No bodies. They don't need them: an eye, a nose, a strip of forehead. Everything else is out of frame. The crop is this tight because the only thing that matters is the ticker.</p>
+              <p>Every Face is born with a Token Bound Account. Inside that wallet lives a piece of the real market: Stock Tokens, USDG, whatever the holder or the agent puts there. Sell the Face and you sell the stare, and everything it has accumulated.</p>
               <p>First there were portraits. Then PFPs. Then pixel brokers with stocks in their pockets. NEONFACES strips the costume. What's left is zero distance: skin reduced to blocks, light reduced to <span class="neon">#CCFF00</span>, identity reduced to an account.</p>
               <p>5555 is not random. Five, like the fingers holding a phone open all night. Five thousand and more, because a 24/7 market needs more than one watcher. Some faces are darker. Some carry more neon. That's not cosmetic rarity: it's how long that stare has stayed on.</p>
             </div>
@@ -97,7 +113,7 @@
             </li>
             <li>
               <b>The stare can work.</b>
-              <p>This chain is built for agents too. You stay the owner and can delegate simple rules — "keep part of it liquid", "accumulate one ticker". Not a landing-page bot: the same idea as a face that never closes its eyes.</p>
+              <p>This chain is built for agents too. You stay the owner and can delegate simple rules: "keep part of it liquid", "accumulate one ticker". Not a landing-page bot: the same idea as a face that never closes its eyes.</p>
             </li>
           </ol>
           <div class="truth">
@@ -107,11 +123,11 @@
           <div class="cards">
             <article class="card">
               <h3>Stare tiers</h3>
-              <p>Every Face gets a base basket at mint. At reveal the art decides the tier — <b>Glance</b> 4444, <b>Watch</b> 833, <b>Heavy Stare</b> 278, exact — and Watch / Heavy Stare Faces receive a top-up: a ticker plus USDG, or a richer basket. Nobody can know a tier inside the mint transaction, so bots can't snipe them.</p>
+              <p>Every Face gets a base basket at mint. At reveal the art decides the tier (<b>Glance</b> 4444, <b>Watch</b> 833, <b>Heavy Stare</b> 278, exact) and Watch / Heavy Stare Faces receive a top-up: a ticker plus USDG, or a richer basket. Nobody can know a tier inside the mint transaction, so bots can't snipe them.</p>
             </article>
             <article class="card">
               <h3>Lock before you list</h3>
-              <p>A holder can lock the account until a date: nothing leaves it — not the holder, not the agent, no signature — and the lock survives the sale. Buyers see "Locked until" in the metadata and get exactly what they paid for.</p>
+              <p>A holder can lock the account until a date: nothing leaves it (not the holder, not the agent, no signature) and the lock survives the sale. Buyers see "Locked until" in the metadata and get exactly what they paid for.</p>
             </article>
           </div>
         </section>
@@ -140,7 +156,7 @@
             <div class="vs-row" role="row"><b role="cell">Wallet</b><span role="cell">None, or an empty one</span><span role="cell">An ERC-6551 account created <em>and funded</em> in the mint transaction</span></div>
             <div class="vs-row" role="row"><b role="cell">Rarity</b><span role="cell">An off-chain script and a spreadsheet</span><span role="cell">Published exact counts; each token's art and tier set at reveal by an on-chain permutation anyone can recompute</span></div>
             <div class="vs-row" role="row"><b role="cell">Metadata</b><span role="cell">Frozen JSON, stale on day two</span><span role="cell">Live: traits read what the Face actually holds</span></div>
-            <div class="vs-row" role="row"><b role="cell">Holding</b><span role="cell">Nothing rewards patience</span><span role="cell"><b class="neon">Unblinking</b> — an on-chain clock of how long the stare has stayed with its holder. Selling resets it.</span></div>
+            <div class="vs-row" role="row"><b role="cell">Holding</b><span role="cell">Nothing rewards patience</span><span role="cell"><b class="neon">Unblinking</b>: an on-chain clock of how long the stare has stayed with its holder. Selling resets it.</span></div>
             <div class="vs-row" role="row"><b role="cell">Agents</b><span role="cell">A slide</span><span role="cell">Delegation built into every account: allowed calls only, an ETH budget you set, no signatures, expires, dies on sale</span></div>
             <div class="vs-row" role="row"><b role="cell">Resale</b><span role="cell">Seller can empty the wallet before the sale lands</span><span role="cell">Account lock that survives the sale, visible in the metadata</span></div>
             <div class="vs-row" role="row"><b role="cell">Control</b><span role="cell">Upgradeable proxy, pausable transfers</span><span role="cell">No proxy, no transfer pause, no blocklist. Supply fixed in bytecode. Safe multisig with a 2-day handover.</span></div>
@@ -150,12 +166,12 @@
         <section id="funds" class="block reveal">
           <div class="label">06 / Where the mint goes</div>
           <h2>Said before, not after.</h2>
-          <p class="lead">A major share turns the Faces on — the content of their wallets. A share stays in the treasury for art, site, presence and liquidity. A share is the team's, with rules against dumping on the floor. A share goes to growth and collaborations. If the Faces were born empty, NEONFACES would be just an aesthetic. The aesthetic is strong. It isn't enough.</p>
+          <p class="lead">A major share turns the Faces on: the content of their wallets. A share stays in the treasury for art, site, presence and liquidity. A share is the team's, with rules against dumping on the floor. A share goes to growth and collaborations. If the Faces were born empty, NEONFACES would be just an aesthetic. The aesthetic is strong. It isn't enough.</p>
           <div class="split">
             <svg id="donut" viewBox="0 0 200 200" aria-label="Mint proceeds split"></svg>
             <ul id="split-list" class="split-list"></ul>
           </div>
-          <p class="lead">The mint runs on OpenSea, which keeps 10% of primary sales. The rest can only be paid to <code>NeonPayout</code>: shares and addresses are immutable, and anyone can push the split with <code>releaseAll()</code>. Resale royalties: 5% suggested on-chain (ERC-2981) to the treasury multisig — optional, because transfers are never restricted.</p>
+          <p class="lead">The mint runs on OpenSea, which keeps 10% of primary sales. The rest can only be paid to <code>NeonPayout</code>: shares and addresses are immutable, and anyone can push the split with <code>releaseAll()</code>. Resale royalties: 5% suggested on-chain (ERC-2981) to the treasury multisig, optional because transfers are never restricted.</p>
         </section>
 
         <section id="principles" class="block reveal">
@@ -168,7 +184,7 @@
                 <li>the art stays iron-clad and recognizable</li>
                 <li>the Face lit at mint is real, not a slide</li>
                 <li>the community is chosen, not inflated</li>
-                <li>the tone stays adult: market, stare, neon — no mascots</li>
+                <li>the tone stays adult: market, stare, neon, no mascots</li>
               </ul>
             </div>
             <div class="fails">
@@ -176,7 +192,7 @@
               <ul>
                 <li>it becomes "yet another pixel broker"</li>
                 <li>it promises returns</li>
-                <li>it grows the supply or the allowlist out of fear <small>(the supply is 5555 in bytecode — it can't grow even if we wanted it to)</small></li>
+                <li>it grows the supply or the allowlist out of fear <small>(the supply is 5555 in bytecode: it can't grow even if we wanted it to)</small></li>
                 <li>the team disappears after mint and only the listings feed is left</li>
               </ul>
             </div>
@@ -202,7 +218,7 @@
             <div class="mint-panel">
               <div class="phase-row"><span class="pill" id="phase-pill">Loading…</span></div>
               <div class="progress"><div id="progress-bar"></div></div>
-              <div class="progress-label"><span id="progress-text">— / 5555</span><span id="seeded-text"></span></div>
+              <div class="progress-label"><span id="progress-text">... / 5555</span><span id="seeded-text"></span></div>
               <a id="opensea-btn" class="btn btn-neon btn-wide" target="_blank" rel="noopener">Mint on OpenSea ↗</a>
               <p class="fine">The mint happens on OpenSea: stages, prices and your allowlist spot are shown there. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only and are not available to US persons.</p>
               <h3 class="mine-title">Your Faces</h3>
@@ -215,12 +231,12 @@
         <section id="faq" class="block reveal">
           <div class="label">10 / FAQ</div>
           <div class="faq">
-            <details><summary>Where do I mint?</summary><p>On OpenSea, on Robinhood Chain — the button above opens the drop. This site is where you look inside your Face and manage it: withdraw, lock, delegate an agent.</p></details>
-            <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT: a base basket from mint, a top-up after reveal for Watch / Heavy Stare, plus anything you add. You can withdraw everything, add more, delegate an agent or lock it — from the Face's page.</p></details>
+            <details><summary>Where do I mint?</summary><p>On OpenSea, on Robinhood Chain: the button above opens the drop. This site is where you look inside your Face and manage it: withdraw, lock, delegate an agent.</p></details>
+            <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT: a base basket from mint, a top-up after reveal for Watch / Heavy Stare, plus anything you add. You can withdraw everything, add more, delegate an agent or lock it, all from the Face's page.</p></details>
             <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure. Stock Tokens are tokenized instruments that track the underlying; they give no legal ownership and no shareholder rights.</p></details>
-            <details><summary>When do I know my Stare tier?</summary><p>At reveal, after the mint closes. The reveal maps every token to one art piece with a keyed permutation — check it with <code>artIdOf(tokenId)</code> — and the art decides the tier. Watch / Heavy Stare top-ups can then be delivered by anyone, in one call.</p></details>
+            <details><summary>When do I know my Stare tier?</summary><p>At reveal, after the mint closes. The reveal maps every token to one art piece with a keyed permutation (check it with <code>artIdOf(tokenId)</code>) and the art decides the tier. Watch / Heavy Stare top-ups can then be delivered by anyone, in one call.</p></details>
             <details><summary>What can an agent do with my Face?</summary><p>Only what you allow, within the ETH and daily limits you set. The ready-made action trades on Uniswap through a guard contract: everything bought comes back into the Face, never more than 1% below the Chainlink price. An agent can never sign for the account, it expires, and it stops the moment the Face changes hands.</p></details>
-            <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and anyone can deliver it with one call once the pool is refilled — the seed vault receives 40% of mint proceeds for exactly this.</p></details>
+            <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and anyone can deliver it with one call once the pool is refilled. The seed vault receives 40% of mint proceeds for exactly this.</p></details>
           </div>
         </section>
       </section>

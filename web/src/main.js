@@ -8,7 +8,7 @@ import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-let gallery = []; // [{ artId, stare, record }] — on-chain pixel records
+let gallery = []; // [{ artId, stare, record }]: on-chain pixel records
 let placeholder = null;
 let rarity = null;
 const faceURI = (f) => svgDataURI(f.artId, f.record);
@@ -205,7 +205,7 @@ async function renderSplit() {
     .map((p) => {
       const link = p.addr ? explorer(`address/${p.addr}`) : null;
       const addr = p.addr ? `<small>${link ? `<a href="${link}" target="_blank" rel="noopener">${p.addr}</a>` : p.addr}</small>` : "";
-      return `<li><b>${p.pct}%</b><div><span><strong>${p.name}</strong> — ${p.desc}</span>${addr}</div></li>`;
+      return `<li><b>${p.pct}%</b><div><span><strong>${p.name}</strong>: ${p.desc}</span>${addr}</div></li>`;
     })
     .join("");
 }
@@ -269,7 +269,7 @@ const FRIENDLY = {
   AccountIsLocked: "This Face's account is locked.",
   InvalidLock: "A lock can only be extended, up to 365 days.",
   InvalidAgentConfig: "Check the agent address, expiry and calls (the account itself can't be a target).",
-  InsufficientPool: "The seed pool is being refilled — try again later.",
+  InsufficientPool: "The seed pool is being refilled. Try again later.",
   NotUpgradeable: "Nothing to upgrade for this Face.",
   Unauthorized: "Only the holder can do this.",
 };
@@ -400,7 +400,7 @@ async function showFace(id) {
       $("#face-actions").appendChild(btn);
     };
     if (!seed.activated) act("Activate this Face", "activate");
-    else if (!seed.funded) act("Seed pending — deliver it", "fund");
+    else if (!seed.funded) act("Seed pending: deliver it", "fund");
     if (seed.tier >= 2 && !seed.upgraded) act(`Deliver the ${TIERS[seed.tier]} top-up`, "upgrade");
 
     // agent + lock
@@ -418,7 +418,7 @@ async function showFace(id) {
         : active
           ? `<b>agent</b>${agent}<br><b>until</b>${fmtDate(expiry)} · <b>ETH budget</b>${formatEther(allowance)}`
           : `<b>agent</b>none active`) +
-      (lockedNow ? `<br><b>locked until</b><span class="neon">${fmtDate(lockedUntil)}</span> — nothing can leave this account` : "");
+      (lockedNow ? `<br><b>locked until</b><span class="neon">${fmtDate(lockedUntil)}</span>. Nothing can leave this account` : "");
 
     const links = [];
     const tl = explorer(`token/${state.dep.faces}/instance/${id}`);

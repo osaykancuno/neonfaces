@@ -153,7 +153,7 @@
   @media (prefers-reduced-motion: reduce) { .banner { content: url("img/banner.png"); } }
 
   section[id] { scroll-margin-top: 72px; }
-  /* top bar + menu */
+  /* top bar */
   .topbar { position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: -40px -20px 0; padding: 12px 20px; background: linear-gradient(#000 70%, rgba(0,0,0,0)); }
   .topbar .brand { font: 700 18px/1 var(--pixel); color: var(--neon); text-decoration: none; letter-spacing: .04em; }
   .menu-btn { font: 700 14px/1 var(--pixel); color: var(--neon); background: #000; border: 2px solid var(--neon); padding: 10px 14px; cursor: pointer; letter-spacing: .06em; }
@@ -168,36 +168,32 @@
   .sound-btn.on i:nth-child(3) { animation-delay: .6s; }
   @keyframes eq { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
   @media (prefers-reduced-motion: reduce) { .sound-btn.on i { animation: none; } }
-  .menu { position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.84); display: grid; place-items: start end; padding: 12px; }
-  .menu[hidden] { display: none; }
-  .menu-box { box-sizing: border-box; width: min(420px, 100%); max-height: calc(100vh - 24px); overflow: auto; background: #030400; border: 2px solid var(--neon); box-shadow: 6px 6px 0 var(--olive); padding: 16px 18px; display: grid; gap: 8px; }
-  .menu-box .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .menu-box nav a { display: grid; grid-template-columns: 34px 1fr; padding: 9px 2px; border-bottom: 1px solid var(--line); font: 700 15px/1.3 var(--pixel); color: var(--ice); text-decoration: none; }
-  .menu-box nav a i { font: 400 12px/1.6 var(--mono); color: var(--dim); font-style: normal; }
-  .menu-box nav a:hover, .menu-box nav a:focus-visible { color: var(--neon); background: var(--panel); outline: none; }
-  .menu-box .foot { font: 400 12px/1.5 var(--mono); color: var(--dim); margin-top: 6px; }
-
-  /* the app shell: views, tabs on top (desktop) and a bottom tab bar (phones) */
+  /* the app shell: views, a sidebar on desktop, a bottom tab bar on phones */
   .view { display: grid; gap: 56px; }
   .view[hidden] { display: none; }
-  .tabs { display: flex; gap: 2px; margin-left: auto; margin-right: 8px; }
-  .tabs a { font: 600 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text); text-decoration: none; padding: 9px 11px; }
-  .tabs a svg { display: none; }
-  .tabs a:hover { color: var(--neon); }
-  .tabs a[aria-current] { background: var(--neon); color: #000; }
-  .tabbar { display: none; }
-  .menu-box nav a small { grid-column: 2; font: 400 11px/1.4 var(--mono); color: var(--dim); }
+  .tabbar .side-brand { display: none; }
+  .tabbar { position: fixed; z-index: 25; background: #000; }
+  .tabbar a { color: var(--text); text-decoration: none; }
+  .tabbar a[aria-current] { color: #000; background: var(--neon); }
+  @media (min-width: 761px) {
+    body { padding-left: calc(216px + 20px); }
+    .topbar .brand { visibility: hidden; }
+    .tabbar { top: 0; bottom: 0; left: 0; width: 216px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; padding: 18px 12px; border-right: 2px solid var(--neon); }
+    .tabbar a { display: flex; align-items: center; gap: 12px; padding: 12px 14px; font: 600 13px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .tabbar a:hover { color: var(--neon); background: #0b0e02; }
+    .tabbar a[aria-current] { color: #000; background: var(--neon); }
+    .tabbar svg { width: 20px; height: 20px; flex: none; }
+    .tabbar .side-brand { display: block; font: 700 18px/1 var(--pixel); color: var(--neon); padding: 6px 14px 20px; letter-spacing: .04em; background: none; }
+  }
   @media (max-width: 760px) {
-    .tabs { display: none; }
-    body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+    body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); font-size: 17px; }
     .tabbar {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: grid; grid-template-columns: repeat(5, 1fr);
-      height: calc(62px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: #000; border-top: 2px solid var(--neon);
+      left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr);
+      height: calc(62px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 2px solid var(--neon);
     }
-    .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--dim); font: 600 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+    .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--dim); font: 600 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
     .tabbar svg { width: 22px; height: 22px; }
     .tabbar a[aria-current] { color: var(--neon); background: #0b0e02; }
-    body { font-size: 17px; }
     .page, .view { gap: 44px; }
     .lede { font-size: 19px; }
   }
@@ -208,24 +204,9 @@
 <body>
 <div class="topbar">
   <a class="brand" href="#home">NEONFACES</a>
-  <nav class="tabs" aria-label="Sections"><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
   <span class="bar-right">
     <button class="menu-btn sound-btn" id="sound-btn" aria-pressed="false" aria-label="Sound"><span aria-hidden="true"><i></i><i></i><i></i></span></button>
-    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="menu">MENU</button>
   </span>
-</div>
-<div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
-  <div class="menu-box">
-    <div class="head"><span class="label">Everything, one stare away</span><button class="menu-btn" id="menu-close" aria-label="Close the menu">&#10005;</button></div>
-    <nav>
-      <a href="#home"><i>01</i>Home<small>the idea, the life of a Face</small></a>
-      <a href="#faces"><i>02</i>Faces<small>on-chain art, tiers, the Gaze, live traits</small></a>
-      <a href="#sets"><i>03</i>Sets<small>four pieces, one face</small></a>
-      <a href="#wallet"><i>04</i>Wallet<small>what's inside, the mint split, agents, the lock</small></a>
-      <a href="#facts"><i>05</i>Facts<small>what the contracts fix, how it runs by itself</small></a>
-    </nav>
-    <p class="foot">Mint on OpenSea, Robinhood Chain. Stages and dates are announced before the sale.</p>
-  </div>
 </div>
 <main class="page" id="top">
   <div class="view" data-view="home">
@@ -423,10 +404,11 @@
         <thead><tr><th>Fixed</th><th>What it means</th></tr></thead>
         <tbody>
           <tr><td>5555</td><td>Total supply, written in the contract. It can't grow.</td></tr>
-          <tr><td>111</td><td>Team Faces, capped in the contract.</td></tr>
+          <tr><td>111</td><td>Team Faces, capped in the contract. Once the sale starts, nobody can add another way to mint.</td></tr>
           <tr><td>No proxy</td><td>The contracts can't be swapped for new code.</td></tr>
           <tr><td>No pause</td><td>Transfers and resales can never be stopped or blocked.</td></tr>
           <tr><td>Sealed art</td><td>The pixels match a fingerprint published before the mint.</td></tr>
+          <tr><td>Seed pool</td><td>Once the baskets are locked after the reveal, what the pool still owes to Faces can't be withdrawn by anyone.</td></tr>
           <tr><td>555 sets</td><td>Dealt whole at the reveal; each set's bonus is paid once, ever.</td></tr>
           <tr><td>Open review</td><td>The security review, tests and code are public.</td></tr>
         </tbody>
@@ -449,7 +431,7 @@
     <p>Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
   </footer>
 </main>
-<nav class="tabbar" aria-label="Sections"><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
+<nav class="tabbar" aria-label="Sections"><a class="side-brand" href="#home">NEONFACES</a><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
 <script>
   // sound in the NEONFACES style: synthesized in the browser (no music, no files), off by default, remembered
   const sound = (() => {
@@ -509,16 +491,6 @@
     show();
   })();
 
-  // menu: open, close on a link, Esc or a click outside
-  (() => {
-    const menu = document.getElementById("menu");
-    const btn = document.getElementById("menu-btn");
-    const set = (open) => { if (open === menu.hidden) (open ? sound.open : sound.close)(); menu.hidden = !open; btn.setAttribute("aria-expanded", String(open)); if (open) menu.querySelector("a").focus(); else btn.focus(); };
-    btn.addEventListener("click", () => set(menu.hidden));
-    document.getElementById("menu-close").addEventListener("click", () => set(false));
-    menu.addEventListener("click", (e) => { if (e.target === menu || e.target.closest("a")) set(false); });
-    addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) set(false); });
-  })();
 </script>
 </body>
 </html>

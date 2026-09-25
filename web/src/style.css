@@ -78,7 +78,6 @@ img { image-rendering: pixelated; }
 .app-nav a:hover { color: var(--neon); }
 .app-nav a[aria-current] { color: #000; background: var(--neon); }
 @media (max-width: 860px) { .app-nav { display: none; } .brand span { display: none; } #connect { margin-left: auto; } }
-.menu-btn { padding: 10px 14px; font-size: 18px; line-height: 1; }
 /* sound toggle: three pixel bars, lit when on */
 .sound-btn { padding: 10px 12px; }
 .sound-btn span { display: flex; align-items: flex-end; gap: 3px; height: 16px; }
@@ -89,7 +88,7 @@ img { image-rendering: pixelated; }
 .sound-btn.on i:nth-child(2) { animation-delay: .3s; }
 .sound-btn.on i:nth-child(3) { animation-delay: .6s; }
 @media (max-width: 860px) { .nav { gap: 10px; } #connect { margin-left: auto; } }
-@media (max-width: 520px) { .nav { gap: 6px; } #connect { padding: 9px 10px; font-size: 12px; } .sound-btn, .menu-btn { padding: 8px 10px; } #nav-eye { width: 28px; } }
+@media (max-width: 520px) { .nav { gap: 6px; } #connect { padding: 9px 10px; font-size: 12px; } .sound-btn { padding: 8px 10px; } #nav-eye { width: 28px; } }
 @keyframes eq { from { transform: scaleY(.45); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
 @media (prefers-reduced-motion: reduce) { .sound-btn.on i { animation: none; } }
 
@@ -411,21 +410,6 @@ h3 { font-family: var(--pixel); font-size: 18px; color: var(--neon); margin: 0 0
 .hp-prepared { border-color: var(--neon); }
 
 /* ---- menu: every section one tap away (the inline nav hides on phones) ---- */
-.menu { position: fixed; inset: 0; z-index: 90; background: rgba(0, 0, 0, .82); display: grid; place-items: start end; padding: 12px; }
-.menu[hidden] { display: none; }
-.menu-box { width: min(440px, 100%); max-height: calc(100vh - 24px); overflow: auto; background: #030400; border: 2px solid var(--neon); box-shadow: 6px 6px 0 var(--olive, #414d12); padding: 18px; display: grid; gap: 14px; }
-.menu-head { display: flex; justify-content: space-between; align-items: center; }
-.menu-head .btn { padding: 6px 12px; }
-.menu-list { display: grid; }
-.menu-list a { display: grid; grid-template-columns: 36px 1fr; grid-template-rows: auto auto; column-gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--line); font-family: var(--pixel); font-size: 16px; color: var(--ice, #f2ffc8); text-decoration: none; }
-.menu-list a i { grid-row: span 2; font-style: normal; font-family: var(--mono); font-size: 12px; color: var(--dim); align-self: center; }
-.menu-list a small { font-family: var(--mono); font-size: 11px; color: var(--dim); text-transform: none; }
-.menu-list a:hover, .menu-list a:focus-visible { background: #0b0e02; color: var(--neon); }
-.menu-list a.neon { color: var(--neon); }
-.menu-face { display: flex; gap: 8px; align-items: center; font-family: var(--mono); font-size: 13px; }
-.menu-face input { width: 90px; background: #000; color: var(--ice, #f2ffc8); border: 1px solid var(--line); padding: 8px; font-family: var(--mono); }
-.menu-face .btn { padding: 8px 14px; }
-.menu-foot { display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: var(--mono); font-size: 12px; }
 
 /* ------------------------------------------------------------------ the app shell */
 :root { --tabbar: 0px; }
@@ -501,3 +485,33 @@ body { -webkit-tap-highlight-color: transparent; }
 .view > .block:first-child { padding-top: max(96px, clamp(70px, 10vw, 140px)); }
 .open-face label { flex-basis: 100%; }
 .open-face input { flex: 1; max-width: 200px; }
+
+/* ------------------------------------------------------------------ desktop: an app with a sidebar */
+.tabbar .side-brand { display: none; }
+@media (min-width: 861px) {
+  :root { --side: 216px; }
+  body { padding-left: var(--side); }
+  .tabbar {
+    display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; bottom: 0; left: 0; z-index: 60;
+    width: var(--side); padding: 18px 12px; background: #000; border-right: 2px solid var(--neon);
+  }
+  .tabbar a { display: flex; align-items: center; gap: 12px; padding: 12px 14px; color: var(--text); font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; }
+  .tabbar a:hover { color: var(--neon); background: #0b0e02; }
+  .tabbar svg { width: 20px; height: 20px; flex: none; }
+  .tabbar a[aria-current] { background: var(--neon); color: #000; }
+  .tabbar .side-brand { display: block; font-family: var(--pixel); font-size: 18px; color: var(--neon); padding: 6px 14px 20px; letter-spacing: 1px; background: none; }
+  .nav { left: var(--side); justify-content: flex-end; background: linear-gradient(#000 55%, rgba(0,0,0,0)); }
+  .nav .brand { display: none; }
+  #connect { margin-left: 0; }
+  /* proportions of an app, not a poster */
+  .hero { min-height: 0; padding: 96px var(--gutter) 56px; }
+  .eye { width: min(360px, 50vw); }
+  .title { font-size: clamp(56px, 7vw, 108px); }
+  .hero-stats { margin-top: 32px; }
+  .block { padding: 64px var(--gutter); max-width: 1180px; }
+  .view > .block:first-child { padding-top: 104px; }
+  h2 { font-size: clamp(28px, 3.2vw, 44px); margin-bottom: 26px; }
+  .lore .big { font-size: clamp(22px, 2.6vw, 34px); }
+  .gallery { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+  .footer { padding-left: var(--gutter); }
+}

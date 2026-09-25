@@ -57,27 +57,6 @@ route();
 
 window.addEventListener("popstate", route);
 
-// ---- menu: open / close, close on navigation, Esc, or a click outside
-const menu = $("#menu");
-const setMenu = (open) => {
-  if (open === menu.hidden) (open ? sound.open : sound.close)();
-  menu.hidden = !open;
-  $("#menu-btn").setAttribute("aria-expanded", String(open));
-  if (open) menu.querySelector("a")?.focus();
-};
-$("#menu-btn").addEventListener("click", () => setMenu(menu.hidden));
-$("#menu-close").addEventListener("click", () => setMenu(false));
-menu.addEventListener("click", (e) => { if (e.target === menu || e.target.closest("a")) setMenu(false); });
-window.addEventListener("keydown", (e) => e.key === "Escape" && !menu.hidden && setMenu(false));
-$("#menu-face").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const v = Number($("#menu-face-id").value);
-  if (v >= 1 && v <= 5555) {
-    setMenu(false);
-    history.pushState({}, "", `/face/${v}`);
-    route();
-  }
-});
 document.addEventListener("click", (e) => {
   const a = e.target.closest("a[data-link]");
   if (!a || e.metaKey || e.ctrlKey) return;

@@ -52,32 +52,10 @@
         <canvas id="nav-eye" width="24" height="12"></canvas>
         <span>NEONFACES</span>
       </a>
-      <nav class="app-nav" aria-label="App">
-        <a href="/" data-link data-tab="">Home</a>
-        <a href="/faces" data-link data-tab="faces">Faces</a>
-        <a href="/sets" data-link data-tab="sets">Sets</a>
-        <a href="/mine" data-link data-tab="mine">Mine</a>
-        <a href="/guide" data-link data-tab="guide">Guide</a>
-      </nav>
       <button id="sound-btn" class="btn btn-ghost sound-btn" aria-pressed="false" aria-label="Sound"><span aria-hidden="true"><i></i><i></i><i></i></span></button>
       <button id="connect" class="btn btn-ghost">Connect</button>
-      <button id="menu-btn" class="btn btn-ghost menu-btn" aria-expanded="false" aria-controls="menu" aria-label="Open the menu"><span aria-hidden="true">&#9776;</span></button>
     </header>
 
-    <div id="menu" class="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
-      <div class="menu-box">
-        <div class="menu-head"><span class="label">Everything, one stare away</span><button class="btn btn-ghost" id="menu-close" aria-label="Close the menu">&#10005;</button></div>
-        <nav class="menu-list">
-          <a href="/" data-link><i>01</i>Home<small>the stare, the mint, the watch</small></a>
-          <a href="/faces" data-link><i>02</i>Faces<small>drawn from the chain</small></a>
-          <a href="/sets" data-link><i>03</i>Sets<small>four pieces, one face, the set hunter</small></a>
-          <a href="/mine" data-link class="neon"><i>04</i>Mine<small>your Faces</small></a>
-          <a href="/guide" data-link><i>05</i>Guide<small>lore, tiers, the Gaze, traits, the contracts, FAQ</small></a>
-        </nav>
-        <form class="menu-face" id="menu-face"><label for="menu-face-id">Open a Face</label><input id="menu-face-id" type="number" min="1" max="5555" placeholder="#" /><button class="btn btn-neon">Look</button></form>
-        <div class="menu-foot"><a href="/llms.txt" target="_blank" rel="noopener">For AI assistants</a><a href="/neonfaces-mcp.mjs" download>Talk to your Face (MCP)</a></div>
-      </div>
-    </div>
 
     <main id="app">
       <!-- ================= HOME ================= -->
@@ -245,7 +223,7 @@
             </article>
             <article class="card">
               <h3>Lock before you list</h3>
-              <p>A holder can lock the account until a date: nothing leaves it (not the holder, not the agent, no signature) and the lock survives the sale. Buyers see "Locked until" in the metadata and get exactly what they paid for.</p>
+              <p>A holder can lock the account until a date: nothing leaves it (not the holder, not the agent, no signature, not even the set pieces sitting inside it) and the lock survives the sale. Buyers see "Locked until" in the metadata, and the Face's page lists any token approval left open.</p>
             </article>
           </div>
         </section>
@@ -268,8 +246,9 @@
             <div class="vs-row" role="row"><b role="cell">Sets</b><span role="cell">"Collect them all" with no way to check</span><span role="cell">555 four-piece faces. The contract knows every set, deals only whole ones, shows an assembled set as one face and pays its bonus once</span></div>
             <div class="vs-row" role="row"><b role="cell">Holding</b><span role="cell">Nothing rewards patience</span><span role="cell"><b class="neon">Unblinking</b>: an on-chain clock of how long the stare has stayed with its holder; after 30, 90 and 365 days the neon blooms in the art itself. Selling resets it.</span></div>
             <div class="vs-row" role="row"><b role="cell">Agents</b><span role="cell">A slide</span><span role="cell">Delegation built into every account (allowed calls only, a budget you set, no signatures, expires, dies on sale), ready-made strategies run for you, and a public reason for every move</span></div>
+            <div class="vs-row" role="row"><b role="cell">Seed pool</b><span role="cell">A team wallet that can take it back</span><span role="cell">Once the baskets are locked after the reveal, what the pool still owes to Faces (pending seeds, top-ups, set bonuses) can't be withdrawn by anyone</span></div>
             <div class="vs-row" role="row"><b role="cell">Resale</b><span role="cell">Seller can empty the wallet before the sale lands</span><span role="cell">Account lock that survives the sale, visible in the metadata</span></div>
-            <div class="vs-row" role="row"><b role="cell">Control</b><span role="cell">Upgradeable proxy, pausable transfers</span><span role="cell">No proxy, no transfer pause, no blocklist. Supply fixed in bytecode. Safe multisig with a 2-day handover.</span></div>
+            <div class="vs-row" role="row"><b role="cell">Control</b><span role="cell">Upgradeable proxy, pausable transfers</span><span role="cell">No proxy, no transfer pause, no blocklist. Supply fixed in bytecode, and no new minter once the sale has started. Safe multisig with a 2-day handover.</span></div>
           </div>
         </section>
         <section id="guide-funds" class="block reveal">
@@ -344,6 +323,7 @@
     </footer>
 
     <nav id="tabbar" class="tabbar" aria-label="App">
+      <a class="side-brand" href="/" data-link>NEONFACES</a>
       <a href="/" data-link data-tab="" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a>
       <a href="/faces" data-link data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a>
       <a href="/sets" data-link data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a>

@@ -23,6 +23,7 @@
 | `tools/` | Node ops tools: seed keeper, drop-config checker, live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
 | `web/` | The site (Vite + viem, static). Draws Faces from the on-chain bytes with a byte-identical JS port of the renderer. Links to the OpenSea drop; Face pages with the holder panel (withdraw, lock, agents). |
 | `config/` | Seed basket plan, verified trading config (Uniswap + Chainlink addresses), allowlist sources. |
+| `landing/` | Pre-launch page for neonfaces.xyz (static, no build): the project explained in plain words. Replaced by `web/` at launch. |
 | `brand/` | Logo (`logo.gif`) and banner (`banner.gif`, `banner.png` for headers that don't animate), drawn from the on-chain art by `art/export_brand.py`. |
 | `docs/` | Lore, architecture, agents, launch runbook, security review, economics, traits. |
 

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Pre-launch page for neonfaces.xyz. Replaced by the full site (web/) at launch. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ccff00">
+<link rel="canonical" href="https://neonfaces.xyz/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="NEONFACES">
+<meta property="og:url" content="https://neonfaces.xyz/">
+<meta property="og:title" content="NEONFACES: They don't blink.">
+<meta property="og:description" content="5555 faces. Every one is an account. Fully on-chain on Robinhood Chain.">
+<meta property="og:image" content="https://neonfaces.xyz/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A mosaic of pixel-art NEONFACES in neon yellow and black, with the words: They don't blink.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="NEONFACES: They don't blink.">
+<meta name="twitter:description" content="5555 faces. Every one is an account. Fully on-chain on Robinhood Chain.">
+<meta name="twitter:image" content="https://neonfaces.xyz/og.png">
+<title>NEONFACES: They don't blink.</title>
+<meta name="description" content="5555 fully on-chain pixel faces on Robinhood Chain. Every Face is a wallet that holds a small basket of Stock Tokens.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ink: #000000;
+    --panel: #070900;
+    --neon: #ccff00;
+    --ice: #f2ffc8;
+    --text: #c9d4a3;
+    --dim: #8a9a5a;
+    --line: #232b08;
+    --olive: #414d12;
+    --watch: #94b21d;
+    --pixel: "Silkscreen", "Courier New", monospace;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --sans: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  }
+  html { background: var(--ink); }
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font: 400 18px/1.65 var(--sans);
+    padding-inline: 20px;
+    padding-block: 40px 72px;
+  }
+  .page { max-width: 760px; margin: 0 auto; display: grid; gap: 56px; }
+  .col { max-width: 660px; }
+  a { color: var(--neon); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--neon); outline-offset: 3px; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+  .label {
+    font: 600 12px/1 var(--mono);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  /* hero */
+  header { display: grid; gap: 22px; }
+  .banner { border: 2px solid var(--neon); display: block; width: 100%; height: auto; image-rendering: pixelated; aspect-ratio: 3 / 1; background: var(--panel); }
+  h1 { font: 700 clamp(40px, 9vw, 76px)/1 var(--pixel); color: var(--neon); letter-spacing: .02em; }
+  .tagline { font: 400 clamp(20px, 3.6vw, 26px)/1.3 var(--pixel); color: var(--ice); }
+  .lede { font-size: 21px; line-height: 1.55; color: var(--ice); max-width: 640px; }
+
+  .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-block: 1px solid var(--line); }
+  .facts div { padding: 16px 12px 14px 0; display: grid; gap: 8px; }
+  .facts b { font: 700 26px/1 var(--pixel); color: var(--neon); font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  section { display: grid; gap: 18px; }
+  h2 { font: 700 26px/1.2 var(--pixel); color: var(--ice); letter-spacing: .01em; }
+  section p + p { margin-top: 2px; }
+  strong { color: var(--ice); font-weight: 600; }
+  em { color: var(--neon); font-style: normal; }
+
+  /* faces by tier */
+  .tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .tier { display: grid; gap: 10px; }
+  .tier .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .tier img { width: 100%; height: auto; image-rendering: pixelated; aspect-ratio: 1; display: block; border: 1px solid var(--line); }
+  .tier h3 { font: 700 15px/1.2 var(--pixel); color: var(--neon); }
+  .tier p { font: 400 13px/1.5 var(--mono); color: var(--dim); }
+  @media (max-width: 560px) { .tiers { grid-template-columns: 1fr; } .tier .pair { grid-template-columns: 1fr 1fr; max-width: 320px; } }
+
+  /* bars drawn to scale */
+  .bar { display: flex; height: 34px; border: 1px solid var(--neon); padding: 2px; gap: 2px; }
+  .bar span { display: block; height: 100%; }
+  .legend { display: grid; gap: 8px; font: 400 14px/1.4 var(--mono); }
+  .legend div { display: grid; grid-template-columns: 14px 64px 1fr; gap: 10px; align-items: baseline; }
+  .legend i { width: 12px; height: 12px; display: inline-block; transform: translateY(1px); }
+  .legend b { color: var(--ice); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* lifecycle */
+  ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: s; border-left: 2px solid var(--olive); }
+  ol.steps li { counter-increment: s; position: relative; padding: 0 0 22px 28px; }
+  ol.steps li:last-child { padding-bottom: 0; }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute; left: -13px; top: 1px;
+    width: 24px; height: 24px; display: grid; place-items: center;
+    background: var(--ink); border: 2px solid var(--neon); color: var(--neon);
+    font: 700 12px/1 var(--mono);
+  }
+  ol.steps b { color: var(--ice); display: block; font-weight: 600; }
+
+  .rules { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .rules li { padding-left: 22px; position: relative; }
+  .rules li::before { content: ""; position: absolute; left: 0; top: .62em; width: 9px; height: 9px; background: var(--neon); }
+
+  table { width: 100%; border-collapse: collapse; font: 400 15px/1.45 var(--mono); }
+  th, td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+  td:first-child { color: var(--neon); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+
+  .quote { font: 400 clamp(24px, 5vw, 36px)/1.25 var(--pixel); color: var(--neon); border-block: 1px solid var(--line); padding-block: 26px; }
+
+  .truth { border: 1px solid var(--neon); padding: 20px 22px; display: grid; gap: 10px; background: var(--panel); }
+  .truth p { color: var(--ice); }
+  footer { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 24px; }
+  footer p { font: 400 13px/1.6 var(--mono); color: var(--dim); }
+  .links { display: flex; flex-wrap: wrap; gap: 10px 24px; font: 600 14px/1.4 var(--mono); }
+
+  @media (prefers-reduced-motion: reduce) { .banner { content: url("img/banner.png"); } }
+</style>
+
+<style>html,body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<main class="page">
+  <header>
+    <img class="banner" src="img/banner.gif" width="1500" height="500" alt="A mosaic of pixel-art NEONFACES in neon yellow and black around a pixel eye and the words: They don't blink.">
+    <span class="label">Robinhood Chain · 5555 Faces · fully on-chain</span>
+    <h1>NEONFACES</h1>
+    <p class="tagline">They don't blink.</p>
+    <p class="lede">5555 close-up pixel faces on Robinhood Chain. Every Face is also a wallet, and every wallet holds a small piece of the market: a basket of Stock Tokens you can keep, add to, withdraw or put to work.</p>
+    <div class="facts" role="list">
+      <div role="listitem"><b>5555</b><span class="label">Faces, fixed</span></div>
+      <div role="listitem"><b>100%</b><span class="label">on-chain art</span></div>
+      <div role="listitem"><b>1</b><span class="label">wallet per Face</span></div>
+      <div role="listitem"><b>40%</b><span class="label">of the mint fills them</span></div>
+    </div>
+  </header>
+
+  <section class="col">
+    <span class="label">The idea</span>
+    <h2>A portrait that holds something</h2>
+    <p>On Robinhood Chain the market never closes, so someone has to keep watching. NEONFACES are the faces of those watchers: no bodies, no costumes, just an eye, a nose, a strip of forehead, cropped so tight that only the stare is left. Every one is drawn in blocks of neon <em>#CCFF00</em> fading to black.</p>
+    <p>What makes them different is behind the image. Each Face is the key to its own wallet, and that wallet is filled when the Face is minted. Sell the Face and you sell the stare, together with everything it has accumulated.</p>
+  </section>
+
+  <section class="col">
+    <span class="label">Art</span>
+    <h2>The art lives on the chain</h2>
+    <p>Most collections keep their images on a server or on IPFS, and the NFT only points at them. NEONFACES stores the pixels themselves on Robinhood Chain: every Face is a grid of 20 to 40 blocks, about 168 bytes, and the contract draws the image and writes its description every time someone asks. No server, no link that can break.</p>
+    <p>The full set was sealed against a fingerprint published before the first mint, so nobody can swap the art later. There are eleven traits (crop, light, grain, expression, accessories and more) with exact, published counts.</p>
+  </section>
+
+  <section class="col">
+    <span class="label">Wallet</span>
+    <h2>Every Face is a wallet</h2>
+    <p>Each Face gets its own account on the chain (the ERC-6551 standard): the NFT is the key. Whoever holds the Face controls the account. Tokens, stablecoins and pieces of tokenized stocks can live inside it.</p>
+    <p>Every Face starts with a <strong>base basket</strong> of about $3 in one of TSLA, NVDA, AAPL, AMZN or MSFT. You can leave it there, add more, or withdraw it at any time from the Face's page. If the Face changes hands, what's inside goes with it.</p>
+  </section>
+
+  <section>
+    <div class="col" style="display:grid;gap:18px">
+      <span class="label">Stare tiers</span>
+      <h2>Three kinds of stare, decided at the reveal</h2>
+      <p>After the mint closes, the reveal assigns every token its art with a formula anyone can recompute on the chain. The art decides the tier, and the counts are exact. Watch and Heavy Stare Faces then receive a top-up on top of their base basket.</p>
+    </div>
+    <div class="tiers">
+      <div class="tier">
+        <div class="pair"><img src="img/face-glance-1.png" width="320" height="320" alt="A Glance Face"><img src="img/face-glance-2.png" width="320" height="320" alt="A Glance Face"></div>
+        <h3>Glance · 4444</h3>
+        <p>Base basket, about $3.</p>
+      </div>
+      <div class="tier">
+        <div class="pair"><img src="img/face-watch-1.png" width="320" height="320" alt="A Watch Face"><img src="img/face-watch-2.png" width="320" height="320" alt="A Watch Face"></div>
+        <h3>Watch · 833</h3>
+        <p>+ about $9 of NVDA, GOOGL or META and $3 of USDG.</p>
+      </div>
+      <div class="tier">
+        <div class="pair"><img src="img/face-heavy-stare-1.png" width="320" height="320" alt="A Heavy Stare Face"><img src="img/face-heavy-stare-2.png" width="320" height="320" alt="A Heavy Stare Face"></div>
+        <h3>Heavy Stare · 278</h3>
+        <p>+ about $57: SPY, NVDA, TSLA and USDG.</p>
+      </div>
+    </div>
+    <div class="bar" role="img" aria-label="Tier shares: Glance 4444 (80%), Watch 833 (15%), Heavy Stare 278 (5%)">
+      <span style="width:80%;background:var(--olive)"></span><span style="width:15%;background:var(--watch)"></span><span style="width:5%;background:var(--neon)"></span>
+    </div>
+    <p class="col">Nothing valuable is decided inside the mint transaction, so bots can't mint, peek at the tier and cancel until they land a rare one. Basket values are set from live prices right before launch.</p>
+  </section>
+
+  <section class="col">
+    <span class="label">The mint pays for itself</span>
+    <h2>Part of every sale fills the Faces</h2>
+    <p>The mint happens on OpenSea. OpenSea keeps its 10% fee, and the rest goes to a split written into the contract. 40% of it goes to a <strong>seed vault</strong>: a contract that can only buy the basket tokens, at prices checked against Chainlink, and deliver them straight to the Faces' pool. That money can't be spent on anything else.</p>
+    <p>Most Faces are born with their basket. A Face minted in the first minutes, before the pool is restocked, gets it shortly after; anyone can deliver a pending basket with one click from the Face's page.</p>
+  </section>
+
+  <section>
+    <div class="col" style="display:grid;gap:18px">
+      <span class="label">Where the money goes</span>
+      <h2>Said before, not after</h2>
+      <p>The shares and the addresses are fixed in the contract. Nobody can change them, and anyone can trigger the payout.</p>
+    </div>
+    <div class="bar" role="img" aria-label="Mint split: 40% seed vault, 25% treasury, 20% team, 15% growth">
+      <span style="width:40%;background:var(--neon)"></span><span style="width:25%;background:var(--watch)"></span><span style="width:20%;background:#677920"></span><span style="width:15%;background:var(--olive)"></span>
+    </div>
+    <div class="legend">
+      <div><i style="background:var(--neon)"></i><b>40%</b><span>Seed vault: buys what goes inside the Faces</span></div>
+      <div><i style="background:var(--watch)"></i><b>25%</b><span>Treasury: art, site, audits, presence</span></div>
+      <div><i style="background:#677920"></i><b>20%</b><span>Team: released slowly over 6 months, so no dumping on the floor</span></div>
+      <div><i style="background:var(--olive)"></i><b>15%</b><span>Growth and collaborations</span></div>
+    </div>
+    <p class="col">Resale royalties are 5%, suggested and optional: transfers are never restricted.</p>
+  </section>
+
+  <section class="col">
+    <span class="label">Agents</span>
+    <h2>The stare can work</h2>
+    <p>Robinhood Chain is built for agents too. From your Face's page you can hand simple jobs to an agent (a bot, an app or an AI service) with a step-by-step setup in plain language, and you stay the owner.</p>
+    <ul class="rules">
+      <li>It can only do the actions you allow, like trading the Face's tokens.</li>
+      <li>Trades go through a guard contract: what it buys always comes back into the Face, never more than 1% worse than the Chainlink price, and never beyond the daily limit you set.</li>
+      <li>It can spend ETH only up to the budget you give it.</li>
+      <li>It can never sign for the Face, it expires on the date you choose, and it stops the moment the Face is sold.</li>
+    </ul>
+  </section>
+
+  <section class="col">
+    <span class="label">Buying and selling safely</span>
+    <h2>Lock before you list</h2>
+    <p>A seller could empty a Face's wallet right before a sale goes through. NEONFACES prevents that: the holder can <strong>lock</strong> the wallet until a date. Until then nothing can leave it, not by the holder, not by an agent, not by a signature, and the lock stays in place after the sale. Buyers see "Locked until" in the traits and get exactly what they paid for.</p>
+  </section>
+
+  <section class="col">
+    <span class="label">Live traits</span>
+    <h2>Traits that keep watching</h2>
+    <p>The metadata isn't frozen on day one. It reads the Face as it is now:</p>
+    <ul class="rules">
+      <li><strong>Unblinking</strong>: how many days the Face has stayed with its current holder. Selling resets it.</li>
+      <li><strong>Holds TSLA, NVDA…</strong>: what the Face's wallet actually contains.</li>
+      <li><strong>Locked until</strong>: the date its wallet opens again, if it is locked.</li>
+    </ul>
+  </section>
+
+  <p class="quote">They don't smile. They don't pose. They don't blink.</p>
+
+  <section class="col">
+    <span class="label">Life of a Face</span>
+    <h2>From mint to your wallet</h2>
+    <ol class="steps">
+      <li><b>Mint on OpenSea</b>Holders of Robinhood Chain collections go first, then holders of partner collections, then everyone. Stages and prices are announced before the sale.</li>
+      <li><b>Wallet and base basket</b>Your Face gets its wallet in the same transaction and its base basket from the pool.</li>
+      <li><b>Reveal</b>When the mint closes, the chain assigns every Face its art and tier.</li>
+      <li><b>Top-up</b>Watch and Heavy Stare Faces receive their extra basket.</li>
+      <li><b>Yours to use</b>Keep it, add to it, withdraw, set up an agent, lock it before listing, or sell it with everything inside.</li>
+    </ol>
+  </section>
+
+  <section class="col">
+    <span class="label">Check it yourself</span>
+    <h2>Everything important is on the chain</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Fixed</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr><td>5555</td><td>Total supply, written in the contract. It can't grow.</td></tr>
+          <tr><td>111</td><td>Team Faces, capped in the contract.</td></tr>
+          <tr><td>No proxy</td><td>The contracts can't be swapped for new code.</td></tr>
+          <tr><td>No pause</td><td>Transfers and resales can never be stopped or blocked.</td></tr>
+          <tr><td>Sealed art</td><td>The pixels match a fingerprint published before the mint.</td></tr>
+          <tr><td>Open review</td><td>The security review, tests and code are public.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="truth">
+      <span class="label">Plain truth</span>
+      <p>NEONFACES does not sell shares or shareholder rights, and promises no returns. It sells an artwork that can hold on-chain exposure. What's inside a Face is worth whatever those tokens are worth, and the holder can withdraw it at any time.</p>
+    </div>
+  </section>
+
+  <footer class="col">
+    <div class="links">
+      <span>neonfaces.xyz</span>
+      <span>Mint: OpenSea, Robinhood Chain</span>
+    </div>
+    <p>Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
+  </footer>
+</main>
+</body>
+</html>

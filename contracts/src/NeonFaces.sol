@@ -30,6 +30,9 @@ interface ITokenURIRenderer {
 interface INeonSeeder {
     function faces() external view returns (address);
     function activate(uint256 tokenId) external returns (address account);
+    function completesSet(uint256 anchorId, uint256 pieceId) external view returns (bool);
+    function fusedAnchorOf(uint256 tokenId) external view returns (uint256);
+    function claimSetBonus(uint256 anchorId) external;
 }
 
 ///  ███╗   ██╗███████╗ ██████╗ ███╗   ██╗███████╗ █████╗  ██████╗███████╗███████╗
@@ -97,6 +100,8 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     bytes32 public provenanceHash; // keccak running hash of the on-chain art chunks, committed before mint
     uint256 public revealBlock; // L2 block whose hash becomes the reveal seed
     uint256 public revealSeed; // 0 until revealed
+    /// @dev Gas reserved for delivering a set bonus inside the transfer that completes the set.
+    uint256 internal constant SET_BONUS_GAS = 1_000_000;
     /// @notice Minting ends for good when the reveal is requested: nobody can mint once art is knowable.
     bool public mintClosed;
     uint256 public revealRequests;
@@ -160,6 +165,9 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     error SeederNotSet();
     error SeederAlreadySet();
     error SeederMismatch();
+    error OnlySeeder();
+    error OutOfGasForSetBonus();
+    error SetIsFused();
     error InvalidConfig();
     error FeeNotAllowed();
 
@@ -250,14 +258,33 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
             // fail closed: an account that claims to be a Face account must answer, and be unlocked
             (bool ok, bytes memory r) = from.staticcall(abi.encodeWithSignature("isLocked()"));
             if (!ok || r.length != 32 || abi.decode(r, (uint256)) != 0) revert FaceAccountLocked();
+            // a piece of a fused set never leaves its anchor
+            if (revealSeed != 0 && INeonSeeder(seeder).fusedAnchorOf(tokenId) == holder) revert SetIsFused();
             emit MetadataUpdate(holder);
         }
-        holder = _faceOfAccount(to);
-        if (holder != 0) emit MetadataUpdate(holder);
+        bool nested = holder != 0; // leaving a Face account
+        uint256 into = _faceOfAccount(to);
+        if (into != 0) emit MetadataUpdate(into);
+        // the moved Face's own metadata changes too (its set status and description)
+        if (nested || into != 0) emit MetadataUpdate(tokenId);
+        holder = into;
         for (uint256 depth; holder != 0; ++depth) {
             if (holder == tokenId || depth == 4) revert OwnershipCycle();
             holder = _faceOfAccount(_ownerOf(holder));
         }
+        if (into != 0) _paySetBonus(into, tokenId);
+    }
+
+    /// @dev The last piece of a set just entered `anchorId`'s account: deliver the set's one-time bonus in the same
+    /// transaction, so it never waits for the keeper. A short pool never blocks the transfer (the bonus then stays
+    /// claimable by anyone, and the keeper retries). The claim runs on a fixed gas budget, several times what it
+    /// uses, and the transfer reverts when that budget isn't there: otherwise a wallet's gas estimate could land
+    /// on a limit where the piece moves in and the bonus is quietly skipped.
+    function _paySetBonus(uint256 anchorId, uint256 pieceId) internal {
+        address s = seeder;
+        if (s == address(0) || revealSeed == 0 || !INeonSeeder(s).completesSet(anchorId, pieceId)) return;
+        if (gasleft() < SET_BONUS_GAS + SET_BONUS_GAS / 63 + 10_000) revert OutOfGasForSetBonus();
+        try INeonSeeder(s).claimSetBonus{gas: SET_BONUS_GAS}(anchorId) {} catch {}
     }
 
     /// @dev The Face whose ERC-6551 account `a` is, or 0. A contract that only claims to be one can at worst
@@ -369,6 +396,13 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         renderer = newRenderer;
         emit RendererSet(newRenderer);
         emit BatchMetadataUpdate(1, MAX_SUPPLY);
+    }
+
+    /// @notice Called by the seeder when a Face's contents or set change (a seed, a top-up or a set bonus
+    /// delivered, a set fused): marketplaces re-read that Face at once instead of waiting for the daily refresh.
+    function metadataChanged(uint256 tokenId) external {
+        if (msg.sender != seeder) revert OnlySeeder();
+        emit MetadataUpdate(tokenId);
     }
 
     /// @notice Ask marketplaces to refresh a range (e.g. after a seed is funded).

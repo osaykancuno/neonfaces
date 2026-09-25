@@ -1,11 +1,15 @@
 // The project's only moving part off-chain: keeps the seed pool stocked from the mint itself, delivers every
 // pending seed, top-up and set bonus, pays the split and the team vesting, and refreshes marketplace metadata daily.
 // Everything it calls is permissionless except the vault's `buy` (KEEPER_ROLE). Run it as a loop, or with --once
-// from a scheduler (.github/workflows/keeper.yml runs it every 10 minutes, no server needed).
+// from a scheduler (.github/workflows/keeper.yml runs it every 10 minutes, no server needed). Anyone can run it with
+// any funded key: without KEEPER_ROLE it refills through the vault's permissionless `restock` (only what minted Faces
+// are owed, no stock ahead) and does everything else the same.
 //
 //   PK=<keeper key> node seed-keeper.mjs <chainId> [--once]
 //   env: RPC_URL, INTERVAL (seconds, default 60), BUFFER (Faces to stock ahead, default 25), SLIPPAGE (bps, default 100),
-//        SET_EVERY_MIN (minutes between set scans after the reveal, default 30), SET_BUFFER (set bonuses to stock ahead, default 5),
+//        MAX_BUY_USD (per token per round, default 2000: big purchases are spread over rounds so arbitrage can
+//        bring each pool back to its Chainlink price in between),
+//        SET_EVERY_MIN (minutes between set scans after the reveal, default 30), SET_BUFFER (set bonuses to stock ahead, default: every set still unpaid),
 //        KEEPER_STATE (JSON file carried between --once runs, so a scheduled run doesn't re-read all 5555 Faces)
 //
 // Each round:
@@ -15,7 +19,8 @@
 //      exact top-up basket of every Watch / Heavy Stare Face still waiting,
 //   3. makes NeonSeedVault buy the missing tokens (NeonTrader: Uniswap v3, Chainlink-bounded, straight into the pool),
 //   4. delivers pending seeds (activateBatch) and the top-ups the pool can cover (upgradeBatch),
-//   5. after the reveal, delivers the one-time bonus of every assembled set (claimSetBonus), so holders don't have to,
+//   5. stocks the set bonuses during the sale (one per 10 Faces), and after the reveal delivers the bonus of any
+//      assembled set still unpaid (the last piece's transfer normally delivers it already),
 //   6. once a day, `refreshMetadata()`: Unblinking days and the Gaze change with time, marketplaces need the nudge.
 // The keeper key needs gas only. It can't move the vault's ETH anywhere but into the pool.
 // Stock Token feeds only update on trading days: over a weekend the buys wait, the mint doesn't.
@@ -34,13 +39,17 @@ const BUFFER = Number(process.env.BUFFER ?? 25);
 const SLIPPAGE = BigInt(process.env.SLIPPAGE ?? 100);
 const SET_EVERY_MIN = Number(process.env.SET_EVERY_MIN ?? 30);
 const STATE = process.env.KEEPER_STATE;
-const SET_BUFFER = Number(process.env.SET_BUFFER ?? 5);
+// After the reveal the pool stocks the bonus of every set not paid yet, not just the next few: once it holds them,
+// no future bonus depends on this keeper (claimSetBonus is permissionless, the vault's buys are not).
+const SET_BUFFER = process.env.SET_BUFFER === undefined ? Infinity : Number(process.env.SET_BUFFER);
 const MIN_BUY_USD8 = 2n * 10n ** 8n; // skip dust buys
+const MAX_BUY_USD8 = BigInt(Math.round(Number(process.env.MAX_BUY_USD ?? 2000) * 1e8));
+const KEEPER_ROLE = keccak256(new TextEncoder().encode("KEEPER_ROLE"));
 
 const dep = JSON.parse(readFileSync(resolve(here, `../contracts/deployments/${chainId}.json`), "utf8"));
 const cfg = JSON.parse(readFileSync(resolve(here, `../config/trader.${chainId}.json`), "utf8"));
 const rpc = process.env.RPC_URL || { 4663: "https://rpc.mainnet.chain.robinhood.com" }[chainId];
-if (!process.env.PK) throw new Error("set PK (keeper key: KEEPER_ROLE on NeonSeedVault, gas only)");
+if (!process.env.PK) throw new Error("set PK (the keeper key, or any key with a little ETH for gas)");
 if (!dep.seedVault || !dep.trader) throw new Error("deployments file needs seedVault and trader");
 const chain = { id: chainId, name: "robinhood", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [rpc] } } };
 const pub = createPublicClient({ chain, transport: http(rpc, { batch: true }) });
@@ -69,7 +78,11 @@ const abi = parseAbi([
   "function refreshMetadata()",
   "function price(address) view returns (uint256)",
   "function buy(address[] path, uint24[] fees, uint256 ethIn, uint256 slippageBps) returns (uint256)",
+  "function restock(address[] path, uint24[] fees) returns (uint256)",
+  "function hasRole(bytes32 role, address account) view returns (bool)",
+  "error NothingToRestock(address token)",
   "function balanceOf(address) view returns (uint256)",
+  "function decimals() view returns (uint8)",
   "error InsufficientPool(address token, uint256 needed, uint256 available)",
   "error StalePrice(address token, uint256 updatedAt)",
 ]);
@@ -84,7 +97,6 @@ async function send(address, functionName, args) {
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 const WETH = cfg.weth.toLowerCase();
-const USDG = cfg.tokens.find((t) => t.symbol === "USDG").address.toLowerCase();
 const symOf = Object.fromEntries(cfg.tokens.map((t) => [t.address.toLowerCase(), t.symbol]));
 const byAddr = Object.fromEntries(cfg.tokens.map((t) => [t.address.toLowerCase(), t]));
 /** ETH -> token through the hubs (tools/route.mjs): [path, fees]. */
@@ -92,6 +104,8 @@ const route = (token) => {
   const r = routeOf(cfg.tokens, byAddr[WETH], byAddr[token]);
   return [r.path, r.fees];
 };
+
+const decOf = new Map(); // token -> decimals (read once)
 
 // what we know about each Face, refreshed incrementally
 const faces = new Map(); // id -> { funded, tier, upgraded }
@@ -176,6 +190,7 @@ async function round() {
 
   const baseIds = (await read(dep.seeder, "tierBaskets", [1])).map(Number);
   const legsOf = new Map();
+  const decimalsOf = async (t) => decOf.get(t) ?? decOf.set(t, Number(await read(t, "decimals"))).get(t);
   const legs = async (b) => legsOf.get(b) ?? legsOf.set(b, await read(dep.seeder, "basket", [b])).get(b);
   const pendingBase = [...faces].filter(([, f]) => !f.funded).map(([id]) => id);
   const pendingTop = new Map(); // id -> basketId
@@ -192,14 +207,19 @@ async function round() {
 
   // sets: the bonus basket of every assembled set still unpaid (same draw as NeonSeeder.claimSetBonus)
   const bonusDue = new Map(); // anchor -> basketId
+  const dueSets = new Set();
   let bonusOpts = [];
+  const bonusOf = (setId) => {
+    const k = BigInt(keccak256(encodeAbiParameters([{ type: "uint256" }, { type: "uint256" }, { type: "uint8" }], [revealSeed, BigInt(setId), 4])));
+    return bonusOpts[Number(k % BigInt(bonusOpts.length))];
+  };
   if (revealSeed && Date.now() / 1000 - lastSetScan >= SET_EVERY_MIN * 60) {
     lastSetScan = Math.floor(Date.now() / 1000);
     bonusOpts = (await read(dep.seeder, "tierBaskets", [4])).map(Number);
     if (bonusOpts.length) {
       for (const { anchor, setId } of await assembledSets(supply)) {
-        const k = BigInt(keccak256(encodeAbiParameters([{ type: "uint256" }, { type: "uint256" }, { type: "uint8" }], [revealSeed, setId, 4])));
-        bonusDue.set(anchor, bonusOpts[Number(k % BigInt(bonusOpts.length))]);
+        bonusDue.set(anchor, bonusOf(setId));
+        dueSets.add(String(setId));
       }
     }
   }
@@ -217,26 +237,45 @@ async function round() {
   for (const b of pendingTop.values()) await add(owed, b, 1);
   for (const b of bonusDue.values()) await add(owed, b, 1);
   const ahead = new Map(owed);
-  if (!revealSeed) for (const b of baseIds) await add(ahead, b, Math.ceil(BUFFER / baseIds.length));
-  else if (unpaidSets?.size > bonusDue.size) for (const b of bonusOpts) await add(ahead, b, Math.ceil(SET_BUFFER / bonusOpts.length));
+  if (!revealSeed) {
+    for (const b of baseIds) await add(ahead, b, Math.ceil(BUFFER / baseIds.length));
+    // during the sale, the set bonuses too: one set for every 10 Faces minted (NeonSeeder.setsIn), so the pool
+    // already holds every bonus at the reveal and the first assemblies are paid in their own transaction
+    const opts = (await read(dep.seeder, "tierBaskets", [4])).map(Number);
+    if (opts.length === 1) await add(ahead, opts[0], Math.floor((supply * 555) / 5555));
+    else log(`${opts.length} set bonus baskets: bonuses are stocked after the reveal, when each set's draw is known`);
+  }
+  else if (bonusOpts.length && unpaidSets?.size > bonusDue.size) {
+    // the exact bonus basket of each set still to be assembled (same draw as NeonSeeder.claimSetBonus)
+    let n = 0;
+    for (const setId of unpaidSets.keys()) {
+      if (n >= SET_BUFFER) break;
+      if (dueSets.has(String(setId))) continue;
+      await add(ahead, bonusOf(setId), 1);
+      n++;
+    }
+  }
 
-  // 3. buy what is missing: one buy per token; if the vault can't cover the buffer too, what is owed comes first
+  // 3. buy what is missing: one buy per token, at most MAX_BUY_USD each; if the vault can't cover the buffer too,
+  //    what is owed comes first. Without KEEPER_ROLE: the vault's public `restock`, for what is owed only.
+  const keeper = await read(dep.seedVault, "hasRole", [KEEPER_ROLE, wallet.account.address]).catch(() => false);
   const pool = new Map();
   for (const t of ahead.keys()) pool.set(t, await read(t, "balanceOf", [dep.seeder]));
   let ethLeft = await pub.getBalance({ address: dep.seedVault });
   const ethFor = async (t, need) => {
     const missing = need - pool.get(t);
     if (missing <= 0n) return 0n;
-    const [pt, pe] = await Promise.all([read(dep.trader, "price", [t]), read(dep.trader, "price", [WETH])]);
-    const usd8 = (missing * pt) / 10n ** (t === USDG ? 6n : 18n);
+    const [pt, pe, dec] = await Promise.all([read(dep.trader, "price", [t]), read(dep.trader, "price", [WETH]), decimalsOf(t)]);
+    let usd8 = (missing * pt) / 10n ** BigInt(dec); // cbBTC has 8 decimals, USDG 6, Stock Tokens 18
     if (usd8 < MIN_BUY_USD8) return 0n;
+    if (usd8 > MAX_BUY_USD8) usd8 = MAX_BUY_USD8;
     return (usd8 * 10n ** 18n * 103n) / (pe * 100n); // +3% for pool fees and slippage
   };
   let aheadCost = 0n;
   try {
     for (const [t, need] of ahead) aheadCost += await ethFor(t, need);
   } catch {}
-  for (const needs of aheadCost <= ethLeft ? [ahead] : [owed, ahead]) {
+  for (const needs of !keeper ? [owed] : aheadCost <= ethLeft ? [ahead] : [owed, ahead]) {
     for (const [t, need] of needs) {
       if (ethLeft === 0n) break;
       let ethIn;
@@ -250,7 +289,7 @@ async function round() {
       if (ethIn > ethLeft) ethIn = ethLeft;
       const [path, fees] = route(t);
       try {
-        const hash = await send(dep.seedVault, "buy", [path, fees, ethIn, SLIPPAGE]);
+        const hash = keeper ? await send(dep.seedVault, "buy", [path, fees, ethIn, SLIPPAGE]) : await send(dep.seedVault, "restock", [path, fees]);
         pool.set(t, await read(t, "balanceOf", [dep.seeder]));
         ethLeft -= ethIn;
         log(`bought ${symOf[t]} for ${formatEther(ethIn)} ETH`, hash);

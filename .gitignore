@@ -19,6 +19,7 @@ safe/
 web/public/agent-presets.json
 web/public/deployment.json
 config/allowlists/opensea/
+config/allowlists/holders.json
 tools/.keeper-state.json
 # local rehearsal only (mock NeonTrader on anvil)
 contracts/deployments/trader.*.json

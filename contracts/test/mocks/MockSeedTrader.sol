@@ -8,6 +8,20 @@ contract MockSeedTrader {
     address public immutable weth;
     uint256 public rate = 1;
     mapping(address => uint256) public dailyLimit;
+    mapping(address => uint256) public usd8Of; // Chainlink stand-in (8 decimals); 0 = unknown token
+
+    function setRate(uint256 r) external {
+        rate = r;
+    }
+
+    function setPrice(address token, uint256 usd8) external {
+        usd8Of[token] = usd8;
+    }
+
+    function price(address token) external view returns (uint256) {
+        require(usd8Of[token] != 0, "unknown token");
+        return usd8Of[token];
+    }
 
     constructor(address weth_) {
         weth = weth_;

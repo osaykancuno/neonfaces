@@ -2,9 +2,13 @@
   "_readme": "Holders snapshot for one OpenSea presale stage. Run: node tools/snapshot.mjs <this file>, then node tools/allowlist.mjs <phase>.csv. Pin snapshotBlock to an announced block before the final run (ownerOf at a past block needs an archive RPC).",
   "rules": {
     "perNft": 1,
-    "maxPerWallet": 3
+    "maxPerWallet": 1
   },
   "exclude": [],
+  "accountImplementations": [
+    "0xe946075125843aadb5e40e59f513d929af507c4b"
+  ],
+  "_accountImplementations": "StonkBroker6551Account (verified on Blockscout): every StonkBroker has a clone of it, and owner() returns the StonkBroker's owner",
   "mintChainId": 4663,
   "phase": "robinhood",
   "collections": [
@@ -51,6 +55,29 @@
       "method": "ownerOf",
       "snapshotBlock": "latest",
       "weight": 1
+    },
+    {
+      "name": "NORMIES",
+      "opensea": "https://opensea.io/collection/normies",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x9eb6e2025b64f340691e424b7fe7022ffde12438",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
+    },
+    {
+      "name": "Normies Yacht Club",
+      "opensea": "https://opensea.io/collection/normies-yacht-club",
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "address": "0x87306c282ebd62fe1c80aa69dd9408331dc11f64",
+      "standard": "erc721",
+      "method": "ownerOf",
+      "snapshotBlock": "latest",
+      "weight": 1
     }
-  ]
+  ],
+  "_stage": "Stage 1: holders of the Robinhood Chain collections, NORMIES and Normies Yacht Club (Ethereum)"
 }

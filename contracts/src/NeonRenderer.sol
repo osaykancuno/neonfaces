@@ -65,18 +65,19 @@ contract NeonRenderer {
     function tokenURI(uint256 tokenId) external view returns (string memory) {
         NeonSeeder.SeedView memory s = seeder.seedOf(tokenId);
         (bool revealed, uint256 artId, bytes memory rec) = _artOf(tokenId);
-        (uint256 setId, bool assembled, bytes memory setAttrs, NeonSeeder.Leg[] memory bonus) =
-            revealed ? _set(tokenId) : (0, false, bytes(""), new NeonSeeder.Leg[](0));
+        SetInfo memory set_;
+        if (revealed) set_ = _set(tokenId);
 
         DynamicBufferLib.DynamicBuffer memory j;
         j.p('{"name":"NEONFACES #', bytes(tokenId.toString()), '","description":"They don\'t blink. Face #');
         j.p(bytes(tokenId.toString()), " is an account: ", bytes(LibString.toHexStringChecksummed(s.account)));
+        j.p(". Whatever it holds travels with it.", set_.note);
         j.p(
-            ". Whatever it holds travels with it. Stock Tokens give economic exposure only, not legal ownership of the ",
+            " Stock Tokens give economic exposure only, not legal ownership of the ",
             "underlying shares, and are not available to US persons. Art and metadata are fully on-chain.",
             '","image":"data:image/svg+xml;base64,'
         );
-        j.p(bytes(Base64.encode(bytes(_image(tokenId, revealed ? artId : PLACEHOLDER_ART_ID, rec, assembled ? setId : 0)))));
+        j.p(bytes(Base64.encode(bytes(_image(tokenId, revealed ? artId : PLACEHOLDER_ART_ID, rec, set_.assembled ? set_.setId : 0, set_.fused)))));
         j.p('","external_url":"', bytes(siteURL()), "face/", bytes(tokenId.toString()));
         j.p('","account":"', bytes(LibString.toHexStringChecksummed(s.account)), '","attributes":[');
         j.p(_attr("Stare", _tierName(s.tier), false));
@@ -85,14 +86,14 @@ contract NeonRenderer {
             for (uint256 i; i < 11; ++i) {
                 if (bytes(values[i]).length != 0) j.p(_attr(names[i], values[i], true));
             }
-            j.p(setAttrs);
+            j.p(set_.attrs);
         } else {
             j.p(_attr("Status", "Unrevealed", true));
         }
         j.p(_attr("Seed", s.funded ? _basketLabel(s.legs) : (s.activated ? "Pending" : "None"), true));
         j.p(_attr("Seed Status", s.funded ? "Funded" : (s.activated ? "Pending" : "Inactive"), true));
         if (s.tier >= 2) j.p(_attr("Stare Upgrade", s.upgraded ? _basketLabel(s.upgradeLegs) : "Pending", true));
-        j.p(_holdings(s, bonus));
+        j.p(_holdings(s, set_.bonus));
         j.p(_unblinking(tokenId));
         j.p(_lock(s.account));
         if (revealed) j.p(',{"trait_type":"Art ID","display_type":"number","value":', bytes(artId.toString()), "}");
@@ -103,10 +104,9 @@ contract NeonRenderer {
     /// @notice Raw SVG of a token (for sites and agents): the whole face when it anchors an assembled set.
     function svgOf(uint256 tokenId) external view returns (string memory) {
         (bool revealed, uint256 artId, bytes memory rec) = _artOf(tokenId);
-        uint256 setId;
-        bool assembled;
-        if (revealed) (setId, assembled,,) = _set(tokenId);
-        return _image(tokenId, revealed ? artId : PLACEHOLDER_ART_ID, rec, assembled ? setId : 0);
+        SetInfo memory set_;
+        if (revealed) set_ = _set(tokenId);
+        return _image(tokenId, revealed ? artId : PLACEHOLDER_ART_ID, rec, set_.assembled ? set_.setId : 0, set_.fused);
     }
 
     /// @notice Gaze level: 0, then 1 "Steady" / 2 "Fixed" / 3 "Burning" after 30 / 90 / 365 days with the same holder.
@@ -117,38 +117,82 @@ contract NeonRenderer {
         return d >= 365 ? 3 : d >= 90 ? 2 : d >= 30 ? 1 : 0;
     }
 
-    /// @dev The token's image: its art (or the whole face when `setId` != 0), with its Gaze.
-    function _image(uint256 tokenId, uint256 artId, bytes memory rec, uint256 setId) internal view returns (string memory) {
-        uint8 gaze = gazeOf(tokenId);
-        return setId != 0 ? renderSetSVG(setId, _setRecords(setId), gaze) : renderSVG(artId, rec, gaze);
-    }
-
-    /// @dev Set attributes: "Set" #n, "Set status" (Assembled here / Inside #id) and the one-time "Set bonus"
-    /// (with its legs when this Face received it, so "Holds" lists them).
-    function _set(uint256 tokenId)
+    /// @dev The token's image: its art (or the whole face when `setId` != 0), with its Gaze; a fused set gets a neon
+    /// frame one cell wide around the whole face (drawn by the renderer: the sealed art is untouched).
+    function _image(uint256 tokenId, uint256 artId, bytes memory rec, uint256 setId, bool fused)
         internal
         view
-        returns (uint256 setId, bool assembled, bytes memory attrs, NeonSeeder.Leg[] memory bonus)
+        returns (string memory svg)
     {
+        uint8 gaze = gazeOf(tokenId);
+        if (setId == 0) return renderSVG(artId, rec, gaze);
+        bytes[] memory recs = _setRecords(setId);
+        svg = renderSetSVG(setId, recs, gaze);
+        if (fused) {
+            bytes memory b = bytes(svg);
+            assembly {
+                mstore(b, sub(mload(b), 6)) // drop "</svg>"
+            }
+            string memory inner = (2 * uint256(uint8(recs[0][0])) - 1).toString();
+            svg = string.concat(
+                string(b), '<rect x=".5" y=".5" width="', inner, '" height="', inner, '" fill="none" stroke="#CCFF00"/></svg>'
+            );
+        }
+    }
+
+    /// @dev Set attributes: "Set" n (a number, so marketplaces keep it out of rarity scores: every set is shared
+    /// by only four Faces, which would rank any set piece above the rarest single), "Set status" (Assembled /
+    /// Inside another piece: two values, the ids go in the description) and the one-time "Set bonus" (with its
+    /// legs when this Face received it, so "Holds" lists them). `note` is the sentence added to the description.
+    struct SetInfo {
+        uint256 setId;
+        bool assembled;
+        bool fused;
+        bytes attrs;
+        NeonSeeder.Leg[] bonus;
+        bytes note;
+    }
+
+    function _set(uint256 tokenId) internal view returns (SetInfo memory info) {
         uint256[4] memory members;
+        uint256 setId;
         (setId,, members) = seeder.setOf(tokenId);
-        if (setId == 0) return (0, false, "", bonus);
-        attrs = _attr("Set", string.concat("#", setId.toString()), true);
-        assembled = seeder.isAssembled(tokenId);
-        if (assembled) {
-            attrs = abi.encodePacked(attrs, _attr("Set status", "Assembled", true));
+        if (setId == 0) return info;
+        info.setId = setId;
+        info.attrs = abi.encodePacked(',{"trait_type":"Set","display_type":"number","value":', setId.toString(), "}");
+        info.assembled = seeder.isAssembled(tokenId);
+        if (info.assembled) {
+            (uint32 fusedInto, uint64 fusedAt) = seeder.fusedSet(setId);
+            info.fused = fusedInto != 0;
+            info.attrs = abi.encodePacked(info.attrs, _attr("Set status", info.fused ? "Fused" : "Assembled", true));
+            if (info.fused) {
+                info.attrs = abi.encodePacked(info.attrs, ',{"trait_type":"Fused since","display_type":"date","value":', uint256(fusedAt).toString(), "}");
+            }
+            bytes memory note = abi.encodePacked(" It holds the other three pieces of set ", setId.toString(), " (");
+            uint256 listed;
+            for (uint256 q; q < 4; ++q) {
+                if (members[q] == tokenId) continue;
+                note = abi.encodePacked(note, listed++ == 0 ? "#" : ", #", members[q].toString());
+            }
+            info.note = abi.encodePacked(
+                note,
+                info.fused
+                    ? ") and shows the whole face. Fused for good: the pieces can never leave it, the set only changes hands whole."
+                    : ") and shows the whole face: selling it sells the set."
+            );
         } else {
             address owner = faces.ownerOf(tokenId);
             for (uint256 q; q < 4; ++q) {
                 if (members[q] != tokenId && owner == seeder.accountOf(members[q])) {
-                    attrs = abi.encodePacked(attrs, _attr("Set status", string.concat("Inside #", members[q].toString()), true));
+                    info.attrs = abi.encodePacked(info.attrs, _attr("Set status", "Inside another piece", true));
+                    info.note = abi.encodePacked(" It sits inside Face #", members[q].toString(), ", a piece of the same set.");
                 }
             }
         }
         (uint32 anchorId, uint32 basketId) = seeder.setBonus(setId);
         if (anchorId == tokenId) {
-            bonus = seeder.basket(basketId);
-            attrs = abi.encodePacked(attrs, _attr("Set bonus", _basketLabel(bonus), true));
+            info.bonus = seeder.basket(basketId);
+            info.attrs = abi.encodePacked(info.attrs, _attr("Set bonus", _basketLabel(info.bonus), true));
         }
     }
 
@@ -353,7 +397,9 @@ contract NeonRenderer {
         }
     }
 
-    /// @dev Live balances of the seed tokens (base, top-up, set bonus) inside the Face account, e.g. {"trait_type":"Holds TSLA","value":"0.003"}
+    /// @dev Live balances of the seed tokens (base, top-up, set bonus) inside the Face account, as numbers so
+    /// marketplaces show them as stats and keep them out of trait filters and rarity scores, e.g.
+    /// {"trait_type":"Holds TSLA","display_type":"number","value":0.003}
     function _holdings(NeonSeeder.SeedView memory s, NeonSeeder.Leg[] memory bonus) internal view returns (bytes memory out) {
         uint256 n;
         uint256 seedCount;
@@ -376,7 +422,12 @@ contract NeonRenderer {
                 continue;
             }
             out = abi.encodePacked(
-                out, _attr(string.concat("Holds ", sym), _decimal(abi.decode(rb, (uint256)), abi.decode(rd, (uint8))), true)
+                out,
+                ',{"trait_type":"',
+                LibString.escapeJSON(string.concat("Holds ", sym)),
+                '","display_type":"number","value":',
+                _decimal(abi.decode(rb, (uint256)), abi.decode(rd, (uint8))),
+                "}"
             );
         }
     }

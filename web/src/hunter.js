@@ -51,7 +51,8 @@ async function setState(setId, members, me) {
   );
   const assembled = await Promise.all(ids.map((m) => read("seeder", "isAssembled", [BigInt(m)])));
   const anchor = ids.find((_, q) => assembled[q]) ?? null;
-  return { setId: Number(setId), pieces, anchor };
+  const fused = anchor ? Number((await read("seeder", "fusedSet", [BigInt(setId)]).catch(() => [0]))[0]) === anchor : false;
+  return { setId: Number(setId), pieces, anchor, fused };
 }
 
 async function records(setId) {
@@ -64,7 +65,7 @@ function card(s, recs, watched) {
   const os = state.dep.chain?.opensea;
   const mine = s.pieces.filter((p) => p.mine).length;
   const head = s.anchor
-    ? `Complete: assembled in <a href="/face/${s.anchor}" data-link>Face #${s.anchor}</a>`
+    ? `Complete: ${s.fused ? "fused for good" : "assembled"} in <a href="/face/${s.anchor}" data-link>Face #${s.anchor}</a>`
     : mine
       ? `${mine} of 4 with you · ${4 - mine} to find`
       : "Pieces and holders";

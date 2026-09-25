@@ -287,6 +287,15 @@ h3 { font-family: var(--pixel); font-size: 18px; color: var(--neon); margin: 0 0
 .balances { display: grid; gap: 6px; }
 .bal { display: flex; justify-content: space-between; font-family: var(--mono); border: 1px solid var(--line); padding: 8px 10px; }
 .bal b { color: var(--neon); }
+.set-total { margin: 14px 0; }
+.say { margin: 18px 0; }
+.say h4 { margin: 0 0 6px; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; }
+.poll { margin: 10px 0; }
+.poll-row { position: relative; display: flex; justify-content: space-between; font-family: var(--mono); border: 1px solid var(--line); padding: 6px 10px; margin: 4px 0; overflow: hidden; }
+.poll-row span, .poll-row b { position: relative; z-index: 1; }
+.poll-row i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--neon); opacity: .18; }
+.poll-row.mine { border-color: var(--neon); }
+.set-total h4 { margin: 0 0 4px; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; }
 .face-traits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 .face-traits div { border: 1px solid var(--line); padding: 6px 8px; font-family: var(--mono); font-size: 12px; }
 .face-traits span { display: block; color: var(--dim); font-size: 10px; text-transform: uppercase; }

@@ -1,0 +1,476 @@
+{
+  "generatedAt": "2026-09-25T21:45:26.149Z",
+  "rules": {
+    "perNft": 1,
+    "maxPerWallet": 2,
+    "minNfts": 2,
+    "notIn": [
+      "robinhood.csv"
+    ],
+    "notInLimit": 1
+  },
+  "collections": [
+    {
+      "name": "CryptoPunks",
+      "chainId": 1,
+      "address": "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
+      "scannedAt": "2026-09-25T20:30:58.479Z",
+      "snapshotBlock": "26056849",
+      "nfts": 9995,
+      "holders": 3664,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 157
+    },
+    {
+      "name": "CryptoPunks (wrapped, V1 wrapper)",
+      "chainId": 1,
+      "address": "0xb7F7F6C52F2e2fdb1963Eab30438024864c313F6",
+      "scannedAt": "2026-09-25T20:31:03.193Z",
+      "snapshotBlock": "26056865",
+      "nfts": 379,
+      "holders": 97,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 15
+    },
+    {
+      "name": "CryptoPunks (wrapped, 721)",
+      "chainId": 1,
+      "address": "0x000000000000003607fce1aC9e043a86675C5C2F",
+      "scannedAt": "2026-09-25T20:31:07.622Z",
+      "snapshotBlock": "26056866",
+      "nfts": 287,
+      "holders": 59,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 14
+    },
+    {
+      "name": "Bored Ape Yacht Club",
+      "chainId": 1,
+      "address": "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D",
+      "scannedAt": "2026-09-25T20:35:42.149Z",
+      "snapshotBlock": "26056866",
+      "nfts": 9997,
+      "holders": 5429,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 98
+    },
+    {
+      "name": "Argonauts",
+      "chainId": 1,
+      "address": "0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C",
+      "scannedAt": "2026-09-25T20:37:42.724Z",
+      "snapshotBlock": "26056888",
+      "nfts": 9978,
+      "holders": 2366,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 25
+    },
+    {
+      "name": "Creepz by OVERLORD",
+      "chainId": 1,
+      "address": "0x5946aeAAB44e65Eb370FFaa6a7EF2218Cff9b47D",
+      "scannedAt": "2026-09-25T20:39:30.771Z",
+      "snapshotBlock": "26056897",
+      "nfts": 11112,
+      "holders": 2122,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 12
+    },
+    {
+      "name": "Pudgy Penguins",
+      "chainId": 1,
+      "address": "0xBd3531dA5CF5857e7CfAA92426877b022e612cf8",
+      "scannedAt": "2026-09-25T20:43:43.438Z",
+      "snapshotBlock": "26056906",
+      "nfts": 8888,
+      "holders": 4963,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 64
+    },
+    {
+      "name": "Mutant Ape Yacht Club",
+      "chainId": 1,
+      "address": "0x60E4d786628Fea6478F785A6d7e704777c86a7c6",
+      "scannedAt": "2026-09-25T20:53:45.075Z",
+      "snapshotBlock": "26056927",
+      "nfts": 19568,
+      "holders": 11851,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 118
+    },
+    {
+      "name": "Milady Maker",
+      "chainId": 1,
+      "address": "0x5Af0D9827E0c53E4799BB226655A1de152A425a5",
+      "scannedAt": "2026-09-25T20:58:01.599Z",
+      "snapshotBlock": "26056977",
+      "nfts": 9976,
+      "holders": 5017,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 88
+    },
+    {
+      "name": "VeeFriends",
+      "chainId": 1,
+      "address": "0xa3AEe8BcE55BEeA1951EF834b99f3Ac60d1ABeeB",
+      "scannedAt": "2026-09-25T21:01:53.204Z",
+      "snapshotBlock": "26056998",
+      "nfts": 10255,
+      "holders": 4573,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 28
+    },
+    {
+      "name": "Good Vibes Club",
+      "chainId": 1,
+      "address": "0xB8Ea78fcaCEf50d41375E44E6814ebbA36Bb33c4",
+      "scannedAt": "2026-09-25T21:03:15.156Z",
+      "snapshotBlock": "26057018",
+      "nfts": 6968,
+      "holders": 1616,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 12
+    },
+    {
+      "name": "Lil Pudgys",
+      "chainId": 1,
+      "address": "0x524cAB2ec69124574082676e6F654a18df49A048",
+      "scannedAt": "2026-09-25T21:11:57.153Z",
+      "snapshotBlock": "26057025",
+      "nfts": 21929,
+      "holders": 10313,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 83
+    },
+    {
+      "name": "Azuki",
+      "chainId": 1,
+      "address": "0xED5AF388653567Af2F388E6224dC7C4b3241C544",
+      "scannedAt": "2026-09-25T21:15:35.025Z",
+      "snapshotBlock": "26057067",
+      "nfts": 10000,
+      "holders": 4283,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 50
+    },
+    {
+      "name": "Nakamigos",
+      "chainId": 1,
+      "address": "0xd774557b647330C91Bf44cfEAB205095f7E6c367",
+      "scannedAt": "2026-09-25T21:19:57.090Z",
+      "snapshotBlock": "26057085",
+      "nfts": 19928,
+      "holders": 5134,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 49
+    },
+    {
+      "name": "CLONE X",
+      "chainId": 1,
+      "address": "0x49cF6f5d44E70224e2E23fDcdd2C053F30aDA28B",
+      "scannedAt": "2026-09-25T21:27:33.540Z",
+      "snapshotBlock": "26057107",
+      "nfts": 19764,
+      "holders": 9022,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 71
+    },
+    {
+      "name": "Meebits",
+      "chainId": 1,
+      "address": "0x7Bd29408f11D2bFC23c34f18275bBf23bB716Bc7",
+      "scannedAt": "2026-09-25T21:32:50.182Z",
+      "snapshotBlock": "26057145",
+      "nfts": 19999,
+      "holders": 6189,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 102
+    },
+    {
+      "name": "rektguy",
+      "chainId": 1,
+      "address": "0xB852c6b5892256C264Cc2C888eA462189154D8d7",
+      "scannedAt": "2026-09-25T21:35:43.498Z",
+      "snapshotBlock": "26057172",
+      "nfts": 8813,
+      "holders": 3407,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 38
+    },
+    {
+      "name": "mfers",
+      "chainId": 1,
+      "address": "0x79FCDEF22feeD20eDDacbB2587640e45491b757f",
+      "scannedAt": "2026-09-25T21:40:17.229Z",
+      "snapshotBlock": "26057186",
+      "nfts": 10019,
+      "holders": 5368,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 80
+    },
+    {
+      "name": "Chimpers Genesis",
+      "chainId": 1,
+      "address": "0x4D55109A17a6914130aCe90325dc98CF66EBfa00",
+      "scannedAt": "2026-09-25T21:40:21.332Z",
+      "snapshotBlock": "26057209",
+      "nfts": 99,
+      "holders": 74,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 3
+    },
+    {
+      "name": "ON THE WALL",
+      "chainId": 1,
+      "address": "0x21fA4C00E1D6d3cc0237a7Dfe3E107F1b2896c85",
+      "scannedAt": "2026-09-25T21:40:28.265Z",
+      "snapshotBlock": "26057209",
+      "nfts": 180,
+      "holders": 136,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 0
+    },
+    {
+      "name": "JPEG Frens",
+      "chainId": 1,
+      "address": "0xe31703379E32CAd7502a594a854a76F9bb0bE0e5",
+      "scannedAt": "2026-09-25T21:42:00.479Z",
+      "snapshotBlock": "26057210",
+      "nfts": 9125,
+      "holders": 1804,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 2
+    },
+    {
+      "name": "a KID called BEAST",
+      "chainId": 1,
+      "address": "0x77372a4cc66063575b05b44481F059BE356964A4",
+      "scannedAt": "2026-09-25T21:44:20.941Z",
+      "snapshotBlock": "26057217",
+      "nfts": 9999,
+      "holders": 2772,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 18
+    },
+    {
+      "name": "BOOA",
+      "chainId": 1,
+      "address": "0xbc48fD45aAaf6549293056606397D351a100b222",
+      "scannedAt": "2026-09-25T21:44:50.240Z",
+      "snapshotBlock": "26057229",
+      "nfts": 2408,
+      "holders": 571,
+      "tokenBoundAccountsMerged": 0,
+      "contractsLeftOut": 0
+    }
+  ],
+  "holders": 71886,
+  "belowMinNfts": 44366,
+  "onEarlierStage": 863,
+  "wallets": 27520,
+  "maxFaces": 54177,
+  "leftOutContracts": 782,
+  "leftOutNfts": 16145,
+  "leftOut": [
+    {
+      "address": "0x250DC85178fB6859e9eE02c925d46AAb946a55E7",
+      "nfts": 2126
+    },
+    {
+      "address": "0x29469395eAf6f95920E59F858042f0e28D98a20B",
+      "nfts": 1703
+    },
+    {
+      "address": "0xf41B389E0C1950dc0B16C9498eaE77131CC08A56",
+      "nfts": 917
+    },
+    {
+      "address": "0x958C41181182e76F221331b2755b77D9e1426A98",
+      "nfts": 882
+    },
+    {
+      "address": "0x263f8b4a146E85d8fd2BB42bE7fac5aaB0Ba3b7F",
+      "nfts": 829
+    },
+    {
+      "address": "0xB88F61E6FbdA83fbfffAbE364112137480398018",
+      "nfts": 722
+    },
+    {
+      "address": "0xE5C30Df7360E1dC7d0272696Ca4D5c766B987314",
+      "nfts": 659
+    },
+    {
+      "address": "0x823dE2c44369e94CAc3DA789Ad4b6493e27e4Bfe",
+      "nfts": 485
+    },
+    {
+      "address": "0x72e36D22717e7Bd70ac1A148F578b78e05dAce73",
+      "nfts": 432
+    },
+    {
+      "address": "0xA858DDc0445d8131daC4d1DE01f834ffcbA52Ef1",
+      "nfts": 414
+    },
+    {
+      "address": "0xb7F7F6C52F2e2fdb1963Eab30438024864c313F6",
+      "nfts": 379
+    },
+    {
+      "address": "0x641927E970222B10b2E8CDBC96b1B4F427316f16",
+      "nfts": 348
+    },
+    {
+      "address": "0x0F5D5751D4f300c3D0adBCAdc05f0Af4f8Baf788",
+      "nfts": 292
+    },
+    {
+      "address": "0x000000000000003607fce1aC9e043a86675C5C2F",
+      "nfts": 287
+    },
+    {
+      "address": "0xd0cC2b0eFb168bFe1f94a948D8df70FA10257196",
+      "nfts": 283
+    },
+    {
+      "address": "0x673A039f6a959Fa9dB65D16781e6deFDe30375D9",
+      "nfts": 187
+    },
+    {
+      "address": "0x611747CC4576aAb44f602a65dF3557150C214493",
+      "nfts": 181
+    },
+    {
+      "address": "0x184239FDB0858570B41775CbC6D66Ba29241Cf87",
+      "nfts": 161
+    },
+    {
+      "address": "0xd46C8648F2ac4Ce1A1aace620460fbd24F640853",
+      "nfts": 158
+    },
+    {
+      "address": "0xC9b2c00f31B210FCea1242D91307A5B1e3b2Be68",
+      "nfts": 150
+    },
+    {
+      "address": "0xF395767ae0e947504651a33aC2899520c551955D",
+      "nfts": 138
+    },
+    {
+      "address": "0xC67DB0dF922238979DA0fD00D46016E8Ae14ceCb",
+      "nfts": 118
+    },
+    {
+      "address": "0xC36E589D071a5177E2Cf659025F75fe1DA027B82",
+      "nfts": 117
+    },
+    {
+      "address": "0x53b635987dD9269a681E668BFe67F1037e971cF1",
+      "nfts": 105
+    },
+    {
+      "address": "0x2D50bF6334152DBdA8Bed2f50e5a0d8456Bd47b3",
+      "nfts": 103
+    },
+    {
+      "address": "0x29A1D37d7c5fbB68d1ACF825E04d3FF448D1088e",
+      "nfts": 101
+    },
+    {
+      "address": "0x419894cb1B4E04f4521fd79e470a379066F0149e",
+      "nfts": 99
+    },
+    {
+      "address": "0x98E711f31E49C2e50C1A290b6F2b1e493E43EA76",
+      "nfts": 97
+    },
+    {
+      "address": "0x9ddbdcD3C5123E673E4B96992101F8CEafCd95A0",
+      "nfts": 91
+    },
+    {
+      "address": "0xaAa2DA255DF9Ee74C7075bCB6D81f97940908A5D",
+      "nfts": 88
+    },
+    {
+      "address": "0xb4C5b5235b98114E9DC227b54e088C11680b2385",
+      "nfts": 87
+    },
+    {
+      "address": "0xc6400A5584db71e41B0E5dFbdC769b54B91256CD",
+      "nfts": 85
+    },
+    {
+      "address": "0x196c85df5d7e722bC259c530c0F8F56D46F19EF1",
+      "nfts": 70
+    },
+    {
+      "address": "0x37AEFd2754dC85426335E33911EfC3cE31E22C90",
+      "nfts": 69
+    },
+    {
+      "address": "0x21130E908bba2d41B63fbca7caA131285b8724F8",
+      "nfts": 69
+    },
+    {
+      "address": "0x931E8194D361571cC8476b15f8cE2f6e72d593F5",
+      "nfts": 62
+    },
+    {
+      "address": "0xB3d6e9e142A785ea8a4F0050fee73Bcc3438c5C5",
+      "nfts": 58
+    },
+    {
+      "address": "0xecA12A0b92e8Cc1e171226DB929f261F51A4614f",
+      "nfts": 58
+    },
+    {
+      "address": "0x6b4DF334368b09f87B3722449703060EEf284126",
+      "nfts": 54
+    },
+    {
+      "address": "0x8037d5bE892912fb72a1233B1B7CAd5aca16AE2d",
+      "nfts": 50
+    },
+    {
+      "address": "0xd134029b301a820C137b5E7854bd21b83a6a7EAe",
+      "nfts": 47
+    },
+    {
+      "address": "0x33a9A08354d4964ffCEA90686f2999b02b2f81A6",
+      "nfts": 45
+    },
+    {
+      "address": "0x8799198Df84E5dd8d788aDbB3E986A222e3dd714",
+      "nfts": 44
+    },
+    {
+      "address": "0x6Bf609583Cd3cFA2393C535CA8C3F49fd23E00B3",
+      "nfts": 43
+    },
+    {
+      "address": "0x0FBC63632CB41A7C4242CA738b7532D9C1065Cc3",
+      "nfts": 41
+    },
+    {
+      "address": "0x6CcD607e6E2cc97574Acd5ab0f2b4D24C7F2A061",
+      "nfts": 38
+    },
+    {
+      "address": "0x1244EAe9FA2c064453B5F605d708C0a0Bfba4838",
+      "nfts": 37
+    },
+    {
+      "address": "0x88f7A4764770f92E6F2A590E87f598097591aDB6",
+      "nfts": 36
+    },
+    {
+      "address": "0xDF7A2593A70fF1e69b5a20644Ae848558A2F7C86",
+      "nfts": 34
+    },
+    {
+      "address": "0x2aE6B0630EBb4D155C6e04fCB16840FFA77760AA",
+      "nfts": 33
+    }
+  ]
+}

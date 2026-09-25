@@ -5,6 +5,7 @@ import { decode, svgDataURI, setDataURI, PIECES, SINGLES } from "./render.js";
 import { journal, longestStares, completedSets, fmtDay, openApprovals } from "./journal.js";
 import { holderPanel, knownTokens } from "./agent-ui.js";
 import { hunt } from "./hunter.js";
+import { route as tradeRoute } from "./actions.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 
@@ -283,9 +284,9 @@ function renderTraits() {
 // =====================================================================================
 async function renderSplit() {
   const parts = [
-    { pct: 40, name: "Seed vault", desc: "A contract that can only buy the basket tokens for the Faces, at Chainlink-checked prices. The product promise." },
-    { pct: 25, name: "Treasury", desc: "Multisig: art, site, market making." },
-    { pct: 20, name: "Team", desc: "Streams through a 6-month linear vesting contract. No floor dumps." },
+    { pct: 50, name: "Seed vault", desc: "A contract that can only buy the basket tokens for the Faces, at Chainlink-checked prices. The product promise." },
+    { pct: 20, name: "Treasury", desc: "Multisig: art, site, audit, market making." },
+    { pct: 15, name: "Team", desc: "Streams through a 6-month linear vesting contract. No floor dumps." },
     { pct: 15, name: "Growth", desc: "Collabs and growth." },
   ];
   if (!state.preview) {
@@ -375,7 +376,14 @@ const FRIENDLY = {
   AccountIsLocked: "This Face's account is locked.",
   InvalidLock: "A lock can only be extended, up to 365 days.",
   InvalidAgentConfig: "Check the agent address, expiry and calls (the account itself can't be a target).",
-  InsufficientPool: "The seed pool is being refilled. Try again later.",
+  InsufficientPool: "The seed pool is short of a token: try again, the seed vault buys it first.",
+  NothingToRestock: "The pool already holds what this needs.",
+  SetIsFused: "This piece is fused into its set for good: it only moves with the Face that holds it.",
+  NotTheHolder: "Only the wallet that holds this Face can do that.",
+  SetAlreadyFused: "This set is already fused.",
+  PollClosed: "This question is closed.",
+  VaultEmpty: "The seed vault has no ETH left to buy it: the treasury can send ETH to the vault, or anyone can send the token to the pool.",
+  StalePrice: "Stock prices aren't fresh (markets closed): buying waits for the next trading day.",
   NotUpgradeable: "Nothing to upgrade for this Face.",
   OwnershipCycle: "That would put a Face inside itself. Move the pieces into one Face only.",
   SetNotAssembled: "The other three pieces must be inside this Face's account first.",
@@ -481,7 +489,7 @@ async function showFace(id) {
     const accLink = explorer(`address/${seed.account}`);
     $("#face-owner").innerHTML = `<b>holder</b>${esc(owner)}`;
     $("#face-account").innerHTML = `<b>account</b>${accLink ? `<a href="${accLink}" target="_blank" rel="noopener">${seed.account}</a>` : seed.account} · <span class="neon">${seed.tier ? TIERS[seed.tier] : "Unrevealed"}</span>`;
-    const show = (a) => (a.display_type === "date" ? new Date(a.value * 1000).toISOString().slice(0, 10) : a.value);
+    const show = (a) => (a.display_type === "date" ? new Date(a.value * 1000).toISOString().slice(0, 10) : a.trait_type === "Set" ? `#${a.value}` : a.value);
     $("#face-traits").innerHTML = meta.attributes.map((a) => `<div><span>${esc(a.trait_type)}</span>${esc(show(a))}</div>`).join("");
 
     // balances: seed tokens (always) + any tradable token the account holds + ETH
@@ -507,13 +515,13 @@ async function showFace(id) {
       const btn = document.createElement("button");
       btn.className = "btn btn-neon";
       btn.textContent = label;
-      btn.onclick = () => send(state.dep.seeder, ABI.seeder, fn, [BigInt(id)], () => showFace(id));
+      btn.onclick = () => deliver(fn, id, () => showFace(id));
       $("#face-actions").appendChild(btn);
     };
     if (!seed.activated) act("Activate this Face", "activate");
     else if (!seed.funded) act("Seed pending: deliver it", "fund");
     if (seed.tier >= 2 && !seed.upgraded) act(`Deliver the ${TIERS[seed.tier]} top-up`, "upgrade");
-    if (seed.tier) await setPanel(id, owner, seed.account).catch(() => {});
+    if ($("#face-actions").children.length) keeperNote($("#face-actions"));
     journal(id, seed.account)
       .then((entries) => {
         if (entries.length) $("#face-journal").innerHTML = entries.slice(0, 40).map((e) => `<li><time>${fmtDay(e.t)}</time>${esc(e.text)}</li>`).join("");
@@ -528,6 +536,7 @@ async function showFace(id) {
       lockedUntil = await readAt(seed.account, "account", "effectiveLockedUntil"); // its own lock or the Face it sits in
     }
     const lockedNow = Number(lockedUntil) * 1000 > Date.now();
+    if (seed.tier) await setPanel(id, owner, seed.account, lockedNow).catch(() => {});
     const [agent, , expiry, active, allowance] = agentInfo ?? [];
     $("#face-agent").innerHTML =
       (!deployed
@@ -587,21 +596,32 @@ async function bonusLegs(id) {
 }
 
 // ---- set panel: where the four pieces are, assemble / take apart, the one-time bonus ----
-async function setPanel(id, owner, account) {
+async function setPanel(id, owner, account, lockedNow) {
   const [setId, piece, members] = await read("seeder", "setOf", [BigInt(id)]);
   if (!setId) return;
   const el = $("#face-set");
   const ids = members.map(Number);
-  const [owners, accounts, assembledHere, bonus, sealed] = await Promise.all([
+  const [owners, accounts, assembledHere, bonus, sealed, fusedInfo] = await Promise.all([
     Promise.all(ids.map((m) => read("faces", "ownerOf", [BigInt(m)]))),
     Promise.all(ids.map((m) => read("seeder", "accountOf", [BigInt(m)]))),
     read("seeder", "isAssembled", [BigInt(id)]),
     read("seeder", "setBonus", [setId]),
     readAt(state.dep.art, "art", "isSealed").catch(() => false),
+    read("seeder", "fusedSet", [setId]).catch(() => [0, 0n]),
   ]);
+  const fused = Number(fusedInfo[0]) !== 0;
+  const fusedHere = Number(fusedInfo[0]) === id;
   const recs = sealed ? await Promise.all(ids.map((_, q) => readAt(state.dep.art, "art", "artData", [BigInt(SINGLES + 4 * (Number(setId) - 1) + q)]))) : null;
   const lc = (a) => a.toLowerCase();
   const me = state.account && lc(state.account);
+  const mine = me && lc(owner) === me;
+  // an anchor inside another Face's account: its holder acts through that account (execute)
+  const viaAccount = !mine && me && lc((await readAt(owner, "account", "holder").catch(() => null)) ?? "") === me ? owner : null;
+  const control = mine || !!viaAccount;
+  const act = (target, abi, functionName, args, done) =>
+    viaAccount
+      ? send(viaAccount, ABI.accountExec, "executeBatch", [[{ target, value: 0n, data: encodeFunctionData({ abi, functionName, args }) }], 0], done)
+      : send(target, abi, functionName, args, done);
   // where each piece is: in this Face's account, inside another piece, or with a holder
   const where = (q) => {
     if (ids[q] === id) return "this Face";
@@ -615,12 +635,18 @@ async function setPanel(id, owner, account) {
       .map((m, q) => `<div class="piece${m === id ? " here" : ""}">${recs ? `<img src="${svgDataURI(SINGLES + 4 * (Number(setId) - 1) + q, recs[q])}" alt="">` : ""}
         <a href="/face/${m}" data-link><b>#${m}</b></a>${esc(PIECES[q])}<br>${esc(where(q))}${os && (!me || lc(owners[q]) !== me) && m !== id ? `<br><a href="${os}/${state.dep.faces}/${m}" target="_blank" rel="noopener">OpenSea ↗</a>` : ""}</div>`)
       .join("")}</div>
-    <p class="fine">${assembledHere
-      ? `Assembled: this Face holds the other three pieces and shows the whole face. Selling it sells the set.`
-      : `Assemble the set by moving the other three pieces into one piece's account: that Face then shows the whole face.`}
-    ${Number(bonus[0]) ? ` Set bonus paid to #${bonus[0]}.` : " The first assembly earns a one-time bonus basket."}</p>
+    <p class="fine">${fusedHere
+      ? `Fused for good on ${fmtDate(fusedInfo[1])}: the three pieces can never leave this Face, so the set only changes hands whole.${lockedNow ? "" : control ? " Their baskets can still move: lock it before listing, so buyers see they stay." : ' <b class="badge warn">Not locked</b>: the pieces stay, but the baskets inside can still be withdrawn before a sale completes.'}`
+      : fused
+        ? `Fused for good inside <a href="/face/${fusedInfo[0]}" data-link>Face #${fusedInfo[0]}</a>: this piece only changes hands with it.`
+        : assembledHere
+          ? `Assembled: this Face holds the other three pieces and shows the whole face. Selling it sells the set.${lockedNow ? "" : control ? " Listing it? Lock it first on this page, so buyers can see the pieces can't leave before the sale." : ' <b class="badge warn">Not locked</b>: the holder can still take the pieces out before a sale completes. Ask for a lock before buying.'}`
+          : `Assemble the set by moving the other three pieces into one piece's account: that Face then shows the whole face.`}
+    ${Number(bonus[0]) ? ` Set bonus paid to #${bonus[0]}.` : " The first assembly earns a one-time bonus basket, delivered with the last piece."}</p>
+    <div class="set-total" hidden></div>
     <div class="face-actions"></div>`;
   $("#face-set").hidden = false;
+  if (assembledHere) setTotal(el.querySelector(".set-total"), accounts).catch(() => {});
   const actions = el.querySelector(".face-actions");
   const button = (label, fn) => {
     const b = document.createElement("button");
@@ -630,7 +656,6 @@ async function setPanel(id, owner, account) {
     actions.appendChild(b);
   };
   const reload = () => showFace(id);
-  const mine = me && lc(owner) === me;
   const others = ids.filter((m) => m !== id);
   if (mine && !assembledHere && others.every((m) => lc(owners[ids.indexOf(m)]) === me)) {
     button("Assemble here (3 transfers)", async () => {
@@ -638,7 +663,8 @@ async function setPanel(id, owner, account) {
         toast(`Moving #${m} into #${id}…`);
         if (!(await send(state.dep.faces, ABI.faces, "safeTransferFrom", [state.account, account, BigInt(m)]))) return reload();
       }
-      if (!Number(bonus[0])) await send(state.dep.seeder, ABI.seeder, "claimSetBonus", [BigInt(id)]);
+      // the last transfer delivers the bonus itself; claim only if the pool was short at that moment
+      if (await read("seeder", "setBonusDue", [BigInt(id)]).catch(() => false)) await deliver("claimSetBonus", id);
       reload();
     });
   } else if (mine && !assembledHere) {
@@ -647,7 +673,15 @@ async function setPanel(id, owner, account) {
       ? ` To assemble here, first take the set apart on the Face that holds ${inside.map((m) => `#${m}`).join(", ")}.`
       : " Hold all four pieces in this wallet to assemble.");
   }
-  if (mine && assembledHere) {
+  if (control && assembledHere && !fused) {
+    button("Fuse for good", () => {
+      if (!confirm(`Fuse set #${setId} into Face #${id} for good?
+
+The three pieces can never leave this Face again: the set will only ever change hands whole, and the whole face gets its fused frame. This can't be undone.`)) return;
+      act(state.dep.seeder, ABI.seeder, "fuse", [BigInt(id)], reload);
+    });
+  }
+  if (mine && assembledHere && !fused) {
     button("Take apart", () =>
       send(account, ABI.accountExec, "executeBatch", [
         others.map((m) => ({ target: state.dep.faces, value: 0n, data: encodeFunctionData({ abi: ABI.faces, functionName: "transferFrom", args: [account, state.account, BigInt(m)] }) })),
@@ -655,7 +689,114 @@ async function setPanel(id, owner, account) {
       ], reload),
     );
   }
-  if (assembledHere && !Number(bonus[0])) button("Deliver the set bonus", () => send(state.dep.seeder, ABI.seeder, "claimSetBonus", [BigInt(id)], reload));
+  if (assembledHere && !Number(bonus[0])) button("Deliver the set bonus", () => deliver("claimSetBonus", id, reload));
+  if (control && assembledHere) sayPanel(el, id, setId, act, reload).catch(() => {});
+}
+
+/** Polls asked to the assembled sets (NeonSetVotes), newest first, with their results. */
+async function polls(limit = 3) {
+  if (!state.dep?.setVotes) return [];
+  const n = Number(await read("setVotes", "pollCount"));
+  const out = [];
+  for (let i = n - 1; i >= 0 && out.length < limit; i--) {
+    const [question, choices, start, end, votes, counts] = await read("setVotes", "poll", [BigInt(i)]);
+    const now = Date.now() / 1000;
+    out.push({ id: i, question, choices, start: Number(start), end: Number(end), votes: Number(votes), counts: counts.map(Number), open: now >= Number(start) && now < Number(end) });
+  }
+  return out;
+}
+
+const pollHTML = (p, mineVote) =>
+  `<div class="poll"><p><b>${esc(p.question)}</b><br><span class="fine">${p.open ? `open until ${fmtDate(p.end)} UTC` : `closed ${fmtDate(p.end)} UTC`} · ${p.votes} set${p.votes === 1 ? "" : "s"} voted</span></p>${p.choices
+    .map((c, i) => {
+      const pct = p.votes ? Math.round((100 * p.counts[i]) / p.votes) : 0;
+      return `<div class="poll-row${mineVote === i ? " mine" : ""}"><span>${esc(c)}</span><b>${p.counts[i]}</b><i style="width:${pct}%"></i></div>`;
+    })
+    .join("")}</div>`;
+
+async function setupSay() {
+  const list = await polls();
+  if (!list.length) return;
+  $("#say-list").innerHTML =
+    list.map((p) => pollHTML(p)).join("") +
+    (list.some((p) => p.open) ? `<p class="fine">Hold an assembled set? Vote from the page of the Face that holds it.</p>` : "");
+  $("#say").hidden = false;
+}
+
+/** On an assembled set you hold: vote in the open polls (the set votes; you can change it until the poll ends). */
+async function sayPanel(el, id, setId, act, reload) {
+  for (const p of (await polls()).filter((x) => x.open)) {
+    const mineVote = Number(await read("setVotes", "voteOf", [BigInt(p.id), setId]));
+    const box = document.createElement("div");
+    box.className = "say";
+    box.innerHTML = `<h4>The sets' say</h4>${pollHTML(p, mineVote)}<div class="face-actions"></div>`;
+    for (const [i, c] of p.choices.entries()) {
+      const b = document.createElement("button");
+      b.className = mineVote === i ? "btn btn-ghost" : "btn btn-neon";
+      b.textContent = mineVote === i ? `${c} (this set's vote)` : `Vote ${c}`;
+      b.disabled = mineVote === i;
+      b.onclick = () => act(state.dep.setVotes, ABI.setVotes, "vote", [BigInt(p.id), BigInt(id), BigInt(i)], reload);
+      box.querySelector(".face-actions").appendChild(b);
+    }
+    el.appendChild(box);
+  }
+}
+
+/** What the whole assembled set holds: this Face's account plus the three pieces inside it, all of which change
+ *  hands with this Face. Marketplaces only show the anchor's own balances. */
+async function setTotal(el, accounts) {
+  const tokens = [...new Set((await knownTokens()).map((t) => t.toLowerCase()))];
+  const rows = (
+    await Promise.all(
+      tokens.map(async (t) => {
+        const [bals, sym, dec] = await Promise.all([
+          Promise.all(accounts.map((a) => readAt(t, "erc20", "balanceOf", [a]))),
+          readAt(t, "erc20", "symbol").catch(() => "?"),
+          readAt(t, "erc20", "decimals").catch(() => 18),
+        ]);
+        return { sym, v: bals.reduce((x, y) => x + y, 0n), dec };
+      }),
+    )
+  ).filter((r) => r.v > 0n);
+  const eth = (await Promise.all(accounts.map((a) => state.pub.getBalance({ address: a })))).reduce((x, y) => x + y, 0n);
+  if (eth > 0n) rows.push({ sym: "ETH", v: eth, dec: 18 });
+  if (!rows.length) return;
+  el.innerHTML = `<h4>The whole set holds</h4><p class="fine">This Face and the three pieces inside it, each with its own basket: all of it changes hands with this Face.</p><div class="balances">${rows
+    .map((b) => `<div class="bal"><span>${esc(b.sym)}</span><b>${Number(formatUnits(b.v, b.dec)).toLocaleString("en-US", { maximumFractionDigits: 6 })}</b></div>`)
+    .join("")}</div>`;
+  el.hidden = false;
+}
+
+/** Under pending deliveries: who delivers them, and that nobody has to wait for anyone. */
+function keeperNote(el) {
+  const p = document.createElement("p");
+  p.className = "fine";
+  p.textContent = "The keeper delivers this within minutes. Still pending after an hour? Deliver it yourself here: if the pool is short, the seed vault buys what is missing first.";
+  el.appendChild(p);
+}
+
+/** A permissionless delivery (fund / upgrade / claimSetBonus). If the pool is short of a token, first make the seed
+ *  vault buy it (`restock`: anyone can, only what Faces are owed, at Chainlink-checked prices), then deliver: no
+ *  delivery has to wait for the keeper. */
+async function deliver(fn, id, done) {
+  for (let tries = 0; tries < 8; tries++) {
+    try {
+      if (!state.account) await doConnect();
+      await ensureChain();
+      await state.pub.simulateContract({ address: state.dep.seeder, abi: ABI.seeder, functionName: fn, args: [BigInt(id)], account: state.account });
+    } catch (e) {
+      const rev = e?.walk?.((x) => x.name === "ContractFunctionRevertedError");
+      if (rev?.data?.errorName !== "InsufficientPool") return toast(errMsg(e));
+      const token = rev.data.args[0];
+      const t = (state.dep.tradeTokens ?? []).find((x) => x.address.toLowerCase() === token.toLowerCase());
+      if (!t) return toast(errMsg(e));
+      toast(`The pool is short of ${t.symbol}: the seed vault buys it first…`);
+      const { path, fees } = tradeRoute(state.dep, { symbol: "ETH" }, t);
+      if (!(await send(state.dep.seedVault, ABI.seedVault, "restock", [path, fees]))) return;
+      continue;
+    }
+    return send(state.dep.seeder, ABI.seeder, fn, [BigInt(id)], done);
+  }
 }
 
 async function send(address, abi, functionName, args, done) {
@@ -676,3 +817,6 @@ async function send(address, abi, functionName, args, done) {
     return false;
   }
 }
+
+// after every declaration above (top-level await: earlier calls could reach consts still in their TDZ)
+setupSay().catch(() => {});

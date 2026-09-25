@@ -109,73 +109,73 @@
     {
       "name": "Base / TSLA",
       "legs": {
-        "TSLA": 3.0
+        "TSLA": 5.0
       }
     },
     {
       "name": "Base / NVDA",
       "legs": {
-        "NVDA": 3.0
+        "NVDA": 5.0
       }
     },
     {
       "name": "Base / AAPL",
       "legs": {
-        "AAPL": 3.0
+        "AAPL": 5.0
       }
     },
     {
       "name": "Base / AMZN",
       "legs": {
-        "AMZN": 3.0
+        "AMZN": 5.0
       }
     },
     {
       "name": "Base / MSFT",
       "legs": {
-        "MSFT": 3.0
+        "MSFT": 5.0
       }
     },
     {
       "name": "Watch top-up / NVDA + USDG",
       "legs": {
-        "NVDA": 9.0,
-        "USDG": 3.0
+        "NVDA": 10.0,
+        "USDG": 4.0
       }
     },
     {
       "name": "Watch top-up / GOOGL + USDG",
       "legs": {
-        "GOOGL": 9.0,
-        "USDG": 3.0
+        "GOOGL": 10.0,
+        "USDG": 4.0
       }
     },
     {
       "name": "Watch top-up / META + USDG",
       "legs": {
-        "META": 9.0,
-        "USDG": 3.0
+        "META": 10.0,
+        "USDG": 4.0
       }
     },
     {
       "name": "Heavy Stare top-up / Multi-asset",
       "legs": {
-        "SPY": 12.0,
-        "QQQ": 8.0,
-        "NVDA": 6.0,
-        "GLD": 10.0,
-        "CBBTC": 10.0,
-        "SLV": 6.0,
+        "SPY": 15.0,
+        "QQQ": 11.0,
+        "NVDA": 7.0,
+        "GLD": 13.0,
+        "CBBTC": 12.0,
+        "SLV": 7.0,
         "USO": 5.0
       }
     },
     {
       "name": "Set bonus / SPCX + GOOGL + META + MSFT",
       "legs": {
-        "SPCX": 2.5,
-        "GOOGL": 2.5,
-        "META": 2.5,
-        "MSFT": 2.5
+        "SPCX": 3.0,
+        "GOOGL": 3.0,
+        "META": 3.0,
+        "MSFT": 3.0
       }
     }
   ],

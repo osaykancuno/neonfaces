@@ -11,8 +11,9 @@
 //   reveal-request                       NeonFaces.requestReveal (then anyone calls reveal() after 5 blocks)
 //   lock-seeder                          NeonSeeder.lockConfig (baskets become immutable)
 //   freeze-metadata                      NeonFaces.freezeMetadata (renderer can never change again)
-//   release                              NeonPayout.releaseAll (push the 40/25/20/15 split; anyone can)
+//   release                              NeonPayout.releaseAll (push the 50/20/15/15 split; anyone can)
 //   vault-surplus <eth>                  NeonSeedVault.releaseSurplus: leftover seed ETH to the treasury (after lock-seeder)
+//   poll <days> "<question>" "<choice>"... NeonSetVotes.createPoll: ask the assembled sets (2 to 8 choices, opens now)
 //
 // Sale stages, prices and allowlists are configured in OpenSea Studio, not here.
 // Output: ../safe/<chainId>-<action>.json -> import it in the Safe app (Apps > Transaction Builder).
@@ -40,6 +41,7 @@ const abi = parseAbi([
   "function freezeMetadata()",
   "function releaseAll()",
   "function releaseSurplus(uint256 amount)",
+  "function createPoll(string question, string[] choices, uint64 start, uint64 end) returns (uint256)",
 ]);
 const tx = (to, functionName, args = []) => ({
   to,
@@ -89,6 +91,16 @@ switch (action) {
     if (!args[0]) throw new Error("vault-surplus <eth>");
     txs = [tx(dep.seedVault, "releaseSurplus", [parseEther(args[0])])];
     break;
+  case "poll": {
+    const [daysArg, question, ...choices] = args;
+    const days = Number(daysArg);
+    if (!dep.setVotes) throw new Error("deployments file has no setVotes");
+    if (!(days > 0) || !question || choices.length < 2 || choices.length > 8) throw new Error('poll <days> "<question>" "<choice 1>" "<choice 2>" ... (2 to 8 choices)');
+    // open as soon as the Safe executes it, closes <days> after this batch was built
+    const start = BigInt(Math.floor(Date.now() / 1000));
+    txs = [tx(dep.setVotes, "createPoll", [question, choices, start, start + BigInt(Math.round(days * 86400))])];
+    break;
+  }
   default:
     throw new Error(`unknown action ${action}`);
 }

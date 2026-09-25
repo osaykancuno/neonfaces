@@ -9,6 +9,7 @@ const EV = {
   seeded: parseAbiItem("event FaceSeeded(uint256 indexed tokenId, address indexed account, uint32 indexed basketId)"),
   upgraded: parseAbiItem("event FaceUpgraded(uint256 indexed tokenId, address indexed account, uint8 tier, uint32 indexed basketId)"),
   bonus: parseAbiItem("event SetBonusPaidTo(uint256 indexed setId, uint256 indexed anchorId, address indexed account, uint32 basketId)"),
+  fused: parseAbiItem("event SetFused(uint256 indexed setId, uint256 indexed anchorId)"),
   agentSet: parseAbiItem("event AgentSet(address indexed agent, address indexed grantor, uint64 expiry, uint64 epoch, uint256 valueAllowance)"),
   agentRevoked: parseAbiItem("event AgentRevoked(uint64 epoch)"),
   locked: parseAbiItem("event AccountLocked(uint64 until)"),
@@ -97,11 +98,12 @@ export async function openApprovals(accounts, tokens) {
 export async function journal(id, account) {
   const d = state.dep;
   const idn = BigInt(id);
-  const [xfers, seeded, upgraded, bonus, agentSet, agentRevoked, locked, traded, notes, strategies] = await Promise.all([
+  const [xfers, seeded, upgraded, bonus, fused, agentSet, agentRevoked, locked, traded, notes, strategies] = await Promise.all([
     logs(d.faces, EV.transfer, { tokenId: idn }),
     logs(d.seeder, EV.seeded, { tokenId: idn }),
     logs(d.seeder, EV.upgraded, { tokenId: idn }),
     logs(d.seeder, EV.bonus, { anchorId: idn }),
+    logs(d.seeder, EV.fused, { anchorId: idn }),
     logs(account, EV.agentSet),
     logs(account, EV.agentRevoked),
     logs(account, EV.locked),
@@ -119,6 +121,7 @@ export async function journal(id, account) {
   for (const l of seeded) await add(l, `Base seed delivered: ${await basketLabel(l.args.basketId)}.`);
   for (const l of upgraded) await add(l, `${TIER[l.args.tier]} top-up delivered: ${await basketLabel(l.args.basketId)}.`);
   for (const l of bonus) await add(l, `Set #${l.args.setId} assembled here for the first time. Set bonus delivered: ${await basketLabel(l.args.basketId)}.`);
+  for (const l of fused) await add(l, `Set #${l.args.setId} fused here for good: its pieces can never leave this Face.`);
   const agentName = (a) => (d.strategyAgent && a.toLowerCase() === d.strategyAgent.toLowerCase() ? "The NEONFACES strategy agent" : `Agent ${short(a)}`);
   for (const l of agentSet) await add(l, `${agentName(l.args.agent)} appointed until ${new Date(Number(l.args.expiry) * 1000).toISOString().slice(0, 10)}.`);
   for (const l of agentRevoked) await add(l, "Agent revoked.");

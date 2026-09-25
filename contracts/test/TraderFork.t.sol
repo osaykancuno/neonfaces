@@ -202,5 +202,16 @@ contract TraderForkTest is Test {
         vm.prank(keeper);
         vm.expectRevert(abi.encodeWithSelector(NeonSeedVault.NotBasketToken.selector, USDG));
         vault.buy(_path2(WETH, USDG), _fees1(100), 0.01 ether, 100);
+
+        // anyone restocks what the pool is short of, through the real pools, sized from Chainlink
+        uint256 held = IERC20(NVDA).balanceOf(address(seeder));
+        uint256 missing = 0.05e18;
+        vm.mockCall(address(seeder), abi.encodeCall(NeonSeeder.owed, (NVDA)), abi.encode(held + missing));
+        vm.prank(makeAddr("anyone"));
+        uint256 got = vault.restock(path, fees);
+        console2.log("NVDA restocked by anyone (1e18):", got);
+        assertGe(got, missing, "covers the shortfall");
+        assertLe(got, missing * 105 / 100, "and not much more");
+        assertEq(IERC20(NVDA).balanceOf(address(seeder)), held + got);
     }
 }

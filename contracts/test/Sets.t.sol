@@ -111,16 +111,23 @@ contract SetsTest is Base {
         _mintAndReveal(120);
         (uint256 setId, uint256[4] memory m) = _firstSet(120);
         assertFalse(seeder.isAssembled(m[0]));
+        assertFalse(seeder.setBonusDue(m[0]));
         vm.expectRevert(abi.encodeWithSelector(NeonSeeder.SetNotAssembled.selector, m[0]));
         seeder.claimSetBonus(m[0]);
 
-        address acc = _assemble(m, m[0]);
+        address acc = seeder.accountOf(m[0]);
+        uint256 before = spy.balanceOf(acc);
+        vm.startPrank(alice);
+        faces.safeTransferFrom(alice, acc, m[1]);
+        faces.safeTransferFrom(alice, acc, m[2]);
+        assertEq(spy.balanceOf(acc), before, "no bonus before the last piece");
+        vm.expectEmit(address(faces));
+        emit IERC4906.MetadataUpdate(m[0]); // marketplaces see the bonus at once
+        faces.safeTransferFrom(alice, acc, m[3]); // the last piece: the bonus comes in the same transaction
+        vm.stopPrank();
         assertTrue(seeder.isAssembled(m[0]));
         assertFalse(seeder.isAssembled(m[1]), "only the anchor is assembled");
-
-        uint256 before = spy.balanceOf(acc);
-        vm.prank(carol); // permissionless: the keeper claims it for every assembled set
-        seeder.claimSetBonus(m[0]);
+        assertFalse(seeder.setBonusDue(m[0]));
         assertEq(spy.balanceOf(acc) - before, 0.013e18);
         assertEq(usdg.balanceOf(acc), 3e6);
         (uint32 anchorId, uint32 basketId) = seeder.setBonus(setId);
@@ -145,6 +152,127 @@ contract SetsTest is Base {
         assertTrue(seeder.isAssembled(m[3]));
         vm.expectRevert(abi.encodeWithSelector(NeonSeeder.SetBonusAlreadyPaid.selector, setId));
         seeder.claimSetBonus(m[3]);
+    }
+
+    function test_Sets_ShortPoolNeverBlocksAssembly() public {
+        _mintAndReveal(120);
+        (uint256 setId, uint256[4] memory m) = _firstSet(120);
+        vm.startPrank(admin);
+        seeder.withdrawPool(address(spy), admin, spy.balanceOf(address(seeder))); // the pool can't pay the bonus
+        vm.stopPrank();
+        _assemble(m, m[0]); // the transfers still go through
+        assertTrue(seeder.isAssembled(m[0]));
+        assertTrue(seeder.setBonusDue(m[0]), "still owed");
+        // a Face from another set moving in doesn't retry the claim, nor need its gas budget
+        uint256 other = 1;
+        while (other == m[0] || other == m[1] || other == m[2] || other == m[3]) ++other;
+        address acc = seeder.accountOf(m[0]);
+        vm.prank(alice);
+        (bool ok,) = address(faces).call{gas: 400_000}(abi.encodeCall(faces.transferFrom, (alice, acc, other)));
+        assertTrue(ok, "unrelated move needs no bonus budget");
+        (uint32 anchorId,) = seeder.setBonus(setId);
+        assertEq(anchorId, 0);
+        spy.mint(address(seeder), 1e18); // restocked: anyone (the keeper, the site's button) delivers it
+        vm.prank(carol);
+        seeder.claimSetBonus(m[0]);
+        assertFalse(seeder.setBonusDue(m[0]));
+    }
+
+    /// Whatever gas the last transfer gets, it either pays the bonus or reverts: a wallet's gas estimate can never
+    /// land on a limit where the piece moves in and the bonus is quietly skipped.
+    function test_Sets_LastPieceNeverSkipsTheBonusForLackOfGas() public {
+        _mintAndReveal(120);
+        (uint256 setId, uint256[4] memory m) = _firstSet(120);
+        address acc = seeder.accountOf(m[0]);
+        vm.startPrank(alice);
+        faces.transferFrom(alice, acc, m[1]);
+        faces.transferFrom(alice, acc, m[2]);
+        vm.stopPrank();
+        uint256 paid;
+        for (uint256 g = 60_000; g <= 1_600_000; g += 20_000) {
+            uint256 snap = vm.snapshotState();
+            vm.prank(alice);
+            (bool ok,) = address(faces).call{gas: g}(abi.encodeCall(faces.transferFrom, (alice, acc, m[3])));
+            if (ok) {
+                (uint32 anchorId,) = seeder.setBonus(setId);
+                assertEq(anchorId, m[0], "moved in without its bonus");
+                ++paid;
+            }
+            vm.revertToState(snap);
+        }
+        assertGt(paid, 0, "enough gas pays it");
+    }
+
+    // ------------------------------------------------------------------
+    // Fusing: a set held together for good
+    // ------------------------------------------------------------------
+    function test_Fuse_OnlyTheHolderOfAnAssembledSet() public {
+        _mintAndReveal(120);
+        (uint256 setId, uint256[4] memory m) = _firstSet(120);
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(NeonSeeder.SetNotAssembled.selector, m[0]));
+        seeder.fuse(m[0]);
+        _assemble(m, m[0]);
+        vm.prank(bob);
+        vm.expectRevert(NeonSeeder.NotTheHolder.selector);
+        seeder.fuse(m[0]);
+
+        vm.expectEmit(address(seeder));
+        emit NeonSeeder.SetFused(setId, m[0]);
+        vm.prank(alice);
+        seeder.fuse(m[0]);
+        (uint32 anchorId, uint64 at) = seeder.fusedSet(setId);
+        assertEq(anchorId, m[0]);
+        assertEq(at, block.timestamp);
+        assertEq(seeder.fusedCount(), 1);
+        assertEq(seeder.fusedAnchorOf(m[2]), m[0]);
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(NeonSeeder.SetAlreadyFused.selector, setId));
+        seeder.fuse(m[0]);
+    }
+
+    function test_Fuse_PiecesNeverLeaveAndTheSetSellsWhole() public {
+        _mintAndReveal(120);
+        (, uint256[4] memory m) = _firstSet(120);
+        address acc = _assemble(m, m[0]);
+        vm.prank(alice);
+        seeder.fuse(m[0]);
+        vm.prank(alice);
+        vm.expectRevert(); // NeonFaces: SetIsFused, whichever way the account tries
+        NeonFaceAccount(payable(acc)).execute(address(faces), 0, abi.encodeCall(faces.transferFrom, (acc, alice, m[1])), 0);
+
+        vm.prank(alice);
+        faces.transferFrom(alice, bob, m[0]); // the anchor still trades, with the set inside
+        assertTrue(seeder.isAssembled(m[0]));
+        vm.prank(bob);
+        vm.expectRevert();
+        NeonFaceAccount(payable(acc)).execute(address(faces), 0, abi.encodeCall(faces.transferFrom, (acc, bob, m[3])), 0);
+        assertEq(faces.ownerOf(m[3]), acc);
+    }
+
+    function test_Fuse_ANestedAnchorFusesThroughTheFaceAboveIt() public {
+        _mintAndReveal(120);
+        (, uint256[4] memory m) = _firstSet(120);
+        _assemble(m, m[0]);
+        uint256 top = 1;
+        while (top == m[0] || top == m[1] || top == m[2] || top == m[3]) ++top;
+        address topAcc = seeder.accountOf(top);
+        vm.startPrank(alice);
+        faces.transferFrom(alice, topAcc, m[0]); // the whole set sits inside another Face
+        NeonFaceAccount(payable(topAcc)).execute(address(seeder), 0, abi.encodeCall(seeder.fuse, (m[0])), 0);
+        vm.stopPrank();
+        assertEq(seeder.fusedAnchorOf(m[1]), m[0]);
+        // the anchor itself can still come out of the Face above
+        vm.prank(alice);
+        NeonFaceAccount(payable(topAcc)).execute(address(faces), 0, abi.encodeCall(faces.transferFrom, (topAcc, alice, m[0])), 0);
+        assertEq(faces.ownerOf(m[0]), alice);
+    }
+
+    function test_Sets_OnlyTheSeederAnnouncesDeliveries() public {
+        _mintAndReveal(8);
+        vm.expectRevert(NeonFaces.OnlySeeder.selector);
+        vm.prank(carol);
+        faces.metadataChanged(1);
     }
 
     function test_Sets_BuyingTheAnchorBuysTheWholeSet() public {
@@ -212,12 +340,16 @@ contract SetsTest is Base {
         _mintPublic(alice, 2);
         address acc1 = seeder.accountOf(1);
         vm.expectEmit(address(faces));
-        emit IERC4906.MetadataUpdate(1);
+        emit IERC4906.MetadataUpdate(1); // the Face that now holds it
+        vm.expectEmit(address(faces));
+        emit IERC4906.MetadataUpdate(2); // the moved Face: its set status changes too
         vm.prank(alice);
         faces.transferFrom(alice, acc1, 2);
 
         vm.expectEmit(address(faces));
         emit IERC4906.MetadataUpdate(1);
+        vm.expectEmit(address(faces));
+        emit IERC4906.MetadataUpdate(2);
         vm.prank(alice);
         NeonFaceAccount(payable(acc1)).execute(address(faces), 0, abi.encodeCall(faces.transferFrom, (acc1, bob, 2)), 0);
         assertEq(faces.ownerOf(2), bob);

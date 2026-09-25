@@ -124,12 +124,15 @@ Rule: shrink a Face to 48 px. If you can't tell it's a NEONFACE, the trait is to
 | Seed | tickers of the base basket delivered at mint |
 | Seed Status | Funded / Pending / Inactive |
 | Stare Upgrade | top-up basket (Watch / Heavy Stare) or Pending |
-| Set | #1..#555, on set pieces |
-| Set status | Assembled (this Face holds the other three pieces and shows the whole face) or Inside #id |
+| Set | 1..555 (a number), on set pieces |
+| Set status | Assembled (this Face holds the other three pieces and shows the whole face), Fused (assembled for good: the pieces can never leave, the whole face gets a one-cell neon frame) or Inside another piece; the description names the pieces |
+| Fused since | date, on the Face that holds a fused set |
 | Set bonus | the one-time bonus basket, on the Face that received it |
-| Holds <TICKER> | live balance inside the Face account |
+| Holds <TICKER> | live balance inside the Face account (a number) |
 | Locked until | date, while the holder has locked the account |
 | Unblinking (days) | days since the Face last changed hands |
 | Eyes open since | date of the last transfer |
 | Gaze | Steady / Fixed / Burning after 30 / 90 / 365 days with the same holder; the neon blooms in the image |
 | Art ID | art piece assigned at reveal |
+
+Numbers on marketplaces: Set, Holds, Unblinking and Art ID are number traits (dates are date traits). OpenSea shows them as stats and leaves them out of trait filters and rarity scores: live balances would otherwise add a new filter value with every trade, and a Set value shared by only four Faces would rank every set piece above the rarest single. Rarity then comes from the art traits and the Stare tier. To find the other pieces of a set, the set hunter on the site lists them with their holders and an OpenSea link for each.

@@ -2,7 +2,12 @@
   "_readme": "Holders snapshot for one OpenSea presale stage. Run: node tools/snapshot.mjs <this file>, then node tools/allowlist.mjs <phase>.csv. Pin snapshotBlock to an announced block before the final run (ownerOf at a past block needs an archive RPC).",
   "rules": {
     "perNft": 1,
-    "maxPerWallet": 3
+    "maxPerWallet": 2,
+    "minNfts": 2,
+    "notIn": [
+      "robinhood.csv"
+    ],
+    "notInLimit": 1
   },
   "exclude": [],
   "mintChainId": 4663,
@@ -218,28 +223,6 @@
       "weight": 1
     },
     {
-      "name": "NORMIES",
-      "opensea": "https://opensea.io/collection/normies",
-      "chainId": 1,
-      "rpc": "https://ethereum-rpc.publicnode.com",
-      "address": "0x9eb6e2025b64f340691e424b7fe7022ffde12438",
-      "standard": "erc721",
-      "method": "ownerOf",
-      "snapshotBlock": "latest",
-      "weight": 1
-    },
-    {
-      "name": "Normies Yacht Club",
-      "opensea": "https://opensea.io/collection/normies-yacht-club",
-      "chainId": 1,
-      "rpc": "https://ethereum-rpc.publicnode.com",
-      "address": "0x87306c282ebd62fe1c80aa69dd9408331dc11f64",
-      "standard": "erc721",
-      "method": "ownerOf",
-      "snapshotBlock": "latest",
-      "weight": 1
-    },
-    {
       "name": "ON THE WALL",
       "opensea": "https://opensea.io/collection/on-the-wall",
       "chainId": 1,
@@ -283,5 +266,6 @@
       "snapshotBlock": "latest",
       "weight": 1
     }
-  ]
+  ],
+  "_stage": "Stage 2: wallets with at least 2 NFTs of these collections; wallets on the stage 1 list keep at most 1 Face here (SeaDrop counts across stages)"
 }

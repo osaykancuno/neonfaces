@@ -105,7 +105,12 @@ contract RwaForkTest is Test {
         base[0] = 7;
         seeder.setTierBaskets(1, base);
         vm.stopPrank();
+        uint256 g = gasleft();
         seeder.fund(1);
+        uint256 used = g - gasleft();
+        console2.log("gas to deliver 6 real Stock Token legs:", used);
+        // a set bonus has 4 legs and NeonFaces gives its in-transfer delivery 1M gas: keep a wide margin
+        assertLt(used, 500_000, "real token deliveries fit the set bonus gas budget");
         address account = seeder.accountOf(1);
         for (uint256 i; i < 6; ++i) {
             assertEq(IERC20(a[i].token).balanceOf(account), bought[i] / 2, "every asset reaches the Face");

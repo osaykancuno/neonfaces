@@ -114,6 +114,15 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
 
     mapping(uint256 setId => SetBonusPaid) public setBonus;
     uint256 public setBonusCount;
+
+    struct Fused {
+        uint32 anchorId; // the Face that holds the set for good (0 = not fused)
+        uint64 at;
+    }
+
+    /// @notice Sets fused by their holder: the three pieces can never leave the anchor's account again.
+    mapping(uint256 setId => Fused) public fusedSet;
+    uint256 public fusedCount;
     /// @notice Top-ups delivered per tier (2 Watch, 3 Heavy Stare).
     mapping(uint8 tier => uint256) public upgradedIn;
     /// @notice When the baskets were locked (0 while configurable).
@@ -131,6 +140,7 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     event ConfigLocked();
     event PoolWithdrawn(address indexed token, address indexed to, uint256 amount);
     event SetBonusPaidTo(uint256 indexed setId, uint256 indexed anchorId, address indexed account, uint32 basketId);
+    event SetFused(uint256 indexed setId, uint256 indexed anchorId);
 
     error InvalidTier();
     error InvalidBasket();
@@ -143,6 +153,8 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     error InsufficientPool(address token, uint256 needed, uint256 available);
     error SetNotAssembled(uint256 anchorId);
     error SetBonusAlreadyPaid(uint256 setId);
+    error NotTheHolder();
+    error SetAlreadyFused(uint256 setId);
     error NotRevealed();
     error StillOwed(address token, uint256 owed);
 
@@ -213,6 +225,7 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
             ++fundedCount;
         }
         _deliver(basketId, account);
+        faces.metadataChanged(tokenId);
         emit FaceSeeded(tokenId, account, basketId);
     }
 
@@ -247,6 +260,7 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
             ++upgradedIn[tier];
         }
         _deliver(basketId, account);
+        faces.metadataChanged(tokenId);
         emit FaceUpgraded(tokenId, account, tier, basketId);
         return true;
     }
@@ -271,7 +285,32 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
             ++setBonusCount;
         }
         _deliver(basketId, account);
+        faces.metadataChanged(anchorId);
         emit SetBonusPaidTo(setId, anchorId, account, basketId);
+    }
+
+    /// @notice Fuse an assembled set for good: its three pieces can never leave the anchor's account again, so the
+    /// set only ever changes hands whole, and the anchor is drawn with the fused frame. Irreversible. Only the
+    /// anchor's owner (a wallet, or the account of a Face it sits in, through `execute`) can do it.
+    function fuse(uint256 anchorId) external {
+        if (faces.ownerOf(anchorId) != msg.sender) revert NotTheHolder();
+        if (!isAssembled(anchorId)) revert SetNotAssembled(anchorId);
+        (uint256 setId,,) = setOf(anchorId);
+        if (fusedSet[setId].anchorId != 0) revert SetAlreadyFused(setId);
+        fusedSet[setId] = Fused(uint32(anchorId), uint64(block.timestamp));
+        unchecked {
+            ++fusedCount;
+        }
+        faces.metadataChanged(anchorId);
+        emit SetFused(setId, anchorId);
+    }
+
+    /// @notice The anchor a Face is fused into (0 if its set isn't fused). NeonFaces refuses to move a piece out
+    /// of that anchor's account.
+    function fusedAnchorOf(uint256 tokenId) external view returns (uint256) {
+        if (fusedCount == 0) return 0; // asked on every move out of a Face account: skip the set lookup while none is
+        (uint256 setId,,) = setOf(tokenId);
+        return setId == 0 ? 0 : fusedSet[setId].anchorId;
     }
 
     function _deliver(uint32 basketId, address account) internal {
@@ -319,6 +358,21 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
         for (uint256 q; q < 4; ++q) {
             members[q] = mulmod(inv, p - piece + q + n - b, n) + 1; // id − 1 = a⁻¹ · (slot − b) mod n
         }
+    }
+
+    /// @notice True when this Face anchors an assembled set whose one-time bonus is still unpaid.
+    function setBonusDue(uint256 anchorId) public view returns (bool) {
+        (uint256 setId,,) = setOf(anchorId);
+        return setId != 0 && setBonus[setId].anchorId == 0 && isAssembled(anchorId);
+    }
+
+    /// @notice True when moving `pieceId` into `anchorId`'s account just completed their set and its bonus is still
+    /// unpaid. NeonFaces asks on every move into a Face account, so the cheap checks (same set, unpaid) come first.
+    function completesSet(uint256 anchorId, uint256 pieceId) external view returns (bool) {
+        (uint256 setId,, uint256[4] memory m) = setOf(anchorId);
+        if (setId == 0 || pieceId == anchorId || setBonus[setId].anchorId != 0) return false;
+        if (m[0] != pieceId && m[1] != pieceId && m[2] != pieceId && m[3] != pieceId) return false;
+        return isAssembled(anchorId);
     }
 
     /// @notice True when the other three pieces of this Face's set sit inside this Face's account.

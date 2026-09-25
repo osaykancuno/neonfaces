@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {AccessControlDefaultAdminRules} from
     "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
@@ -12,6 +13,7 @@ import {NeonSeeder} from "./NeonSeeder.sol";
 /// @dev The part of NeonTrader the vault uses.
 interface ISeedTrader {
     function weth() external view returns (address);
+    function price(address token) external view returns (uint256 usd8);
     function setDailyLimit(uint256 usd8) external;
     function swap(address[] calldata path, uint24[] calldata fees, uint256 amountIn, uint256 slippageBps)
         external
@@ -20,16 +22,21 @@ interface ISeedTrader {
 }
 
 /// @title NeonSeedVault — turns the seed share of the mint into the Faces' Stock Tokens
-/// @notice Receives 40% of the creator share of every mint (from NeonPayout). The ETH can only leave as
+/// @notice Receives 50% of the creator share of every mint (from NeonPayout). The ETH can only leave as
 /// basket tokens bought through NeonTrader (Uniswap v3, minimum output from Chainlink, ≤ 1% slippage) and
-/// delivered straight to the NeonSeeder pool. The keeper chooses which basket token to buy and when; it
-/// can't send anything anywhere else. Once the baskets are locked (after the reveal) and the pool holds
-/// everything it owes, any surplus can only go to the treasury.
+/// delivered straight to the NeonSeeder pool. The keeper chooses which basket token to buy and when (and keeps a
+/// small stock ahead); anyone can `restock` what minted Faces are still owed, so no delivery depends on the
+/// keeper. Nobody can send anything anywhere else. Once the baskets are locked (after the reveal) and the pool
+/// holds everything it owes, any surplus can only go to the treasury.
 contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
     uint256 public constant OWED_GRACE = 180 days;
+    /// @notice `restock`: at most this much per call (8 decimals, USD), so one purchase never moves a pool far
+    /// from its Chainlink price, and the most a sandwich could take from one call stays small.
+    uint256 public constant MAX_RESTOCK_USD8 = 2_000e8;
+    uint256 public constant RESTOCK_SLIPPAGE_BPS = 100;
 
     address payable public immutable treasury;
     NeonSeeder public seeder;
@@ -38,6 +45,7 @@ contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
     event SeederSet(address seeder);
     event TraderSet(address trader);
     event Bought(address indexed token, uint256 ethIn, uint256 amountOut);
+    event Restocked(address indexed caller, address indexed token, uint256 ethIn, uint256 amountOut);
     event SurplusReleased(uint256 amount);
 
     error AlreadySet();
@@ -47,6 +55,8 @@ contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
     error BasketsNotLocked();
     error SeedsStillOwed();
     error ZeroAddress();
+    error NothingToRestock(address token);
+    error VaultEmpty();
 
     constructor(address payable treasury_, address admin) AccessControlDefaultAdminRules(2 days, admin) {
         if (treasury_ == address(0)) revert ZeroAddress();
@@ -90,6 +100,33 @@ contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
         amountOut = token.balanceOf(address(this)); // the vault holds no tokens between buys
         token.safeTransfer(address(seeder), amountOut);
         emit Bought(address(token), ethIn, amountOut);
+    }
+
+    /// @notice Anyone: buy the basket token `path[last]` the pool is short of, i.e. what minted Faces are still owed
+    /// (`NeonSeeder.owed` minus the pool's balance: pending seeds, top-ups, unpaid set bonuses), never more, up to
+    /// `MAX_RESTOCK_USD8` per call. The ETH is sized from Chainlink (+3% for pool fees and slippage; any excess
+    /// stays in the pool) and NeonTrader enforces the minimum output, so a caller chooses only the route, among
+    /// listed pools whose fees NeonTrader caps. The keeper does this on its own; this is the door for anyone else.
+    function restock(address[] calldata path, uint24[] calldata fees) external nonReentrant returns (uint256 amountOut) {
+        ISeedTrader t = trader;
+        NeonSeeder s = seeder;
+        if (address(t) == address(0) || address(s) == address(0)) revert NotSet();
+        address weth = t.weth();
+        if (path[0] != weth) revert MustPayWithEth();
+        IERC20 token = IERC20(path[path.length - 1]);
+        uint256 owed = s.owed(address(token));
+        uint256 held = token.balanceOf(address(s));
+        if (owed <= held) revert NothingToRestock(address(token));
+        uint256 usd8 = (owed - held) * t.price(address(token)) / 10 ** IERC20Metadata(address(token)).decimals();
+        if (usd8 > MAX_RESTOCK_USD8) usd8 = MAX_RESTOCK_USD8;
+        uint256 ethIn = usd8 * 1e18 * 103 / (t.price(weth) * 100);
+        if (address(this).balance == 0) revert VaultEmpty();
+        if (ethIn > address(this).balance) ethIn = address(this).balance;
+        if (ethIn == 0) revert NothingToRestock(address(token));
+        t.swap{value: ethIn}(path, fees, ethIn, RESTOCK_SLIPPAGE_BPS);
+        amountOut = token.balanceOf(address(this)); // the vault holds no tokens between buys
+        token.safeTransfer(address(s), amountOut);
+        emit Restocked(msg.sender, address(token), ethIn, amountOut);
     }
 
     /// @notice After the baskets are locked, send leftover ETH to the treasury: once the pool holds everything it

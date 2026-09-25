@@ -8,16 +8,16 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 /// @notice SeaDrop sends the creator's part of every mint here (OpenSea keeps its drop fee).
 /// NeonFaces only accepts this contract as SeaDrop's payout address, so the split below is the only
 /// place mint money can go. Shares and payees are immutable; there is no owner.
-///   40% Seed vault   — buys Stock Tokens / USDG that refill the NeonSeeder pool
-///   25% Treasury     — multisig: art, site, market making
-///   20% Team         — an OpenZeppelin VestingWallet (linear, 6 months)
+///   50% Seed vault   — buys Stock Tokens / USDG that refill the NeonSeeder pool
+///   20% Treasury     — multisig: art, site, audit, market making
+///   15% Team         — an OpenZeppelin VestingWallet (linear, 6 months)
 ///   15% Growth       — collabs + growth
 /// Anyone can push the split with `release()`; nobody can redirect it.
 contract NeonPayout is ReentrancyGuard {
     uint256 public constant BPS = 10_000;
-    uint256 public constant SEED_BPS = 4_000;
-    uint256 public constant TREASURY_BPS = 2_500;
-    uint256 public constant TEAM_BPS = 2_000;
+    uint256 public constant SEED_BPS = 5_000;
+    uint256 public constant TREASURY_BPS = 2_000;
+    uint256 public constant TEAM_BPS = 1_500;
     uint256 public constant GROWTH_BPS = 1_500;
 
     address payable public immutable seedVault;

@@ -182,6 +182,78 @@ contract OnChainTest is Base {
         assertEq(renderer.svgOf(1), svg);
     }
 
+    /// What a marketplace reads for a set: the anchor shows the whole face and names the pieces it holds, the
+    /// pieces inside say where they are; "Set" and "Holds" are numbers (kept out of trait filters and rarity).
+    function test_Metadata_AssembledSetForMarketplaces() public {
+        _uploadAll(_tinyRecord());
+        vm.prank(admin);
+        artStore.seal();
+        _allowTestAsSeaDrop();
+        faces.mintSeaDrop(alice, 120);
+        _reveal();
+        uint256[4] memory m;
+        uint256 setId;
+        for (uint256 id = 1; setId == 0; ++id) (setId,, m) = seeder.setOf(id);
+        address acc = seeder.accountOf(m[0]);
+        vm.startPrank(alice);
+        for (uint256 q = 1; q < 4; ++q) faces.transferFrom(alice, acc, m[q]);
+        vm.stopPrank();
+
+        string memory a = _json(faces.tokenURI(m[0]));
+        _checkJson(a);
+        assertTrue(LibString.contains(a, string.concat('"trait_type":"Set","display_type":"number","value":', vm.toString(setId), "}")));
+        assertTrue(LibString.contains(a, '"trait_type":"Set status","value":"Assembled"'));
+        assertTrue(LibString.contains(a, string.concat("It holds the other three pieces of set ", vm.toString(setId), " (#", vm.toString(m[1]), ", #", vm.toString(m[2]), ", #", vm.toString(m[3]), ")")));
+        assertTrue(LibString.contains(a, '","display_type":"number","value":'));
+        assertFalse(LibString.contains(a, '"trait_type":"Holds SPY","value":"'), "balances are not strings");
+        assertEq(renderer.svgOf(m[0]), renderer.renderSetSVG(setId, _fourRecords(), 0), "whole face");
+
+        string memory p = _json(faces.tokenURI(m[1]));
+        _checkJson(p);
+        assertTrue(LibString.contains(p, '"trait_type":"Set status","value":"Inside another piece"'));
+        assertTrue(LibString.contains(p, string.concat("It sits inside Face #", vm.toString(m[0]), ", a piece of the same set.")));
+        assertFalse(LibString.contains(p, "Inside #"), "ids stay out of the trait values");
+
+        // fused: the status, the date, a neon frame around the whole face
+        vm.prank(alice);
+        seeder.fuse(m[0]);
+        string memory f = _json(faces.tokenURI(m[0]));
+        _checkJson(f);
+        assertTrue(LibString.contains(f, '"trait_type":"Set status","value":"Fused"'));
+        assertTrue(LibString.contains(f, '"trait_type":"Fused since","display_type":"date"'));
+        assertTrue(LibString.contains(f, "Fused for good"));
+        string memory svg = renderer.svgOf(m[0]);
+        assertTrue(LibString.contains(svg, 'fill="none" stroke="#CCFF00"/></svg>'));
+        assertTrue(LibString.startsWith(svg, "<svg"));
+    }
+
+    /// @dev forge's JSON parser refuses decimal numbers, so the check is structural: no string-quoted numbers
+    /// after a number display_type, balanced braces and brackets, nothing after the closing brace.
+    function _checkJson(string memory j) internal pure {
+        bytes memory b = bytes(j);
+        int256 depth;
+        bool inString;
+        for (uint256 i; i < b.length; ++i) {
+            if (inString) {
+                if (b[i] == "\\") ++i;
+                else if (b[i] == '"') inString = false;
+                continue;
+            }
+            if (b[i] == '"') inString = true;
+            else if (b[i] == "{" || b[i] == "[") ++depth;
+            else if (b[i] == "}" || b[i] == "]") --depth;
+            assertTrue(depth >= 0, "unbalanced");
+            if (depth == 0) assertEq(i, b.length - 1, "trailing data");
+        }
+        assertEq(depth, 0, "unbalanced");
+        assertFalse(LibString.contains(j, '"display_type":"number","value":"'), "number traits are numbers");
+    }
+
+    function _fourRecords() internal pure returns (bytes[] memory recs) {
+        recs = new bytes[](4);
+        for (uint256 q; q < 4; ++q) recs[q] = _tinyRecord();
+    }
+
     function test_Metadata_UnblinkingAndLiveHoldings() public {
         _openPublic();
         _mintPublic(alice, 1);
@@ -245,7 +317,7 @@ contract OnChainTest is Base {
         string memory j = _json(faces.tokenURI(1));
         uint256 bal = MockStockToken(s.legs[0].token).balanceOf(s.account);
         assertEq(bal, 1e18 + s.legs[0].amount);
-        assertTrue(LibString.contains(j, string.concat('"trait_type":"Holds ', sym, '","value":"1.')));
+        assertTrue(LibString.contains(j, string.concat('"trait_type":"Holds ', sym, '","display_type":"number","value":1.')));
     }
 
     function test_Metadata_StareUpgradeAndLockAfterReveal() public {
@@ -282,7 +354,7 @@ contract OnChainTest is Base {
         assertFalse(LibString.contains(j, '"Holds SPY"'), "not shown while not held");
         spy.mint(seeder.accountOf(1), 2e18); // e.g. bought by the Face's agent
         j = _json(faces.tokenURI(1));
-        assertTrue(LibString.contains(j, '"trait_type":"Holds SPY","value":"2"'));
+        assertTrue(LibString.contains(j, '"trait_type":"Holds SPY","display_type":"number","value":2}'));
     }
 
     function test_ContractURI_OnChain() public view {

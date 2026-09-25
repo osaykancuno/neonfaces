@@ -65,7 +65,7 @@ contract SeedVaultTest is Base {
         // the seed share reaches the vault (anyone can push the split)
         vm.prank(carol);
         vaultPayout.release(payable(address(vault)));
-        uint256 seedShare = uint256(PUBLIC_PRICE) * 4 * 9 / 10 * 40 / 100;
+        uint256 seedShare = uint256(PUBLIC_PRICE) * 4 * 9 / 10 * 50 / 100;
         assertEq(address(vault).balance, seedShare);
 
         // the keeper turns it into basket tokens, straight into the pool
@@ -154,6 +154,55 @@ contract SeedVaultTest is Base {
         vault.releaseSurplus(1 ether);
         vm.stopPrank();
         assertEq(treasury.balance, 1 ether);
+    }
+
+    /// Anyone can refill what minted Faces are owed, with the vault's ETH, never more than that, at most
+    /// MAX_RESTOCK_USD8 per call: no delivery depends on the keeper.
+    function test_AnyoneRestocksWhatIsOwedAndNoMore() public {
+        _mintPublic(alice, 4); // empty pool: 4 seeds pending
+        vaultPayout.release(payable(address(vault)));
+        trader.setPrice(weth, 2_500e8);
+        trader.setPrice(address(tsla), 100e8);
+        trader.setPrice(address(nvda), 100e8);
+        trader.setRate(25); // 1 wei of ETH buys 25 units of an 18-decimal $100 token: the oracle price
+
+        uint256 owed = seeder.owed(address(tsla));
+        assertEq(owed, 4 * 0.002e18);
+        vm.prank(carol); // no role
+        uint256 out = vault.restock(_path(address(tsla)), _fees());
+        assertEq(tsla.balanceOf(address(seeder)), out);
+        assertGe(out, owed, "covers what is owed");
+        assertLe(out, owed * 104 / 100, "and not much more");
+
+        vm.expectRevert(abi.encodeWithSelector(NeonSeedVault.NothingToRestock.selector, address(tsla)));
+        vm.prank(carol);
+        vault.restock(_path(address(tsla)), _fees());
+        // a token no basket uses is never owed
+        vm.expectRevert(abi.encodeWithSelector(NeonSeedVault.NothingToRestock.selector, address(spy)));
+        vault.restock(_path(address(spy)), _fees());
+        // anyone then delivers the pending seeds
+        vm.prank(carol);
+        vault.restock(_path(address(nvda)), _fees());
+        for (uint256 id = 1; id <= 4; ++id) seeder.fund(id);
+        assertEq(seeder.fundedCount(), 4);
+    }
+
+    function test_RestockIsCappedPerCall() public {
+        _mintPublic(alice, 10);
+        vaultPayout.release(payable(address(vault)));
+        vm.deal(address(vault), 100 ether);
+        trader.setPrice(weth, 2_500e8);
+        trader.setPrice(address(tsla), 1_000_000e8); // an expensive token: the shortfall is worth far more than the cap
+        trader.setRate(1);
+        uint256 before = address(vault).balance;
+        vault.restock(_path(address(tsla)), _fees());
+        uint256 spent = before - address(vault).balance;
+        assertEq(spent, uint256(2_000e8) * 1e18 * 103 / (2_500e8 * 100), "one call spends at most $2,000 (+3%)");
+        // an empty vault says so (the treasury can send it ETH)
+        vm.deal(address(vault), 0);
+        trader.setPrice(address(nvda), 100e8); // still owed: nothing bought yet
+        vm.expectRevert(NeonSeedVault.VaultEmpty.selector);
+        vault.restock(_path(address(nvda)), _fees());
     }
 
     function test_WiringIsOnce() public {

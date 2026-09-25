@@ -220,7 +220,7 @@
       <div role="listitem"><b>5555</b><span class="label">Faces, fixed</span></div>
       <div role="listitem"><b>100%</b><span class="label">on-chain art</span></div>
       <div role="listitem"><b>1</b><span class="label">wallet per Face</span></div>
-      <div role="listitem"><b>40%</b><span class="label">of the mint fills them</span></div>
+      <div role="listitem"><b>50%</b><span class="label">of the mint fills them</span></div>
     </div>
   </header>
 
@@ -271,17 +271,17 @@
       <div class="tier">
         <div class="pair"><img src="img/face-glance-1.png" width="320" height="320" alt="A Glance Face"><img src="img/face-glance-2.png" width="320" height="320" alt="A Glance Face"></div>
         <h3>Glance · 4444</h3>
-        <p>Base basket, about $3.</p>
+        <p>Base basket, about $5.</p>
       </div>
       <div class="tier">
         <div class="pair"><img src="img/face-watch-1.png" width="320" height="320" alt="A Watch Face"><img src="img/face-watch-2.png" width="320" height="320" alt="A Watch Face"></div>
         <h3>Watch · 833</h3>
-        <p>+ about $9 of NVDA, GOOGL or META and $3 of USDG.</p>
+        <p>+ about $10 of NVDA, GOOGL or META and $4 of USDG.</p>
       </div>
       <div class="tier">
         <div class="pair"><img src="img/face-heavy-stare-1.png" width="320" height="320" alt="A Heavy Stare Face"><img src="img/face-heavy-stare-2.png" width="320" height="320" alt="A Heavy Stare Face"></div>
         <h3>Heavy Stare · 278</h3>
-        <p>+ about $57, a small multi-asset basket: SPY, NVDA, QQQ, gold, silver, oil and bitcoin.</p>
+        <p>+ about $70, a small multi-asset basket: SPY, NVDA, QQQ, gold, silver, oil and bitcoin.</p>
       </div>
     </div>
     <div class="bar" role="img" aria-label="Tier shares: Glance 4444 (80%), Watch 833 (15%), Heavy Stare 278 (5%)">
@@ -334,9 +334,11 @@
     </div>
     <ul class="rules col">
       <li><strong>Collect.</strong> The reveal deals whole sets only, so every set that exists can be completed, and the four pieces always land far apart: nobody gets a finished set by minting several Faces in a row. Each piece shows its set number and part, so you can make an offer on exactly the piece you miss.</li>
-      <li><strong>Assemble.</strong> Move the other three pieces into one piece's wallet. That Face now shows the whole face, and whoever buys it gets all four pieces in one sale. You can take it apart whenever you like.</li>
+      <li><strong>Assemble.</strong> Move the other three pieces into one piece's wallet. That Face now shows the whole face, and whoever buys it gets all four pieces in one sale. Nothing is burned: the supply stays 5555, and on OpenSea the three pieces show as held by that Face's wallet. Selling it? Lock it first, so buyers can see the pieces can't leave before the sale. You can take it apart whenever you like.</li>
       <li><strong>Hunt.</strong> The site's set hunter shows where the missing pieces are, who holds them and for how long, and tells you on your next visit which pieces of a set you watch changed hands.</li>
-      <li><strong>Bonus, once.</strong> The first time a set is assembled it receives a one-time basket of about $10 (SpaceX, Google, Meta and Microsoft), paid by the mint like every other basket. Once per set, ever.</li>
+      <li><strong>Bonus, once.</strong> The first time a set is assembled it receives a one-time basket of about $12 (SpaceX, Google, Meta and Microsoft), in the same transaction as the last piece, paid by the mint like every other basket. Once per set, ever.</li>
+      <li><strong>Fuse, if you choose.</strong> An assembled set can be fused for good: its pieces can never leave the Face that holds them, the whole face gets a neon frame, and the set only ever changes hands whole. It can't be undone.</li>
+      <li><strong>A say.</strong> Before funding new baskets the treasury asks the assembled sets: one set, one vote. Advice it publishes and reads, not a rule.</li>
     </ul>
   </section>
   </div>
@@ -346,23 +348,23 @@
     <span class="label">Wallet</span>
     <h2>Every Face is a wallet</h2>
     <p>Each Face gets its own account on the chain (the ERC-6551 standard): the NFT is the key. Whoever holds the Face controls the account. Tokens, stablecoins and pieces of tokenized stocks can live inside it.</p>
-    <p>Every Face starts with a <strong>base basket</strong> of about $3 in one of TSLA, NVDA, AAPL, AMZN or MSFT. You can leave it there, add more, or withdraw it at any time from the Face's page. If the Face changes hands, what's inside goes with it.</p>
+    <p>Every Face starts with a <strong>base basket</strong> of about $5 in one of TSLA, NVDA, AAPL, AMZN or MSFT. You can leave it there, add more, or withdraw it at any time from the Face's page. If the Face changes hands, what's inside goes with it.</p>
   </section>
 
   <section id="money">
     <div class="col" style="display:grid;gap:18px">
       <span class="label">The mint pays for itself</span>
       <h2>Said before, not after</h2>
-      <p>The mint happens on OpenSea. OpenSea keeps its 10% fee, and the rest goes to a split written into the contract. 40% of it goes to a <strong>seed vault</strong>: a contract that can only buy the basket tokens, at prices checked against Chainlink, and deliver them straight to the Faces' pool. That money can't be spent on anything else.</p>
+      <p>The mint happens on OpenSea. OpenSea keeps its 10% fee, and the rest goes to a split written into the contract. Half of it goes to a <strong>seed vault</strong>: a contract that can only buy the basket tokens, at prices checked against Chainlink, and deliver them straight to the Faces' pool. That money can't be spent on anything else.</p>
       <p>The shares and the addresses are fixed in the contract. Nobody can change them, and anyone can trigger the payout.</p>
     </div>
-    <div class="bar" role="img" aria-label="Mint split: 40% seed vault, 25% treasury, 20% team, 15% growth">
-      <span style="width:40%;background:var(--neon)"></span><span style="width:25%;background:var(--watch)"></span><span style="width:20%;background:#677920"></span><span style="width:15%;background:var(--olive)"></span>
+    <div class="bar" role="img" aria-label="Mint split: 50% seed vault, 20% treasury, 15% team, 15% growth">
+      <span style="width:50%;background:var(--neon)"></span><span style="width:20%;background:var(--watch)"></span><span style="width:15%;background:#677920"></span><span style="width:15%;background:var(--olive)"></span>
     </div>
     <div class="legend">
-      <div><i style="background:var(--neon)"></i><b>40%</b><span>Seed vault: buys what goes inside the Faces</span></div>
-      <div><i style="background:var(--watch)"></i><b>25%</b><span>Treasury: art, site, audits, presence</span></div>
-      <div><i style="background:#677920"></i><b>20%</b><span>Team: released slowly over 6 months, so no dumping on the floor</span></div>
+      <div><i style="background:var(--neon)"></i><b>50%</b><span>Seed vault: buys what goes inside the Faces</span></div>
+      <div><i style="background:var(--watch)"></i><b>20%</b><span>Treasury: art, site, audits, presence</span></div>
+      <div><i style="background:#677920"></i><b>15%</b><span>Team: released slowly over 6 months, so no dumping on the floor</span></div>
       <div><i style="background:var(--olive)"></i><b>15%</b><span>Growth and collaborations</span></div>
     </div>
     <p class="col">Most Faces are born with their basket. A Face minted in the first minutes, before the pool is restocked, gets it shortly after; anyone can deliver a pending basket with one click from the Face's page.</p>

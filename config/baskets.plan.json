@@ -11,7 +11,13 @@
     "GOOGL": 341.92,
     "META": 778.25,
     "SPY": 766.7,
-    "USDG": 1.0
+    "USDG": 1.0,
+    "QQQ": 0,
+    "SLV": 0,
+    "USO": 0,
+    "GLD": 0,
+    "CBBTC": 0,
+    "SPCX": 0
   },
   "tokens": {
     "TSLA": {
@@ -67,6 +73,36 @@
       "decimals": 6,
       "feed": "0x61B7e5650328764B076A108EFF5fa7282a1B9aD2",
       "stable": true
+    },
+    "QQQ": {
+      "address": "0xD5f3879160bc7c32ebb4dC785F8a4F505888de68",
+      "decimals": 18,
+      "feed": "0x80901d846d5D7B030F26B480776EE3b29374C2ae"
+    },
+    "SLV": {
+      "address": "0x411eFb0E7f985935DAec3D4C3ebaEa0d0AD7D89f",
+      "decimals": 18,
+      "feed": "0x209b73908e92Ae021826eD79609845451Ecba2ce"
+    },
+    "USO": {
+      "address": "0xa30FA36Db767ad9eD3f7a60fC79526fB4d56D344",
+      "decimals": 18,
+      "feed": "0x75a9c76Ef439e2C7c2E5a34Ab105EcFe3766431c"
+    },
+    "GLD": {
+      "address": "0xC9a981FEE1F9DEc688bb123ccDeCc63D0deBFC4e",
+      "decimals": 18,
+      "feed": "0x470A51258068043bd43dC0a56245625C9fE86eB0"
+    },
+    "CBBTC": {
+      "address": "0xCEC185eB182c47d1bA1EFc84e6959e18cd620Be4",
+      "decimals": 8,
+      "feed": "0x0009cD492adf8167f9eEBf1293556A673530a21a"
+    },
+    "SPCX": {
+      "address": "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa",
+      "decimals": 18,
+      "feed": "0xB265810950ba6c5C0Ff821c9963014a56fD8Bffb"
     }
   },
   "baskets": [
@@ -122,19 +158,24 @@
       }
     },
     {
-      "name": "Heavy Stare top-up / Index + Mag",
+      "name": "Heavy Stare top-up / Multi-asset",
       "legs": {
-        "SPY": 25.0,
-        "NVDA": 12.0,
-        "TSLA": 12.0,
-        "USDG": 8.0
+        "SPY": 12.0,
+        "QQQ": 8.0,
+        "NVDA": 6.0,
+        "GLD": 10.0,
+        "CBBTC": 10.0,
+        "SLV": 6.0,
+        "USO": 5.0
       }
     },
     {
-      "name": "Set bonus / SPY + USDG",
+      "name": "Set bonus / SPCX + GOOGL + META + MSFT",
       "legs": {
-        "SPY": 7.0,
-        "USDG": 3.0
+        "SPCX": 2.5,
+        "GOOGL": 2.5,
+        "META": 2.5,
+        "MSFT": 2.5
       }
     }
   ],

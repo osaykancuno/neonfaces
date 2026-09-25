@@ -19,6 +19,7 @@
 //   6. once a day, `refreshMetadata()`: Unblinking days and the Gaze change with time, marketplaces need the nudge.
 // The keeper key needs gas only. It can't move the vault's ETH anywhere but into the pool.
 // Stock Token feeds only update on trading days: over a weekend the buys wait, the mint doesn't.
+import { route as routeOf } from "./route.mjs";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -84,9 +85,13 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 const WETH = cfg.weth.toLowerCase();
 const USDG = cfg.tokens.find((t) => t.symbol === "USDG").address.toLowerCase();
-const feeOf = Object.fromEntries(cfg.tokens.map((t) => [t.address.toLowerCase(), t.fee]));
 const symOf = Object.fromEntries(cfg.tokens.map((t) => [t.address.toLowerCase(), t.symbol]));
-const route = (token) => (token === USDG ? [[cfg.weth, token], [100]] : [[cfg.weth, USDG, token], [100, feeOf[token]]]);
+const byAddr = Object.fromEntries(cfg.tokens.map((t) => [t.address.toLowerCase(), t]));
+/** ETH -> token through the hubs (tools/route.mjs): [path, fees]. */
+const route = (token) => {
+  const r = routeOf(cfg.tokens, byAddr[WETH], byAddr[token]);
+  return [r.path, r.fees];
+};
 
 // what we know about each Face, refreshed incrementally
 const faces = new Map(); // id -> { funded, tier, upgraded }

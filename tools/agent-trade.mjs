@@ -9,7 +9,8 @@
 //
 // Routing: direct pool when one side is USDG, otherwise FROM -> USDG -> TO, using the deepest pool tiers listed
 // in config/trader.<chainId>.json. NeonTrader enforces the rest on-chain (output back to the Face, Chainlink
-// fair price ≤ 1% + pool fees, holder's daily USD cap).
+// at most 2% under the Chainlink price, holder's daily USD cap).
+import { route as routeOf } from "./route.mjs";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,11 +39,10 @@ const to = bySym[sym(toSym)];
 if (!from || !to || from === to) throw new Error(`tradable: ETH, ${cfg.tokens.filter((t) => t.symbol !== "WETH").map((t) => t.symbol).join(", ")}`);
 const usdg = bySym.USDG;
 
-// path through USDG unless one side is USDG
-const path = [from];
-if (from !== usdg && to !== usdg) path.push(usdg);
-path.push(to);
-const fees = path.slice(1).map((t, i) => (path[i] === usdg ? t.fee : path[i].fee));
+// route through the hubs (tools/route.mjs)
+const hops = routeOf(cfg.tokens, from, to);
+const path = hops.path.map((a) => cfg.tokens.find((t) => t.address === a));
+const fees = hops.fees;
 
 const abi = parseAbi([
   "function accountOf(uint256) view returns (address)",

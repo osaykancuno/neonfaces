@@ -1,6 +1,6 @@
 // The NEONFACES strategy agent: runs the standing strategies holders leave on NeonTrader, for every Face that
 // delegated to this agent's address. It is an ordinary scoped agent: it can only call NeonTrader.swapWithNote
-// through the Face (output back into the Face, Chainlink price ≤ 1% + pool fees, the holder's daily USD cap),
+// through the Face (output back into the Face, at most 2% under the Chainlink price, the holder's daily USD cap),
 // and each move carries a short note that the Face's journal shows.
 //
 //   RUNNER_PK=<strategy agent key> node agent-runner.mjs <chainId> [--once] [--dry]
@@ -12,6 +12,7 @@
 //   3 TRIM         sell `token` into `funding` when it is more than `bps` of the Face's value
 // A 2-point band avoids trading back and forth; moves under $1 are skipped; stale prices (weekends) skip the run.
 // Scheduled by .github/workflows/keeper.yml next to the keeper (no server).
+import { route as routeOf } from "./route.mjs";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -68,13 +69,8 @@ const USDG = bySym.USDG;
 const WETH = bySym.WETH;
 const symOf = (a) => (a.toLowerCase() === WETH.address.toLowerCase() ? "ETH" : byAddr[a.toLowerCase()]?.symbol ?? "?");
 
-/** v3 route: direct when one side is USDG, otherwise through USDG (same rule as agent-trade.mjs). */
-function route(from, to) {
-  const path = [from];
-  if (from !== USDG && to !== USDG) path.push(USDG);
-  path.push(to);
-  return { path: path.map((t) => t.address), fees: path.slice(1).map((t, i) => (path[i] === USDG ? t.fee : path[i].fee)) };
-}
+/** v3 route through the hubs (tools/route.mjs). */
+const route = (from, to) => routeOf(tokens, from, to);
 
 // ---- state: accounts with a strategy, last move per account, last block scanned
 let st = { trader: dep.trader, fromBlock: String(dep.deployBlock ?? 0), accounts: {}, lastMove: {} };

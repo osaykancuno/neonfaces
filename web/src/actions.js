@@ -42,15 +42,24 @@ async function decimalsOf(ctx, t) {
 export function tokenList(dep) {
   return (dep.tradeTokens ?? []).map((t) => ({ ...t, address: getAddress(t.address), symbol: t.symbol === "WETH" ? "ETH" : t.symbol }));
 }
-const find = (dep, sym) => tokenList(dep).find((t) => t.symbol === String(sym ?? "").toUpperCase());
+const find = (dep, sym) => tokenList(dep).find((t) => t.symbol.toUpperCase() === String(sym ?? "").toUpperCase());
 
-/** v3 route: direct when one side is USDG, otherwise through USDG. */
+/** v3 route through the hubs: every token trades against USDG, or its "hub" (cbBTC against WETH); WETH against
+ * USDG. Same rule as tools/route.mjs. */
 export function route(dep, from, to) {
-  const usdg = find(dep, "USDG");
-  const path = [from];
-  if (from.symbol !== "USDG" && to.symbol !== "USDG") path.push(usdg);
-  path.push(to);
-  return { path: path.map((t) => t.address), fees: path.slice(1).map((t, i) => (path[i].symbol === "USDG" ? t.fee : path[i].fee)) };
+  const list = (dep.tradeTokens ?? []).map((t) => ({ ...t, address: getAddress(t.address) }));
+  const bySym = Object.fromEntries(list.map((t) => [t.symbol, t]));
+  const node = (t) => bySym[t.symbol === "ETH" ? "WETH" : t.symbol];
+  const hub = (t) => (t.symbol === "USDG" ? null : bySym[t.hub ?? "USDG"]);
+  const chain = (t) => (hub(t) ? [t, ...chain(hub(t))] : [t]);
+  const a = chain(node(from));
+  const b = chain(node(to));
+  let nodes;
+  for (let i = 0; i < a.length && !nodes; i++) {
+    const j = b.findIndex((t) => t.symbol === a[i].symbol);
+    if (j >= 0) nodes = [...a.slice(0, i + 1), ...b.slice(0, j).reverse()];
+  }
+  return { path: nodes.map((t) => t.address), fees: nodes.slice(1).map((y, k) => (hub(nodes[k])?.symbol === y.symbol ? nodes[k].fee : y.fee)) };
 }
 
 export function describeStrategy(dep, s) {

@@ -26,7 +26,7 @@ const out = { ...dep, chain: { id: chainId, ...chain } };
 const traderCfg = resolve(here, `../config/trader.${chainId}.json`);
 if (existsSync(traderCfg)) {
   const t = JSON.parse(readFileSync(traderCfg, "utf8"));
-  out.tradeTokens = t.tokens.map(({ symbol, address, fee }) => ({ symbol, address, fee }));
+  out.tradeTokens = t.tokens.map(({ symbol, address, fee, hub }) => ({ symbol, address, fee, ...(hub ? { hub } : {}) }));
 }
 // the NEONFACES strategy agent (tools/agent-runner.mjs): holders can delegate to it from the Face page
 if (process.env.STRATEGY_AGENT) out.strategyAgent = process.env.STRATEGY_AGENT;

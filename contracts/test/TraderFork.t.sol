@@ -6,7 +6,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {VestingWallet} from "@openzeppelin/contracts/finance/VestingWallet.sol";
 import {ERC6551} from "solady/accounts/ERC6551.sol";
 import {NeonFaces} from "../src/NeonFaces.sol";
-import {NeonMinter} from "../src/NeonMinter.sol";
 import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
 import {NeonTrader, ISwapRouter02} from "../src/NeonTrader.sol";
@@ -46,15 +45,13 @@ contract TraderForkTest is Test {
         // a real Face with its account
         address admin = makeAddr("admin");
         NeonFaceAccount impl = new NeonFaceAccount();
-        NeonFaces faces = new NeonFaces(admin, admin, "", "");
+        NeonFaces faces = new NeonFaces(admin, admin, makeAddr("payout"), address(0), "", "");
         NeonSeeder seeder = new NeonSeeder(faces, REGISTRY, address(impl), admin);
-        bytes32 minterRole = faces.MINTER_ROLE();
         vm.startPrank(admin);
         faces.setProvenanceHash(keccak256("fork"));
-        faces.grantRole(minterRole, admin);
-        faces.mint(alice, 1);
+        faces.setSeeder(address(seeder));
+        faces.teamMint(alice, 1); // creates the account (no baskets configured: seed stays pending)
         vm.stopPrank();
-        seeder.activate(1);
         acc = NeonFaceAccount(payable(seeder.accountOf(1)));
 
         vm.prank(WHALE);

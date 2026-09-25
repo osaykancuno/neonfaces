@@ -1,6 +1,6 @@
 // Chain access for the NEONFACES site. No backend: everything is read from Robinhood Chain.
 // `/deployment.json` (written by tools/export-web.mjs) holds addresses + chain; without it the site
-// runs in preview mode (art previews, no mint).
+// runs in preview mode (art previews only). Minting happens on OpenSea (SeaDrop), not here.
 import { createPublicClient, createWalletClient, custom, http, parseAbi, defineChain, getAddress } from "viem";
 
 export const ABI = {
@@ -10,26 +10,9 @@ export const ABI = {
     "function balanceOf(address) view returns (uint256)",
     "function tokenURI(uint256) view returns (string)",
     "function revealSeed() view returns (uint256)",
-    "function mintPaused() view returns (bool)",
     "function mintClosed() view returns (bool)",
-    "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
   ]),
-  minter: parseAbi([
-    "function mint(uint256 quantity, uint256 allowance, bytes32[] proof) payable returns (uint256)",
-    "function phase() view returns (uint8)",
-    "function phaseConfig(uint8) view returns (uint128 price, uint32 maxPerWallet, uint32 supplyCap, uint32 minted, bytes32 merkleRoot)",
-    "function mintedBy(uint8, address) view returns (uint256)",
-    "function payees() view returns (address[4] accounts, uint256[4] shares)",
-    "event Minted(address indexed to, uint8 indexed phase, uint256 firstId, uint256 quantity, uint256 paid)",
-    "error SaleNotActive()",
-    "error InvalidQuantity()",
-    "error WrongPayment(uint256 expected)",
-    "error NotAllowlisted()",
-    "error WalletLimit()",
-    "error PhaseSoldOut()",
-    "error MintIsPaused()",
-    "error ExceedsPublicAllocation()",
-  ]),
+  payout: parseAbi(["function payees() view returns (address[4] accounts, uint256[4] shares)"]),
   seeder: parseAbi([
     "function seedOf(uint256) view returns ((address account, uint8 tier, uint32 basketId, uint32 upgradeBasketId, bool activated, bool funded, bool upgraded, (address token, uint256 amount)[] legs, (address token, uint256 amount)[] upgradeLegs))",
     "function fundedCount() view returns (uint256)",
@@ -73,7 +56,6 @@ export const ABI = {
   ]),
 };
 
-export const PHASES = ["Closed", "Builders", "Allowlist", "Public", "Finished"];
 export const TIERS = ["—", "Glance", "Watch", "Heavy Stare"];
 
 export const state = {
@@ -167,6 +149,24 @@ export async function ensureChain() {
 
 export function short(a) {
   return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "";
+}
+
+/** Faces held by `owner`, from the explorer's index (a convenience: [] when the explorer is unreachable). */
+export async function facesOf(owner) {
+  const base = state.dep?.chain?.explorer;
+  if (!base) return [];
+  const want = state.dep.faces.toLowerCase();
+  const ids = [];
+  let params = "";
+  for (let page = 0; page < 20; page++) {
+    const r = await fetch(`${base}/api/v2/addresses/${owner}/nft?type=ERC-721${params}`);
+    if (!r.ok) break;
+    const j = await r.json();
+    for (const it of j.items ?? []) if (it.token?.address?.toLowerCase() === want) ids.push(Number(it.id));
+    if (!j.next_page_params) break;
+    params = "&" + new URLSearchParams(j.next_page_params).toString();
+  }
+  return ids.sort((a, b) => a - b);
 }
 
 /** tokenURI -> parsed JSON (data:application/json;base64,...) */

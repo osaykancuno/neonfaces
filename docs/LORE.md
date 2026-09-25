@@ -38,10 +38,10 @@ The chain's agents can be delegated to a Face's account. The holder stays the ow
 
 | Share | Destination | Enforced by |
 |---|---|---|
-| 40% | Seed vault — turns the Faces on (the content of their wallets) | `NeonMinter.SEED_BPS`, immutable payee |
-| 25% | Treasury multisig — art, site, presence, liquidity | `NeonMinter.TREASURY_BPS` |
+| 40% | Seed vault — turns the Faces on (the content of their wallets) | `NeonPayout.SEED_BPS`, immutable payee |
+| 25% | Treasury multisig — art, site, presence, liquidity | `NeonPayout.TREASURY_BPS` |
 | 20% | Team — rules against dumping on the floor: 6-month linear vesting | OpenZeppelin `VestingWallet` as payee |
-| 15% | Growth and collaborations | `NeonMinter.GROWTH_BPS` |
+| 15% | Growth and collaborations | `NeonPayout.GROWTH_BPS` |
 
 If the Faces were born empty, NEONFACES would be just an aesthetic. The aesthetic is strong. It isn't enough.
 

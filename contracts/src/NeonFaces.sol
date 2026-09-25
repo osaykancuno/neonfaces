@@ -10,10 +10,26 @@ import {AccessControlDefaultAdminRules} from
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ChainEntropy} from "./lib/ChainEntropy.sol";
+import {
+    ISeaDrop,
+    INonFungibleSeaDropToken,
+    ISeaDropTokenContractMetadata,
+    PublicDrop,
+    AllowListData,
+    TokenGatedDropStage,
+    SignedMintValidationParams,
+    MultiConfigureStruct,
+    RoyaltyInfo as SeaDropRoyaltyInfo
+} from "./interfaces/ISeaDrop.sol";
 
 interface ITokenURIRenderer {
     function tokenURI(uint256 tokenId) external view returns (string memory);
     function contractURI() external view returns (string memory);
+}
+
+interface INeonSeeder {
+    function faces() external view returns (address);
+    function activate(uint256 tokenId) external returns (address account);
 }
 
 ///  ███╗   ██╗███████╗ ██████╗ ███╗   ██╗███████╗ █████╗  ██████╗███████╗███████╗
@@ -28,9 +44,16 @@ interface ITokenURIRenderer {
 /// @dev Design goals: small audit surface, hard caps in bytecode, no upgradeability,
 /// no transfer restrictions (no admin key over the secondary market).
 ///
+/// Minting happens on OpenSea through SeaDrop (SeaDrop 1.0 token interface, implemented here without
+/// ERC721A). SeaDrop checks stage, price, allowlist proof and per-wallet limit, then calls `mintSeaDrop`;
+/// this contract mints and gives every Face its ERC-6551 account + base seed in the same transaction.
+/// Mint proceeds can only be paid to the immutable `payout` splitter (NeonPayout: 40 / 25 / 20 / 15).
+///
 /// Roles
-///  - DEFAULT_ADMIN_ROLE (multisig, 2-step transfer with delay): royalties, roles, team mint, provenance.
-///  - MINTER_ROLE: the NeonMinter sale contract. Can only mint inside the public allocation.
+///  - DEFAULT_ADMIN_ROLE (multisig, 2-step transfer with delay): royalties, roles, team mint, provenance,
+///    which SeaDrop contract may mint, the sale manager.
+///  - saleManager: the wallet that runs the drop in OpenSea Studio (`owner()` while set). It can only
+///    configure SeaDrop stages; it cannot mint, change the art, or redirect the proceeds.
 ///  - PAUSER_ROLE: can pause / unpause *minting* (never transfers).
 ///  - METADATA_ROLE: renderer, reveal request, fallback URIs — until metadata is frozen.
 ///
@@ -47,8 +70,8 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     uint256 public constant PUBLIC_CAP = MAX_SUPPLY - TEAM_CAP; // 5444
     uint96 public constant MAX_ROYALTY_BPS = 500; // 5%
     uint256 public constant REVEAL_DELAY_BLOCKS = 5;
+    uint96 private constant BPS = 10_000;
 
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant METADATA_ROLE = keccak256("METADATA_ROLE");
 
@@ -73,6 +96,17 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     bool public mintClosed;
     uint256 public revealRequests;
 
+    /// @notice The only address SeaDrop may pay mint proceeds to (NeonPayout, immutable split).
+    address public immutable payout;
+    /// @notice Gives every new Face its account and base seed. Set once, before the first mint.
+    address public seeder;
+    /// @notice Runs the drop in OpenSea Studio; reported as `owner()` while set.
+    address public saleManager;
+    mapping(address seaDrop => bool) private _allowedSeaDrop;
+    address[] private _enumeratedAllowedSeaDrop;
+    /// @notice Faces minted through SeaDrop per wallet (SeaDrop enforces per-wallet limits on it).
+    mapping(address minter => uint256) public seaDropMinted;
+
     /// @notice "Unblinking": when each Face last changed hands (mint or transfer). The longer a stare
     /// stays with one holder, the longer its eyes have been open. Read by the renderer.
     mapping(uint256 tokenId => uint64) public heldSince;
@@ -89,6 +123,10 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     event ContractURIUpdated(); // ERC-7572
     event TeamMint(address indexed to, uint256 firstId, uint256 quantity);
     event MintClosed(uint256 totalSupply);
+    event SeederSet(address seeder);
+    event SaleManagerSet(address saleManager);
+    event SeaDropTokenDeployed();
+    event AllowedSeaDropUpdated(address[] allowedSeaDrop);
 
     error ExceedsPublicAllocation();
     error ExceedsTeamAllocation();
@@ -105,33 +143,48 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     error RevealStillOpen();
     error MetadataIsFrozen();
     error RoyaltyTooHigh();
+    error OnlyAllowedSeaDrop();
+    error OnlySaleManager();
+    error PayoutIsFixed();
+    error SupplyIsFixed();
+    error SeederNotSet();
+    error SeederAlreadySet();
+    error SeederMismatch();
+    error InvalidConfig();
 
     constructor(
         address admin,
         address royaltyReceiver,
+        address payout_,
+        address seaDrop,
         string memory unrevealedURI_,
         string memory contractURI_
     ) ERC721("NEONFACES", "NEON") AccessControlDefaultAdminRules(2 days, admin) {
+        if (payout_ == address(0)) revert PayoutIsFixed();
+        payout = payout_;
         _setDefaultRoyalty(royaltyReceiver, MAX_ROYALTY_BPS);
         _unrevealedURI = unrevealedURI_;
         _contractURI = contractURI_;
+        _allowedSeaDrop[seaDrop] = true;
+        _enumeratedAllowedSeaDrop.push(seaDrop);
+        emit SeaDropTokenDeployed();
     }
 
     // ---------------------------------------------------------------------
     // Minting
     // ---------------------------------------------------------------------
 
-    /// @notice Mint `quantity` sequential ids to `to`. Only the sale contract.
-    /// @return firstId the first id minted (ids are firstId .. firstId + quantity - 1)
-    function mint(address to, uint256 quantity) external onlyRole(MINTER_ROLE) returns (uint256 firstId) {
+    /// @notice Called by SeaDrop once it has checked stage, price, proof and wallet limit (the sale on OpenSea).
+    function mintSeaDrop(address minter, uint256 quantity) external {
+        if (!_allowedSeaDrop[msg.sender]) revert OnlyAllowedSeaDrop();
         if (mintPaused) revert MintIsPaused();
         if (publicMinted + quantity > PUBLIC_CAP) revert ExceedsPublicAllocation();
         publicMinted += quantity;
-        firstId = _mintBatch(to, quantity);
+        seaDropMinted[minter] += quantity;
+        _mintBatch(minter, quantity);
     }
 
-    /// @notice Team allocation, hard capped at 111 in bytecode.
-    /// @dev Team Faces still need `NeonSeeder.activate(id)` to get their account + seed.
+    /// @notice Team allocation, hard capped at 111 in bytecode. Same account + seed as every Face.
     function teamMint(address to, uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256 firstId) {
         if (teamMinted + quantity > TEAM_CAP) revert ExceedsTeamAllocation();
         teamMinted += quantity;
@@ -139,17 +192,32 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         emit TeamMint(to, firstId, quantity);
     }
 
+    /// @dev Mints sequential ids, then activates each Face (account + base seed) in the same transaction.
+    /// Plain `_mint`: no receiver callback runs in the middle of a mint.
     function _mintBatch(address to, uint256 quantity) private returns (uint256 firstId) {
         if (quantity == 0) revert ZeroQuantity();
         if (mintClosed) revert MintIsClosed();
         // the art must be committed before the first Face exists, or it could never be sealed
         if (provenanceHash == bytes32(0)) revert ProvenanceNotSet();
+        address s = seeder;
+        if (s == address(0)) revert SeederNotSet(); // a Face is never born without its account
         firstId = totalSupply + 1;
         totalSupply += quantity;
         // MAX_SUPPLY is implied: PUBLIC_CAP + TEAM_CAP == MAX_SUPPLY
         for (uint256 i; i < quantity; ++i) {
             _mint(to, firstId + i);
         }
+        for (uint256 i; i < quantity; ++i) {
+            INeonSeeder(s).activate(firstId + i);
+        }
+    }
+
+    /// @notice Wire the seeder. Once, before the first mint.
+    function setSeeder(address newSeeder) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (seeder != address(0)) revert SeederAlreadySet();
+        if (INeonSeeder(newSeeder).faces() != address(this)) revert SeederMismatch();
+        seeder = newSeeder;
+        emit SeederSet(newSeeder);
     }
 
     function setMintPaused(bool paused) external onlyRole(PAUSER_ROLE) {
@@ -281,11 +349,157 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     }
 
     // ---------------------------------------------------------------------
-    // Royalties (ERC-2981), capped at 5%
+    // Royalties (ERC-2981), capped at 5%. Optional on marketplaces: transfers are never restricted.
     // ---------------------------------------------------------------------
-    function setDefaultRoyalty(address receiver, uint96 bps) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (bps > MAX_ROYALTY_BPS) revert RoyaltyTooHigh();
-        _setDefaultRoyalty(receiver, bps);
+    function setRoyaltyInfo(SeaDropRoyaltyInfo calldata info) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (info.royaltyBps > MAX_ROYALTY_BPS) revert RoyaltyTooHigh();
+        _setDefaultRoyalty(info.royaltyAddress, info.royaltyBps);
+    }
+
+    function royaltyAddress() external view returns (address receiver) {
+        (receiver,) = royaltyInfo(0, BPS);
+    }
+
+    function royaltyBasisPoints() external view returns (uint256 bps) {
+        (, bps) = royaltyInfo(0, BPS);
+    }
+
+    // ---------------------------------------------------------------------
+    // SeaDrop (OpenSea drop) configuration
+    // ---------------------------------------------------------------------
+
+    /// @notice The collection owner OpenSea sees: the sale manager while one is set, else the admin.
+    function owner() public view override returns (address) {
+        address m = saleManager;
+        return m != address(0) ? m : defaultAdmin();
+    }
+
+    /// @notice Set (or clear with 0) the wallet that runs the drop in OpenSea Studio.
+    function setSaleManager(address manager) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        saleManager = manager;
+        emit SaleManagerSet(manager);
+    }
+
+    /// @notice Which SeaDrop contracts may mint. Admin only: an allowed SeaDrop can mint Faces.
+    function updateAllowedSeaDrop(address[] calldata allowed) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        for (uint256 i; i < _enumeratedAllowedSeaDrop.length; ++i) {
+            _allowedSeaDrop[_enumeratedAllowedSeaDrop[i]] = false;
+        }
+        for (uint256 i; i < allowed.length; ++i) {
+            _allowedSeaDrop[allowed[i]] = true;
+        }
+        _enumeratedAllowedSeaDrop = allowed;
+        emit AllowedSeaDropUpdated(allowed);
+    }
+
+    /// @notice What SeaDrop may still sell against: the public allocation plus team Faces already minted
+    /// (the unminted team reserve is not for sale). Equals the final supply once minting is closed.
+    function maxSupply() public view returns (uint256) {
+        return mintClosed ? totalSupply : PUBLIC_CAP + teamMinted;
+    }
+
+    /// @notice The supply is fixed in bytecode.
+    function setMaxSupply(uint256) external pure {
+        revert SupplyIsFixed();
+    }
+
+    function getMintStats(address minter)
+        external
+        view
+        returns (uint256 minterNumMinted, uint256 currentTotalSupply, uint256 maxSupply_)
+    {
+        return (seaDropMinted[minter], totalSupply, maxSupply());
+    }
+
+    modifier onlySale() {
+        if (msg.sender != saleManager && !hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert OnlySaleManager();
+        _;
+    }
+
+    function _seaDrop(address impl) private view returns (ISeaDrop) {
+        if (!_allowedSeaDrop[impl]) revert OnlyAllowedSeaDrop();
+        return ISeaDrop(impl);
+    }
+
+    function updatePublicDrop(address impl, PublicDrop calldata drop) external onlySale {
+        _seaDrop(impl).updatePublicDrop(drop);
+    }
+
+    function updateAllowList(address impl, AllowListData calldata data) external onlySale {
+        _seaDrop(impl).updateAllowList(data);
+    }
+
+    function updateTokenGatedDrop(address impl, address nftToken, TokenGatedDropStage calldata stage)
+        external
+        onlySale
+    {
+        _seaDrop(impl).updateTokenGatedDrop(nftToken, stage);
+    }
+
+    function updateDropURI(address impl, string calldata dropURI) external onlySale {
+        _seaDrop(impl).updateDropURI(dropURI);
+    }
+
+    /// @notice Proceeds can only go to the immutable split: any other address reverts.
+    function updateCreatorPayoutAddress(address impl, address payoutAddress) external onlySale {
+        if (payoutAddress != payout) revert PayoutIsFixed();
+        _seaDrop(impl).updateCreatorPayoutAddress(payoutAddress);
+    }
+
+    function updateAllowedFeeRecipient(address impl, address feeRecipient, bool allowed) external onlySale {
+        _seaDrop(impl).updateAllowedFeeRecipient(feeRecipient, allowed);
+    }
+
+    function updateSignedMintValidationParams(address impl, address signer, SignedMintValidationParams memory params)
+        external
+        onlySale
+    {
+        _seaDrop(impl).updateSignedMintValidationParams(signer, params);
+    }
+
+    function updatePayer(address impl, address payer, bool allowed) external onlySale {
+        _seaDrop(impl).updatePayer(payer, allowed);
+    }
+
+    /// @notice OpenSea Studio's single configuration call. Supply, base URI, contract URI and provenance
+    /// are ignored: they are fixed or governed on-chain here. Everything else is forwarded to SeaDrop.
+    function multiConfigure(MultiConfigureStruct calldata c) external onlySale {
+        ISeaDrop sd = _seaDrop(c.seaDropImpl);
+        if (c.publicDrop.startTime != 0 || c.publicDrop.endTime != 0) sd.updatePublicDrop(c.publicDrop);
+        if (bytes(c.dropURI).length != 0) sd.updateDropURI(c.dropURI);
+        if (c.allowListData.merkleRoot != bytes32(0)) sd.updateAllowList(c.allowListData);
+        if (c.creatorPayoutAddress != address(0)) {
+            if (c.creatorPayoutAddress != payout) revert PayoutIsFixed();
+            sd.updateCreatorPayoutAddress(c.creatorPayoutAddress);
+        }
+        for (uint256 i; i < c.allowedFeeRecipients.length; ++i) {
+            sd.updateAllowedFeeRecipient(c.allowedFeeRecipients[i], true);
+        }
+        for (uint256 i; i < c.disallowedFeeRecipients.length; ++i) {
+            sd.updateAllowedFeeRecipient(c.disallowedFeeRecipients[i], false);
+        }
+        for (uint256 i; i < c.allowedPayers.length; ++i) {
+            sd.updatePayer(c.allowedPayers[i], true);
+        }
+        for (uint256 i; i < c.disallowedPayers.length; ++i) {
+            sd.updatePayer(c.disallowedPayers[i], false);
+        }
+        if (c.tokenGatedDropStages.length != c.tokenGatedAllowedNftTokens.length) revert InvalidConfig();
+        for (uint256 i; i < c.tokenGatedDropStages.length; ++i) {
+            sd.updateTokenGatedDrop(c.tokenGatedAllowedNftTokens[i], c.tokenGatedDropStages[i]);
+        }
+        TokenGatedDropStage memory noStage;
+        for (uint256 i; i < c.disallowedTokenGatedAllowedNftTokens.length; ++i) {
+            sd.updateTokenGatedDrop(c.disallowedTokenGatedAllowedNftTokens[i], noStage);
+        }
+        if (c.signedMintValidationParams.length != c.signers.length) revert InvalidConfig();
+        for (uint256 i; i < c.signers.length; ++i) {
+            sd.updateSignedMintValidationParams(c.signers[i], c.signedMintValidationParams[i]);
+        }
+        SignedMintValidationParams memory noParams;
+        for (uint256 i; i < c.disallowedSigners.length; ++i) {
+            sd.updateSignedMintValidationParams(c.disallowedSigners[i], noParams);
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -298,7 +512,8 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         returns (bool)
     {
         return interfaceId == bytes4(0x49064906) // ERC-4906
-            || ERC721.supportsInterface(interfaceId) || ERC2981.supportsInterface(interfaceId)
-            || AccessControlDefaultAdminRules.supportsInterface(interfaceId);
+            || interfaceId == type(INonFungibleSeaDropToken).interfaceId
+            || interfaceId == type(ISeaDropTokenContractMetadata).interfaceId || ERC721.supportsInterface(interfaceId)
+            || ERC2981.supportsInterface(interfaceId) || AccessControlDefaultAdminRules.supportsInterface(interfaceId);
     }
 }

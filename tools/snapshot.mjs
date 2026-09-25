@@ -105,4 +105,4 @@ report.wallets = rows.length;
 report.maxFaces = rows.reduce((s, r) => s + r[1], 0);
 writeFileSync(resolve(dirname(cfgPath), `${phase}.report.json`), JSON.stringify(report, null, 2));
 console.log(`${rows.length} wallets, up to ${report.maxFaces} Faces -> ${csvPath}`);
-console.log(`next: node allowlist.mjs ${phase} ${csvPath}`);
+console.log(`next: node allowlist.mjs ${csvPath}   (-> CSV for OpenSea Studio)`);

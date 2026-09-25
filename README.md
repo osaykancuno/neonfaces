@@ -3,12 +3,13 @@
 5555 close-up faces on **Robinhood Chain** (chain id 4663). Every Face is an account.
 
 - **Fully on-chain pixel art.** Each Face is a 20–40 block grid (~168 bytes, RLE) stored in contract bytecode (SSTORE2). `tokenURI` draws the SVG and writes the JSON on-chain. No IPFS, no server.
+- **Minted on OpenSea.** The drop runs on OpenSea through SeaDrop; the token itself creates each Face's account and seed during that mint. The site presents the project and is where holders manage their Faces.
 - **Every Face is a wallet.** An ERC-6551 Token Bound Account is created through the canonical registry *and funded* with a base basket of Stock Tokens in the mint transaction.
 - **Stare tiers set at reveal**: a keyed on-chain permutation maps tokens to art; the art decides the tier (exactly 4444 Glance / 833 Watch / 278 Heavy Stare) and Watch / Heavy Stare Faces get a top-up. Nothing valuable is decided at mint, so it can't be sniped.
 - **Unblinking**: an on-chain clock of how long each Face has stayed with its holder, shown in the metadata. Selling resets it.
 - **Scoped agents**: holders delegate an agent in a plain-language wizard; it may only call what they allow, within an ETH budget — no signatures, expiring, void on sale. Trading goes through **NeonTrader**: Uniswap v3 on Robinhood Chain, output always back into the Face, price bounded by Chainlink, daily USD cap. See [docs/AGENTS.md](docs/AGENTS.md).
 - **Lock before listing**: a holder can freeze the account until a date; the lock survives the sale, so buyers get exactly what they see.
-- **Money said before, not after**: 40 / 25 / 20 / 15 split hard-coded in the minter; team share vests over 6 months.
+- **Money said before, not after**: after OpenSea's 10% drop fee, SeaDrop can pay mint proceeds only to `NeonPayout` — a 40 / 25 / 20 / 15 split with no owner; team share vests over 6 months.
 
 > Plain truth: NEONFACES does not sell shares or shareholder rights. It sells an artwork that can hold on-chain exposure. Stock Tokens give economic exposure only and are not available to US persons.
 
@@ -17,9 +18,9 @@
 | Path | What |
 |---|---|
 | `art/` | Procedural renderer + collection generator (Python). Produces the on-chain records, provenance, previews. |
-| `contracts/` | Foundry project: `NeonFaces` (ERC-721), `NeonMinter`, `NeonSeeder`, `NeonFaceAccount` (ERC-6551), `NeonArt` (SSTORE2), `NeonRenderer` (SVG/JSON), `NeonTrader` (agent trading guard). Tests, deploy + upload + rehearsal scripts. |
-| `tools/` | Node ops tools: live-priced baskets, NFT-holder snapshots, allowlists (Merkle), Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
-| `web/` | The site (Vite + viem, static). Draws Faces from the on-chain bytes with a byte-identical JS port of the renderer. Mint, Face pages. |
+| `contracts/` | Foundry project: `NeonFaces` (ERC-721, SeaDrop-compatible), `NeonPayout` (proceeds split), `NeonSeeder`, `NeonFaceAccount` (ERC-6551), `NeonArt` (SSTORE2), `NeonRenderer` (SVG/JSON), `NeonTrader` (agent trading guard). Tests, deploy + upload + rehearsal scripts. |
+| `tools/` | Node ops tools: live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |
+| `web/` | The site (Vite + viem, static). Draws Faces from the on-chain bytes with a byte-identical JS port of the renderer. Links to the OpenSea drop; Face pages with the holder panel (withdraw, lock, agents). |
 | `config/` | Seed basket plan, verified trading config (Uniswap + Chainlink addresses), allowlist sources. |
 | `docs/` | Lore, architecture, agents, launch runbook, security review, economics, traits. |
 
@@ -31,13 +32,14 @@ Requirements: Foundry, Node ≥ 20, Python ≥ 3.11 with `numpy pillow pycryptod
 # 1. art: generate the 5555 Faces (≈9 min) and the site assets
 cd art && python generate.py && python export_site.py && cd ..
 
-# 2. contracts: build + test (66 tests incl. anti-sniping, full-supply permutation, byte-exact SVG, agents, lock)
+# 2. contracts: build + test (71 tests incl. mints through OpenSea's real SeaDrop bytecode, anti-sniping,
+#    full-supply permutation, byte-exact SVG, agents, lock)
 cd contracts && forge test && cd ..
 
-# 3. mainnet-fork tests: real Stock Tokens, real Uniswap v3 pools, real Chainlink feeds
+# 3. mainnet-fork tests: real SeaDrop, real Stock Tokens, real Uniswap v3 pools, real Chainlink feeds
 cd contracts && ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com forge test --match-path "test/*Fork*" -vv && cd ..
 
-# 4. full local rehearsal: deploy, upload + seal the art, phases, 20 mints, reveal
+# 4. full local rehearsal: deploy, upload + seal the art, SeaDrop stage, 20 mints through SeaDrop, reveal
 anvil --chain-id 46630 &
 cd contracts && RPC=http://127.0.0.1:8545 PK=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 ./script/rehearsal.sh && cd ..
 
@@ -45,11 +47,13 @@ cd contracts && RPC=http://127.0.0.1:8545 PK=0xac0974bec39a17e36ba4a6b4d238ff944
 cd tools && npm install && cd ../web && npm install && npm run dev
 ```
 
-The site runs in **preview mode** (art + lore, mint disabled) until `web/public/deployment.json` exists (`node tools/export-web.mjs <chainId>`).
+The site runs in **preview mode** (art + lore only) until `web/public/deployment.json` exists (`node tools/export-web.mjs <chainId>`).
 
 Launching for real: follow [docs/LAUNCH-RUNBOOK.md](docs/LAUNCH-RUNBOOK.md) — testnet rehearsal first.
 
-## Verified facts this build relies on (checked on-chain, 2026-09-24)
+## Verified facts this build relies on (checked on-chain, 2026-09-24/25)
+
+- OpenSea supports Robinhood Chain (chain slug `robinhood`). OpenSea's SeaDrop `0x00005EA00Ac477B1030CE78506496e8C2dE24bf5` is deployed on mainnet and testnet; its bytecode equals Ethereum's except the chain-id immutables. Drops take a 10% fee on primary sales.
 
 - Canonical ERC-6551 registry `0x000000006551c19487814612e58FE06813775758` is deployed on Robinhood Chain mainnet and testnet; its codehash equals Ethereum mainnet's.
 - Safe v1.4.1 (SafeL2, ProxyFactory) is deployed on mainnet and testnet.

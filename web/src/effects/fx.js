@@ -69,7 +69,7 @@ export function mosaic(root, records) {
   }
 
   const swap = () => {
-    if (document.hidden) return;
+    if (document.hidden || !tiles.length) return; // no tiles while the hero has no size
     const t = tiles[Math.floor(Math.random() * tiles.length)];
     const next = decode(records[Math.floor(Math.random() * records.length)]);
     // repaint the whole tile at the new grid size in random block order, flashing each block neon first

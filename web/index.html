@@ -55,7 +55,7 @@
             <p class="tagline" data-scramble>They don't blink.</p>
             <p class="sub">5555 close-up faces on Robinhood Chain.<br />Every one is an account.</p>
             <div class="hero-cta">
-              <a href="/#mint" class="btn btn-neon" data-link>Mint a Face</a>
+              <a href="/#mint" class="btn btn-neon" data-link>Mint on OpenSea</a>
               <a href="/#account" class="btn btn-ghost" data-link>What's inside</a>
             </div>
             <div class="hero-stats">
@@ -155,7 +155,7 @@
             <svg id="donut" viewBox="0 0 200 200" aria-label="Mint proceeds split"></svg>
             <ul id="split-list" class="split-list"></ul>
           </div>
-          <p class="lead">The shares and the four addresses are immutable in <code>NeonMinter</code>; anyone can push the split with <code>releaseAll()</code>. Royalties: 5% on-chain (ERC-2981) to the treasury multisig.</p>
+          <p class="lead">The mint runs on OpenSea, which keeps 10% of primary sales. The rest can only be paid to <code>NeonPayout</code>: shares and addresses are immutable, and anyone can push the split with <code>releaseAll()</code>. Resale royalties: 5% suggested on-chain (ERC-2981) to the treasury multisig — optional, because transfers are never restricted.</p>
         </section>
 
         <section id="principles" class="block reveal">
@@ -189,7 +189,7 @@
           <ol class="roadmap">
             <li><b>Mint + seeding</b><span>Every Face minted with its account and base basket. On-chain reveal, Stare top-ups.</span></li>
             <li><b>Agent strategies</b><span>Delegation ships in every account from day one. Next: ready-made strategies ("accumulate one ticker", "keep 40% liquid") and a holder dashboard.</span></li>
-            <li><b>Market + analytics</b><span>Listings on OpenSea and HoodMarket, account-value analytics, holder votes on which tickers join the pool.</span></li>
+            <li><b>Market + analytics</b><span>HoodMarket listing, account-value analytics, holder votes on which tickers join the pool.</span></li>
           </ol>
         </section>
 
@@ -200,19 +200,14 @@
               <img id="mint-preview" alt="" />
             </div>
             <div class="mint-panel">
-              <div class="phase-row"><span class="pill" id="phase-pill">Loading…</span><span id="phase-price"></span></div>
+              <div class="phase-row"><span class="pill" id="phase-pill">Loading…</span></div>
               <div class="progress"><div id="progress-bar"></div></div>
-              <div class="progress-label"><span id="progress-text">— / 5555</span><span id="phase-cap"></span></div>
-              <div id="al-status" class="al-status"></div>
-              <div class="qty">
-                <button id="qty-minus" aria-label="less">−</button>
-                <input id="qty" type="number" min="1" max="10" value="1" />
-                <button id="qty-plus" aria-label="more">+</button>
-              </div>
-              <button id="mint-btn" class="btn btn-neon btn-wide" disabled>Connect wallet</button>
-              <div id="mint-msg" class="msg" role="status"></div>
-              <div id="mint-result" class="mint-result"></div>
-              <p class="fine">Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only and are not available to US persons.</p>
+              <div class="progress-label"><span id="progress-text">— / 5555</span><span id="seeded-text"></span></div>
+              <a id="opensea-btn" class="btn btn-neon btn-wide" target="_blank" rel="noopener">Mint on OpenSea ↗</a>
+              <p class="fine">The mint happens on OpenSea: stages, prices and your allowlist spot are shown there. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only and are not available to US persons.</p>
+              <h3 class="mine-title">Your Faces</h3>
+              <div id="my-faces" class="mint-result"></div>
+              <p class="fine">Open a Face to see what's inside, withdraw, lock it before listing, or set up an agent.</p>
             </div>
           </div>
         </section>
@@ -220,6 +215,7 @@
         <section id="faq" class="block reveal">
           <div class="label">10 / FAQ</div>
           <div class="faq">
+            <details><summary>Where do I mint?</summary><p>On OpenSea, on Robinhood Chain — the button above opens the drop. This site is where you look inside your Face and manage it: withdraw, lock, delegate an agent.</p></details>
             <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT: a base basket from mint, a top-up after reveal for Watch / Heavy Stare, plus anything you add. You can withdraw everything, add more, delegate an agent or lock it — from the Face's page.</p></details>
             <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure. Stock Tokens are tokenized instruments that track the underlying; they give no legal ownership and no shareholder rights.</p></details>
             <details><summary>When do I know my Stare tier?</summary><p>At reveal, after the mint closes. The reveal maps every token to one art piece with a keyed permutation — check it with <code>artIdOf(tokenId)</code> — and the art decides the tier. Watch / Heavy Stare top-ups can then be delivered by anyone, in one call.</p></details>

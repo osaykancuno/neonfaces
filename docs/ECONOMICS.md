@@ -16,17 +16,25 @@ Full-supply pool ≈ **$42,507**: base ≈ $16,665 (delivered as Faces are minte
 
 ## Funding rule
 
-The seed vault receives 40% of every sale. To seed everything from proceeds alone, total mint revenue must be ≥ pool / 0.40 ≈ **$106k**. Below that, the treasury tops up. Base seeds for the free Builders mints (up to 1111 Faces ≈ $3.3k) are in the pool **before** the phase opens — a Face is never born empty. Top-ups are only needed after the reveal.
+The mint runs on OpenSea, which keeps 10% of paid mints (free mints pay no fee). The seed vault receives 40% of the rest, i.e. 36% of what buyers pay. To seed everything from proceeds alone, total mint revenue must be ≥ pool / 0.36 ≈ **$118k**. Below that, the treasury tops up. Base seeds for the team Faces and the free Builders stage (up to 1222 Faces ≈ $3.7k) are in the pool **before** they are minted — a Face is never born empty. Top-ups are only needed after the reveal.
 
 ## Example sale plan (tune to market)
 
-| Phase | Faces | Price | Revenue |
+| OpenSea stage | Faces | Price | Revenue |
 |---|---|---|---|
+| Team (not sold) | 111 | — | — |
 | Builders (allowlist, free) | ≤ 1111 | 0 | 0 |
 | Allowlist | ≤ 2000 | 0.012 ETH | 24 ETH |
 | Public | rest (≈ 2333) | 0.02 ETH | ≈ 46.7 ETH |
 
-Seed vault receives 40% ≈ 28.3 ETH on a sell-out (≈ $76k at ETH $2,691): the baskets use ≈ 56% of it; the rest is a reserve against price moves and pending seeds, and can fund later holder-voted additions — never promised in advance.
+On a sell-out buyers pay ≈ 70.7 ETH; OpenSea keeps ≈ 7.1 ETH; `NeonPayout` receives ≈ 63.6 ETH and the seed vault 40% of it, ≈ 25.4 ETH (≈ $68k at ETH $2,691): the baskets use ≈ 62% of it; the rest is a reserve against price moves and pending seeds, and can fund later holder-voted additions — never promised in advance.
+
+## What keeps running, and what costs money
+
+- **Runs on its own, at no cost to anyone:** art and metadata (on-chain), every Face account, seed retries and Stare top-ups (permissionless), the split, `NeonTrader` (no owner — it relies on Chainlink feeds and Uniswap pools, run by third parties). If the team disappeared, every Face would still render, hold its tokens and trade through its agent.
+- **Costs money:** the static site and its domain (tens of dollars a year), the independent audit (once, before mainnet), gas for operations (cents). The treasury's 25% covers them many times over.
+- **Recurring income:** only resale royalties — 5% suggested on-chain and in OpenSea's settings, optional for sellers because transfers are never restricted. They go to the treasury Safe. There is no fee on holders' trades and no other revenue.
+- **Not automatic:** new baskets or tickers, the site, the community. People do that, paid from the treasury and royalties; nothing about it is promised.
 
 ## What we never say
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {Script, console2} from "forge-std/Script.sol";
 import {VestingWallet} from "@openzeppelin/contracts/finance/VestingWallet.sol";
 import {NeonFaces} from "../src/NeonFaces.sol";
-import {NeonMinter} from "../src/NeonMinter.sol";
+import {NeonPayout} from "../src/NeonPayout.sol";
 import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
 import {NeonArt} from "../src/NeonArt.sol";
@@ -16,6 +16,7 @@ import {MockStockToken} from "../test/mocks/MockStockToken.sol";
 ///
 /// Environment (see contracts/.env.example):
 ///   ADMIN              final admin (Safe multisig 3/5)
+///   SALE_MANAGER       wallet that runs the drop in OpenSea Studio (optional; default: ADMIN)
 ///   ROYALTY_RECEIVER   5% royalty receiver (Safe)
 ///   SEED_VAULT, TREASURY, GROWTH   split payees (40 / 25 / 15)
 ///   TEAM_BENEFICIARY   receives the team 20% through a 6-month VestingWallet
@@ -28,14 +29,17 @@ import {MockStockToken} from "../test/mocks/MockStockToken.sol";
 ///
 /// The deployer keeps the admin role only until the Safe accepts it: every contract starts a
 /// 2-step admin transfer to ADMIN (`acceptDefaultAdminTransfer()` after the delay).
+///
+/// The sale runs on OpenSea (SeaDrop). Mint proceeds can only be paid to NeonPayout (40/25/20/15).
 contract Deploy is Script {
     address constant REGISTRY = 0x000000006551c19487814612e58FE06813775758;
+    address constant SEADROP = 0x00005EA00Ac477B1030CE78506496e8C2dE24bf5;
 
     struct Deployed {
         NeonFaceAccount accountImpl;
         NeonFaces faces;
         NeonSeeder seeder;
-        NeonMinter minter;
+        NeonPayout payout;
         NeonArt art;
         NeonRenderer renderer;
         VestingWallet teamVesting;
@@ -46,6 +50,7 @@ contract Deploy is Script {
         address admin = vm.envAddress("ADMIN");
         bool mocks = vm.envOr("USE_MOCK_TOKENS", false);
         require(REGISTRY.code.length > 0, "ERC-6551 registry missing on this chain");
+        require(SEADROP.code.length > 0, "SeaDrop missing on this chain");
 
         string memory prov = vm.readFile("../art/output/provenance.json");
         bytes32 provenance = vm.parseJsonBytes32(prov, ".provenanceHash");
@@ -54,27 +59,25 @@ contract Deploy is Script {
         vm.startBroadcast();
 
         d.accountImpl = new NeonFaceAccount();
-        d.faces = new NeonFaces(deployer, vm.envAddress("ROYALTY_RECEIVER"), "", "");
-        d.seeder = new NeonSeeder(d.faces, IERC6551Registry(REGISTRY), address(d.accountImpl), deployer);
         d.teamVesting = new VestingWallet(
             vm.envAddress("TEAM_BENEFICIARY"),
             uint64(vm.envOr("VESTING_START", block.timestamp)),
             uint64(vm.envOr("VESTING_DURATION", uint256(180 days)))
         );
-        d.minter = new NeonMinter(
-            d.faces,
-            d.seeder,
-            deployer,
+        d.payout = new NeonPayout(
             payable(vm.envAddress("SEED_VAULT")),
             payable(vm.envAddress("TREASURY")),
             payable(address(d.teamVesting)),
             payable(vm.envAddress("GROWTH"))
         );
+        d.faces = new NeonFaces(deployer, vm.envAddress("ROYALTY_RECEIVER"), address(d.payout), SEADROP, "", "");
+        d.seeder = new NeonSeeder(d.faces, IERC6551Registry(REGISTRY), address(d.accountImpl), deployer);
         d.art = new NeonArt(d.faces, deployer);
         d.renderer = new NeonRenderer(d.faces, d.seeder, d.art, placeholder, vm.envString("SITE_URL"), _watchTokens());
 
         // ---- wiring ----
-        d.faces.grantRole(d.faces.MINTER_ROLE(), address(d.minter));
+        d.faces.setSeeder(address(d.seeder)); // every mint creates the account + base seed
+        d.faces.setSaleManager(vm.envOr("SALE_MANAGER", admin)); // OpenSea Studio wallet
         d.faces.grantRole(d.faces.PAUSER_ROLE(), admin);
         d.faces.grantRole(d.faces.METADATA_ROLE(), admin);
         d.faces.grantRole(d.faces.METADATA_ROLE(), deployer);
@@ -83,7 +86,6 @@ contract Deploy is Script {
         d.faces.setProvenanceHash(provenance); // commitment BEFORE any mint
         d.art.grantRole(d.art.ARTIST_ROLE(), deployer); // for UploadArt.s.sol
         d.seeder.grantRole(d.seeder.CONFIG_ROLE(), admin);
-        d.minter.grantRole(d.minter.OPERATOR_ROLE(), admin);
 
         // ---- seed baskets (deployer temporarily holds CONFIG_ROLE) ----
         d.seeder.grantRole(d.seeder.CONFIG_ROLE(), deployer);
@@ -93,10 +95,8 @@ contract Deploy is Script {
 
         // ---- hand over to the Safe ----
         if (admin != deployer) {
-            d.minter.revokeRole(d.minter.OPERATOR_ROLE(), deployer);
             d.faces.beginDefaultAdminTransfer(admin);
             d.seeder.beginDefaultAdminTransfer(admin);
-            d.minter.beginDefaultAdminTransfer(admin);
             d.art.beginDefaultAdminTransfer(admin);
         }
 
@@ -201,12 +201,13 @@ contract Deploy is Script {
         vm.serializeAddress(o, "art", address(d.art));
         vm.serializeAddress(o, "renderer", address(d.renderer));
         vm.serializeAddress(o, "teamVesting", address(d.teamVesting));
-        string memory out = vm.serializeAddress(o, "minter", address(d.minter));
+        vm.serializeAddress(o, "seaDrop", SEADROP);
+        string memory out = vm.serializeAddress(o, "payout", address(d.payout));
         string memory path = string.concat("deployments/", vm.toString(block.chainid), ".json");
         vm.writeJson(out, path);
         console2.log("NeonFaces     ", address(d.faces));
         console2.log("NeonSeeder    ", address(d.seeder));
-        console2.log("NeonMinter    ", address(d.minter));
+        console2.log("NeonPayout    ", address(d.payout));
         console2.log("NeonArt       ", address(d.art));
         console2.log("NeonRenderer  ", address(d.renderer));
         console2.log("FaceAccount   ", address(d.accountImpl));

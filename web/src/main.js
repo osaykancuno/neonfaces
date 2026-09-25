@@ -1,5 +1,5 @@
-import { formatEther, formatUnits, parseEventLogs } from "viem";
-import { ABI, PHASES, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata } from "./chain.js";
+import { formatEther, formatUnits } from "viem";
+import { ABI, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata, facesOf } from "./chain.js";
 import { pixelEye } from "./effects/eye.js";
 import { decode, svgDataURI } from "./render.js";
 import { holderPanel, knownTokens } from "./agent-ui.js";
@@ -40,6 +40,7 @@ renderFooter();
 reveals();
 document.querySelectorAll(".hero [data-scramble]").forEach((el) => scramble(el, { duration: 1400 }));
 setupMint();
+renderMyFaces();
 route();
 
 window.addEventListener("popstate", route);
@@ -184,7 +185,7 @@ async function renderSplit() {
   ];
   if (!state.preview) {
     try {
-      const [accounts] = await read("minter", "payees");
+      const [accounts] = await read("payout", "payees");
       accounts.forEach((a, i) => (parts[i].addr = a));
     } catch {}
   }
@@ -216,7 +217,7 @@ function renderFooter() {
     return;
   }
   const d = state.dep;
-  const items = [["Faces", d.faces], ["Minter", d.minter], ["Seeder", d.seeder], ["Art", d.art], ["Renderer", d.renderer]];
+  const items = [["Faces", d.faces], ["Payout", d.payout], ["Seeder", d.seeder], ["Art", d.art], ["Renderer", d.renderer]];
   el.innerHTML = items
     .map(([n, a]) => {
       const l = explorer(`address/${a}`);
@@ -251,7 +252,7 @@ async function pickWallet() {
 }
 
 async function doConnect() {
-  if (state.preview) return toast("Mint is not live yet. They're watching the chain.");
+  if (state.preview) return toast("Not deployed yet. They're watching the chain.");
   const provider = await pickWallet();
   await connect(provider);
   await ensureChain();
@@ -260,20 +261,11 @@ async function doConnect() {
 $("#connect").addEventListener("click", () => doConnect().catch((e) => e.message !== "cancelled" && toast(errMsg(e))));
 window.addEventListener("neon:account", () => {
   $("#connect").textContent = state.account ? short(state.account) : "Connect";
-  refreshMint();
+  renderMyFaces();
   if (!$("#face-page").hidden) route();
 });
 
 const FRIENDLY = {
-  SaleNotActive: "Mint is closed right now.",
-  NotAllowlisted: "This wallet is not on the list for this phase.",
-  WalletLimit: "This wallet has reached its limit for this phase.",
-  PhaseSoldOut: "This phase is sold out.",
-  MintIsPaused: "Mint is paused.",
-  ExceedsPublicAllocation: "Sold out.",
-  WrongPayment: "Wrong ETH amount — refresh and try again.",
-  InvalidQuantity: "Choose between 1 and 10.",
-  MintIsClosed: "Mint is over.",
   AccountIsLocked: "This Face's account is locked.",
   InvalidLock: "A lock can only be extended, up to 365 days.",
   InvalidAgentConfig: "Check the agent address, expiry and calls (the account itself can't be a target).",
@@ -292,114 +284,60 @@ function errMsg(e) {
 }
 
 // =====================================================================================
-// mint
+// mint (on OpenSea) + the connected wallet's Faces
 // =====================================================================================
-const mintState = { phase: 0, cfg: null, allowance: 0, proof: [], remaining: 0 };
-const allowlists = {};
-
 function setupMint() {
   const pick = () => gallery[Math.floor(Math.random() * gallery.length)];
   $("#mint-preview").src = gallery.length ? faceURI(pick()) : svgDataURI(5555, placeholder);
   setInterval(() => gallery.length && ($("#mint-preview").src = faceURI(pick())), 1600);
 
-  const qty = $("#qty");
-  const clamp = () => (qty.value = Math.max(1, Math.min(Number(qty.value) || 1, Math.max(1, Math.min(10, mintState.remaining || 10)))));
-  $("#qty-minus").onclick = () => { qty.value = Number(qty.value) - 1; clamp(); updatePrice(); };
-  $("#qty-plus").onclick = () => { qty.value = Number(qty.value) + 1; clamp(); updatePrice(); };
-  qty.onchange = () => { clamp(); updatePrice(); };
-  $("#mint-btn").onclick = () => onMint().catch((e) => setMsg(errMsg(e), "err"));
-
+  const btn = $("#opensea-btn");
+  const url = state.dep?.opensea?.collection;
+  if (url) btn.href = url;
+  else {
+    btn.removeAttribute("href");
+    btn.classList.add("disabled");
+    btn.textContent = "OpenSea drop: link soon";
+  }
   if (state.preview) {
     $("#phase-pill").textContent = "Coming soon";
     $("#progress-text").textContent = "0 / 5555";
-    $("#mint-btn").textContent = "Mint opens soon";
+    $("#my-faces").innerHTML = `<span class="fine">Faces show up here once the collection is deployed.</span>`;
     return;
   }
   refreshMint();
   setInterval(refreshMint, 12_000);
 }
 
-function updatePrice() {
-  if (!mintState.cfg) return;
-  const q = BigInt(Number($("#qty").value) || 1);
-  const p = mintState.cfg.price * q;
-  $("#phase-price").textContent = mintState.cfg.price === 0n ? "FREE" : `${formatEther(p)} ETH`;
-}
-
-function setMsg(t, cls = "") {
-  const m = $("#mint-msg");
-  m.textContent = t;
-  m.className = `msg ${cls}`;
-}
-
 async function refreshMint() {
   if (state.preview) return;
   try {
-    const [phase, supply, funded, closed] = await Promise.all([read("minter", "phase"), read("faces", "totalSupply"), read("seeder", "fundedCount"), read("faces", "mintClosed")]);
-    const [price, maxPerWallet, supplyCap, minted] = await read("minter", "phaseConfig", [phase]);
-    mintState.phase = Number(phase);
-    mintState.cfg = { price, maxPerWallet, supplyCap, minted };
-    const name = PHASES[mintState.phase];
-    const live = !closed && mintState.phase >= 1 && mintState.phase <= 3;
-    $("#phase-pill").textContent = live ? `${name} · live` : closed ? "Mint over" : name === "Finished" ? "Sold out / closed" : "Closed";
-    $("#phase-pill").classList.toggle("live", live);
+    const [supply, funded, closed] = await Promise.all([read("faces", "totalSupply"), read("seeder", "fundedCount"), read("faces", "mintClosed")]);
+    const done = closed || supply >= 5555n;
+    $("#phase-pill").textContent = done ? "Mint over · trade on OpenSea" : "Minting on OpenSea";
+    $("#phase-pill").classList.toggle("live", !done);
+    if (done && state.dep?.opensea?.collection) $("#opensea-btn").textContent = "View on OpenSea ↗";
     $("#progress-text").textContent = `${supply} / 5555`;
     $("#progress-bar").style.width = `${(Number(supply) / 5555) * 100}%`;
-    $("#phase-cap").textContent = supplyCap ? `phase: ${minted} / ${supplyCap}` : "";
+    $("#seeded-text").textContent = `${funded} seeded`;
     document.querySelectorAll('[data-stat="minted"]').forEach((e) => (e.textContent = supply.toString()));
     document.querySelectorAll('[data-stat="seeded"]').forEach((e) => (e.textContent = funded.toString()));
-    updatePrice();
-
-    const btn = $("#mint-btn");
-    if (!live) { btn.disabled = true; btn.textContent = "Mint closed"; $("#al-status").textContent = ""; return; }
-    if (!state.account) { btn.disabled = false; btn.textContent = "Connect wallet"; $("#al-status").textContent = ""; return; }
-
-    const already = Number(await read("minter", "mintedBy", [phase, state.account]));
-    if (name === "Public") {
-      mintState.allowance = Number(maxPerWallet);
-      mintState.proof = [];
-      $("#al-status").textContent = `Public mint · ${already}/${maxPerWallet} used by this wallet`;
-    } else {
-      const key = name.toLowerCase();
-      allowlists[key] ??= await fetch(`/allowlist/${key}.json`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
-      const entry = allowlists[key]?.entries?.[state.account.toLowerCase()];
-      if (!entry) {
-        mintState.allowance = 0;
-        $("#al-status").textContent = `${short(state.account)} is not on the ${name} list.`;
-      } else {
-        mintState.allowance = entry.allowance;
-        mintState.proof = entry.proof;
-        $("#al-status").textContent = `On the ${name} list ✓ · ${already}/${entry.allowance} used`;
-      }
-    }
-    mintState.remaining = Math.max(0, mintState.allowance - already);
-    btn.disabled = mintState.remaining === 0;
-    btn.textContent = mintState.remaining === 0 ? "Nothing left to mint" : "Mint";
-  } catch (e) {
-    setMsg(`Chain read failed: ${errMsg(e)}`, "err");
-  }
+  } catch {}
 }
 
-async function onMint() {
-  if (!state.account) { await doConnect(); return refreshMint(); }
-  await ensureChain();
-  const q = BigInt(Math.min(Number($("#qty").value) || 1, mintState.remaining));
-  const value = mintState.cfg.price * q;
-  const name = PHASES[mintState.phase];
-  const args = [q, BigInt(name === "Public" ? 0 : mintState.allowance), mintState.proof];
-  setMsg("Simulating…");
-  const { request } = await state.pub.simulateContract({ address: state.dep.minter, abi: ABI.minter, functionName: "mint", args, value, account: state.account });
-  setMsg("Confirm in your wallet…");
-  const hash = await state.wallet.writeContract(request);
-  setMsg(`Minting… ${short(hash)}`);
-  const receipt = await state.pub.waitForTransactionReceipt({ hash });
-  if (receipt.status !== "success") throw new Error("transaction reverted");
-  const [ev] = parseEventLogs({ abi: ABI.minter, logs: receipt.logs, eventName: "Minted" });
-  const first = Number(ev.args.firstId);
-  const ids = Array.from({ length: Number(ev.args.quantity) }, (_, i) => first + i);
-  setMsg(`Minted ${ids.length} Face${ids.length > 1 ? "s" : ""}. Each one already has its account.`, "ok");
-  $("#mint-result").innerHTML = ids.map((id) => `<a href="/face/${id}" data-link>#${id} →</a>`).join("");
-  refreshMint();
+async function renderMyFaces() {
+  const el = $("#my-faces");
+  if (state.preview) return;
+  if (!state.account) {
+    el.innerHTML = `<button class="btn btn-ghost" id="my-connect">Connect to see yours</button>`;
+    $("#my-connect").onclick = () => doConnect().catch((e) => e.message !== "cancelled" && toast(errMsg(e)));
+    return;
+  }
+  el.innerHTML = `<span class="fine">Looking…</span>`;
+  const ids = await facesOf(state.account).catch(() => []);
+  el.innerHTML = ids.length
+    ? ids.map((id) => `<a href="/face/${id}" data-link>#${id} →</a>`).join("")
+    : `<span class="fine">No Face found for ${short(state.account)}. Know the number? Open it: <a href="/face/1" data-link>/face/&lt;number&gt;</a></span>`;
 }
 
 // =====================================================================================

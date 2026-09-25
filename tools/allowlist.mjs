@@ -1,33 +1,34 @@
-// Build an allowlist Merkle tree for NeonMinter.
+// Turn an allowlist into the CSV OpenSea Studio accepts for a presale stage.
 //
-//   node allowlist.mjs <phase> <input.csv>
-//   node allowlist.mjs builders ../config/allowlists/builders.csv
+//   node allowlist.mjs <input.csv> [stage-name]
+//   node allowlist.mjs ../config/allowlists/builders.csv
 //
-// CSV: `address,allowance` per line (header optional, allowance defaults to 1).
-// Leaf = keccak256(bytes.concat(keccak256(abi.encode(address, uint256 allowance)))),
-// exactly what NeonMinter.mint() verifies (OpenZeppelin StandardMerkleTree).
-//
-// Output: ../web/public/allowlist/<phase>.json  -> { root, count, entries: { [address]: { allowance, proof } } }
-// The root goes on-chain with NeonMinter.configurePhase(phase, price, 0, supplyCap, root).
+// Input: `address,allowance` per line (header optional, allowance defaults to 1) — what tools/snapshot.mjs writes.
+// Output: ../config/allowlists/opensea/<stage>.csv — `address,limit` per line, no header, no duplicates,
+// checksummed (OpenSea's format: address, optional per-wallet limit, optional per-wallet price).
+// Upload it to the matching presale stage in OpenSea Studio. Studio builds the SeaDrop Merkle root; the
+// allowlist can't be edited once that stage has started minting.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import { getAddress, isAddress } from "viem";
 
+const OPENSEA_MAX_PER_STAGE = 30_000;
+
 const here = dirname(fileURLToPath(import.meta.url));
-const [phase, csvPath] = process.argv.slice(2);
-if (!phase || !csvPath) {
-  console.error("usage: node allowlist.mjs <builders|allowlist> <file.csv>");
+const [csvPath, stageArg] = process.argv.slice(2);
+if (!csvPath) {
+  console.error("usage: node allowlist.mjs <file.csv> [stage-name]");
   process.exit(1);
 }
+const stage = stageArg ?? basename(csvPath).replace(/\.csv$/i, "");
 
 const rows = new Map();
 const lines = readFileSync(resolve(csvPath), "utf8").split(/\r?\n/);
 lines.forEach((line, i) => {
   const [a, n] = line.split(",").map((s) => s?.trim());
   if (!a || !isAddress(a, { strict: false })) {
-    if (a && i > 0) console.warn(`line ${i + 1}: skipped invalid address "${a}"`);
+    if (a && i > 0) console.warn(`line ${i + 1}: skipped invalid address "${a}" (ENS names are not accepted by OpenSea)`);
     return;
   }
   const addr = getAddress(a);
@@ -37,19 +38,15 @@ lines.forEach((line, i) => {
   rows.set(addr, Math.max(allowance, rows.get(addr) ?? 0));
 });
 if (rows.size === 0) throw new Error("no valid rows");
+if (rows.size > OPENSEA_MAX_PER_STAGE) throw new Error(`${rows.size} wallets: OpenSea accepts at most ${OPENSEA_MAX_PER_STAGE} per stage`);
 
-const values = [...rows.entries()].map(([a, n]) => [a, n.toString()]);
-const tree = StandardMerkleTree.of(values, ["address", "uint256"]);
-
-const entries = {};
-for (const [i, v] of tree.entries()) {
-  entries[v[0].toLowerCase()] = { allowance: Number(v[1]), proof: tree.getProof(i) };
-}
-const out = { phase, root: tree.root, count: rows.size, totalAllowance: values.reduce((s, v) => s + Number(v[1]), 0), entries };
-
-const outPath = resolve(here, `../web/public/allowlist/${phase}.json`);
+const out = [...rows.entries()].map(([a, n]) => `${a},${n}`).join("\n") + "\n";
+const outPath = resolve(here, `../config/allowlists/opensea/${stage}.csv`);
 mkdirSync(dirname(outPath), { recursive: true });
-writeFileSync(outPath, JSON.stringify(out));
-console.log(`${phase}: ${out.count} wallets, ${out.totalAllowance} Faces max`);
-console.log(`root: ${tree.root}`);
+writeFileSync(outPath, out);
+
+const total = [...rows.values()].reduce((s, n) => s + n, 0);
+const limits = [...new Set(rows.values())].sort((a, b) => a - b);
+console.log(`${stage}: ${rows.size} wallets, ${total} Faces max (per-wallet limits: ${limits.join(", ")})`);
 console.log(`wrote ${outPath}`);
+console.log("Set the stage's supply cap in Studio so the stage can't sell more than planned.");

@@ -1,16 +1,19 @@
 // Publish deployment addresses + chain info to the website.
 //
 //   node export-web.mjs <chainId> [rpcUrl]
+//   OPENSEA_URL=https://opensea.io/collection/<slug> node export-web.mjs 4663
 //
 // Writes ../web/public/deployment.json. The site reads it at runtime, so a redeploy never needs a rebuild.
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
+// OPENSEA_URL is the collection page OpenSea creates for the drop (the site's "Mint on OpenSea" button);
+// without it the button says the link is coming.
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const chainId = Number(process.argv[2] ?? 4663);
 const CHAINS = {
-  4663: { name: "Robinhood Chain", rpcUrl: "https://rpc.mainnet.chain.robinhood.com", explorer: "https://robinhoodchain.blockscout.com", opensea: "https://opensea.io/assets/robinhood" },
+  4663: { name: "Robinhood Chain", rpcUrl: "https://rpc.mainnet.chain.robinhood.com", explorer: "https://robinhoodchain.blockscout.com", opensea: "https://opensea.io/item/robinhood" },
   46630: { name: "Robinhood Chain Testnet", rpcUrl: "https://rpc.testnet.chain.robinhood.com", explorer: "https://explorer.testnet.chain.robinhood.com", opensea: "" },
   31337: { name: "Local", rpcUrl: "http://127.0.0.1:8545", explorer: "", opensea: "" },
 };
@@ -19,6 +22,10 @@ if (process.argv[3]) chain.rpcUrl = process.argv[3];
 
 const dep = JSON.parse(readFileSync(resolve(here, `../contracts/deployments/${chainId}.json`), "utf8"));
 const out = { ...dep, chain: { id: chainId, ...chain } };
+if (process.env.OPENSEA_URL) {
+  if (!/^https:\/\/opensea\.io\/collection\/[\w-]+/.test(process.env.OPENSEA_URL)) throw new Error("OPENSEA_URL: https://opensea.io/collection/<slug>");
+  out.opensea = { collection: process.env.OPENSEA_URL };
+} else console.warn("OPENSEA_URL not set: the site's mint button will say the link is coming");
 const outPath = resolve(here, "../web/public/deployment.json");
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, JSON.stringify(out, null, 2));
@@ -36,6 +43,3 @@ if (existsSync(presetsSrc)) {
   console.log("agent presets: none (holders only see the Advanced option)");
 }
 
-// allowlist files present?
-const alDir = resolve(here, "../web/public/allowlist");
-if (existsSync(alDir)) console.log("allowlists:", readdirSync(alDir).join(", ") || "none");

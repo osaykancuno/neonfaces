@@ -5,15 +5,18 @@ import {Test, console2} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {VestingWallet} from "@openzeppelin/contracts/finance/VestingWallet.sol";
 import {NeonFaces} from "../src/NeonFaces.sol";
-import {NeonMinter} from "../src/NeonMinter.sol";
+import {NeonPayout} from "../src/NeonPayout.sol";
 import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
 import {IERC6551Registry} from "../src/interfaces/IERC6551Registry.sol";
+import {ISeaDrop, PublicDrop} from "../src/interfaces/ISeaDrop.sol";
 
-/// @notice Full system on a fork of Robinhood Chain mainnet, seeding Faces with REAL Stock Tokens.
+/// @notice Full system on a fork of Robinhood Chain mainnet: minted through the REAL OpenSea SeaDrop,
+/// seeded with REAL Stock Tokens.
 /// Run: ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com forge test --match-contract ForkTest -vv
 contract ForkTest is Test {
     IERC6551Registry constant REGISTRY = IERC6551Registry(0x000000006551c19487814612e58FE06813775758);
+    ISeaDrop constant SEADROP = ISeaDrop(0x00005EA00Ac477B1030CE78506496e8C2dE24bf5);
     address constant TSLA = 0x322F0929c4625eD5bAd873c95208D54E1c003b2d;
     address constant NVDA = 0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC;
     address constant SPY = 0x117cc2133c37B721F49dE2A7a74833232B3B4C0C;
@@ -40,21 +43,16 @@ contract ForkTest is Test {
 
         address admin = makeAddr("admin");
         NeonFaceAccount impl = new NeonFaceAccount();
-        NeonFaces faces = new NeonFaces(admin, admin, "ipfs://u", "ipfs://c");
-        NeonSeeder seeder = new NeonSeeder(faces, REGISTRY, address(impl), admin);
         VestingWallet vest = new VestingWallet(admin, uint64(block.timestamp), 180 days);
-        NeonMinter minter = new NeonMinter(
-            faces,
-            seeder,
-            admin,
-            payable(makeAddr("seed")),
-            payable(makeAddr("treasury")),
-            payable(address(vest)),
-            payable(makeAddr("growth"))
+        NeonPayout payout = new NeonPayout(
+            payable(makeAddr("seed")), payable(makeAddr("treasury")), payable(address(vest)), payable(makeAddr("growth"))
         );
+        NeonFaces faces = new NeonFaces(admin, admin, address(payout), address(SEADROP), "ipfs://u", "ipfs://c");
+        NeonSeeder seeder = new NeonSeeder(faces, REGISTRY, address(impl), admin);
+        address fee = makeAddr("openseaFee");
 
         vm.startPrank(admin);
-        faces.grantRole(faces.MINTER_ROLE(), address(minter));
+        faces.setSeeder(address(seeder));
         seeder.grantRole(seeder.CONFIG_ROLE(), admin);
         NeonSeeder.Leg[] memory legs = new NeonSeeder.Leg[](4);
         legs[0] = NeonSeeder.Leg(TSLA, 0.001e18);
@@ -68,8 +66,13 @@ contract ForkTest is Test {
         seeder.setTierBaskets(2, ids);
         seeder.setTierBaskets(3, ids);
         faces.setProvenanceHash(keccak256("fork test art"));
-        minter.configurePhase(NeonMinter.Phase.Public, 0.01 ether, 5, 0, bytes32(0));
-        minter.setPhase(NeonMinter.Phase.Public);
+        // what OpenSea Studio configures
+        faces.updateCreatorPayoutAddress(address(SEADROP), address(payout));
+        faces.updateAllowedFeeRecipient(address(SEADROP), fee, true);
+        faces.updatePublicDrop(
+            address(SEADROP),
+            PublicDrop(0.01 ether, uint48(block.timestamp), uint48(block.timestamp + 1 days), 5, 1000, true)
+        );
         vm.stopPrank();
 
         // load the seed pool with real tokens
@@ -82,9 +85,10 @@ contract ForkTest is Test {
 
         address alice = makeAddr("alice");
         vm.deal(alice, 1 ether);
-        bytes32[] memory proof;
         vm.prank(alice);
-        minter.mint{value: 0.02 ether}(2, 0, proof);
+        SEADROP.mintPublic{value: 0.02 ether}(address(faces), fee, address(0), 2);
+        assertEq(address(payout).balance, 0.018 ether, "creator share lands in the split");
+        assertEq(fee.balance, 0.002 ether);
 
         for (uint256 id = 1; id <= 2; ++id) {
             NeonSeeder.SeedView memory s = seeder.seedOf(id);

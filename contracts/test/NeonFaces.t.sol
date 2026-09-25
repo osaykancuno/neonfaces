@@ -5,24 +5,36 @@ import {Base} from "./Base.t.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {NeonFaces} from "../src/NeonFaces.sol";
-import {NeonMinter} from "../src/NeonMinter.sol";
+import {NeonPayout} from "../src/NeonPayout.sol";
 import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
+import {
+    ISeaDrop,
+    INonFungibleSeaDropToken,
+    ISeaDropTokenContractMetadata,
+    PublicDrop,
+    MintParams,
+    MultiConfigureStruct,
+    RoyaltyInfo
+} from "../src/interfaces/ISeaDrop.sol";
 
-/// @dev A contract that mints and reverts unless it got a rich tier — the classic re-roll attack.
+/// @dev A contract that mints on OpenSea and reverts unless it got a rich tier — the classic re-roll attack.
 contract TierSniper {
-    NeonMinter immutable minter;
+    ISeaDrop immutable seaDrop;
+    NeonFaces immutable faces;
     NeonSeeder immutable seeder;
+    address immutable feeRecipient;
 
-    constructor(NeonMinter m, NeonSeeder s) {
-        minter = m;
+    constructor(ISeaDrop sd, NeonFaces f, NeonSeeder s, address fee) {
+        seaDrop = sd;
+        faces = f;
         seeder = s;
+        feeRecipient = fee;
     }
 
     function snipe() external payable returns (uint8 tierSeen) {
-        bytes32[] memory proof;
-        uint256 id = minter.mint{value: msg.value}(1, 0, proof);
-        tierSeen = seeder.tierOf(id);
+        seaDrop.mintPublic{value: msg.value}(address(faces), feeRecipient, address(0), 1);
+        tierSeen = seeder.tierOf(faces.totalSupply());
         if (tierSeen < 3) revert("not heavy, re-roll");
     }
 }
@@ -51,47 +63,59 @@ contract NeonFacesTest is Base {
             }
         }
         assertEq(seeder.fundedCount(), 3);
-        assertEq(address(minter).balance, PUBLIC_PRICE * 3);
+        // OpenSea keeps its fee, the rest can only land in the immutable split
+        assertEq(openseaFee.balance, uint256(PUBLIC_PRICE) * 3 / 10);
+        assertEq(address(payout).balance, uint256(PUBLIC_PRICE) * 3 * 9 / 10);
     }
 
     function test_Mint_RequiresProvenance() public {
-        vm.prank(admin);
-        minter.setPhase(NeonMinter.Phase.Public);
-        bytes32[] memory proof;
+        PublicDrop memory drop = _publicDrop(5);
+        vm.prank(saleManager);
+        faces.updatePublicDrop(SEADROP, drop);
         vm.prank(alice);
         vm.expectRevert(NeonFaces.ProvenanceNotSet.selector);
-        minter.mint{value: PUBLIC_PRICE}(1, 0, proof);
+        seaDrop.mintPublic{value: PUBLIC_PRICE}(address(faces), openseaFee, address(0), 1);
     }
 
-    function test_Mint_RevertsWhenClosed() public {
+    function test_Mint_RequiresSeeder() public {
+        NeonFaces bare = new NeonFaces(admin, royaltyReceiver, address(payout), SEADROP, "", "");
+        vm.startPrank(admin);
+        bare.setProvenanceHash(keccak256("art"));
+        vm.expectRevert(NeonFaces.SeederNotSet.selector);
+        bare.teamMint(admin, 1);
+        vm.expectRevert(NeonFaces.SeederMismatch.selector); // a seeder wired to another collection
+        bare.setSeeder(address(seeder));
+        vm.stopPrank();
+    }
+
+    function test_Mint_NotBeforeTheDropStarts() public {
         _commitProvenance();
-        bytes32[] memory proof;
         vm.prank(alice);
-        vm.expectRevert(NeonMinter.SaleNotActive.selector);
-        minter.mint{value: PUBLIC_PRICE}(1, 0, proof);
+        vm.expectRevert(); // SeaDrop: NotActive (no public stage configured)
+        seaDrop.mintPublic{value: PUBLIC_PRICE}(address(faces), openseaFee, address(0), 1);
     }
 
     function test_Mint_WrongPayment() public {
         _openPublic();
-        bytes32[] memory proof;
         vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(NeonMinter.WrongPayment.selector, uint256(PUBLIC_PRICE) * 2));
-        minter.mint{value: PUBLIC_PRICE}(2, 0, proof);
+        vm.expectRevert(abi.encodeWithSignature("IncorrectPayment(uint256,uint256)", PUBLIC_PRICE, PUBLIC_PRICE * 2));
+        seaDrop.mintPublic{value: PUBLIC_PRICE}(address(faces), openseaFee, address(0), 2);
     }
 
-    function test_Mint_WalletLimitAndMaxPerTx() public {
+    function test_Mint_WalletLimit() public {
         _openPublic();
         _mintPublic(alice, 5);
-        bytes32[] memory proof;
         vm.prank(alice);
-        vm.expectRevert(NeonMinter.WalletLimit.selector);
-        minter.mint{value: PUBLIC_PRICE}(1, 0, proof);
+        vm.expectRevert(abi.encodeWithSignature("MintQuantityExceedsMaxMintedPerWallet(uint256,uint256)", 6, 5));
+        seaDrop.mintPublic{value: PUBLIC_PRICE}(address(faces), openseaFee, address(0), 1);
+        assertEq(faces.seaDropMinted(alice), 5);
+    }
 
-        vm.prank(admin);
-        minter.configurePhase(NeonMinter.Phase.Public, PUBLIC_PRICE, 50, 0, bytes32(0));
-        vm.prank(bob);
-        vm.expectRevert(NeonMinter.InvalidQuantity.selector);
-        minter.mint{value: PUBLIC_PRICE * 11}(11, 0, proof);
+    function test_Mint_OnlyOpenSeaFeeRecipient() public {
+        _openPublic();
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSignature("FeeRecipientNotAllowed()"));
+        seaDrop.mintPublic{value: PUBLIC_PRICE}(address(faces), alice, address(0), 1);
     }
 
     function test_Mint_PausedBlocksMintButNotTransfers() public {
@@ -100,30 +124,28 @@ contract NeonFacesTest is Base {
         vm.prank(admin);
         faces.setMintPaused(true);
 
-        bytes32[] memory proof;
         vm.prank(bob);
         vm.expectRevert(NeonFaces.MintIsPaused.selector);
-        minter.mint{value: PUBLIC_PRICE}(1, 0, proof);
+        seaDrop.mintPublic{value: PUBLIC_PRICE}(address(faces), openseaFee, address(0), 1);
 
         vm.prank(alice);
         faces.transferFrom(alice, bob, 1); // secondary market is never paused
         assertEq(faces.ownerOf(1), bob);
     }
 
-    function test_OnlyMinterCanMint() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, faces.MINTER_ROLE())
-        );
+    function test_OnlySeaDropCanMint() public {
+        _commitProvenance();
+        vm.expectRevert(NeonFaces.OnlyAllowedSeaDrop.selector);
         vm.prank(alice);
-        faces.mint(alice, 1);
+        faces.mintSeaDrop(alice, 1);
     }
 
     // ------------------------------------------------------------------
     // Security: tier sniping is impossible
     // ------------------------------------------------------------------
     function test_Security_TierCannotBeSnipedAtMint() public {
-        _openPublic();
-        TierSniper sniper = new TierSniper(minter, seeder);
+        _openPublic(50);
+        TierSniper sniper = new TierSniper(seaDrop, faces, seeder, openseaFee);
         vm.deal(address(sniper), 1 ether);
         // the tier is 0 (unknowable) inside the mint tx: a re-roll contract can never see a rich tier
         for (uint256 i; i < 5; ++i) {
@@ -140,10 +162,14 @@ contract NeonFacesTest is Base {
         faces.requestReveal();
         assertTrue(faces.mintClosed());
 
-        bytes32[] memory proof;
+        // SeaDrop already refuses (the reported supply is final), and the token refuses on its own
+        assertEq(faces.maxSupply(), 2, "OpenSea sees the final supply");
         vm.prank(bob);
+        vm.expectRevert(abi.encodeWithSignature("MintQuantityExceedsMaxSupply(uint256,uint256)", 3, 2));
+        seaDrop.mintPublic{value: PUBLIC_PRICE}(address(faces), openseaFee, address(0), 1);
+        _allowTestAsSeaDrop();
         vm.expectRevert(NeonFaces.MintIsClosed.selector);
-        minter.mint{value: PUBLIC_PRICE}(1, 0, proof);
+        faces.mintSeaDrop(bob, 1);
 
         vm.prank(admin);
         vm.expectRevert(NeonFaces.MintIsClosed.selector);
@@ -171,9 +197,9 @@ contract NeonFacesTest is Base {
     // ------------------------------------------------------------------
     function test_Reveal_FullSupplyPermutationIsExact() public {
         _commitProvenance();
-        _grantMinter(address(this));
-        for (uint256 i; i < 54; ++i) faces.mint(alice, 100);
-        faces.mint(alice, 44);
+        _allowTestAsSeaDrop();
+        for (uint256 i; i < 54; ++i) faces.mintSeaDrop(alice, 100);
+        faces.mintSeaDrop(alice, 44);
         vm.prank(admin);
         faces.teamMint(admin, 111);
         _reveal();
@@ -199,9 +225,7 @@ contract NeonFacesTest is Base {
     }
 
     function test_Reveal_TopUpsForWatchAndHeavy() public {
-        _openPublic();
-        vm.prank(admin);
-        minter.configurePhase(NeonMinter.Phase.Public, PUBLIC_PRICE, 200, 0, bytes32(0));
+        _openPublic(200);
         for (uint256 i; i < 12; ++i) _mintPublic(alice, 10);
         assertEq(seeder.upgradedCount(), 0);
 
@@ -235,70 +259,146 @@ contract NeonFacesTest is Base {
     }
 
     // ------------------------------------------------------------------
-    // Allowlists (Merkle, allowance in leaf)
+    // OpenSea allowlist stages (SeaDrop Merkle: stage terms are in the leaf)
     // ------------------------------------------------------------------
-    function test_BuildersPhase_FreeMintWithProof() public {
+    function test_BuildersStage_FreeMintWithProof() public {
         _commitProvenance();
-        bytes32 la = _leaf(alice, 2);
-        bytes32 lb = _leaf(bob, 1);
-        bytes32 root = _hashPair(la, lb);
-        vm.startPrank(admin);
-        minter.configurePhase(NeonMinter.Phase.Builders, 0, 0, 1111, root);
-        minter.setPhase(NeonMinter.Phase.Builders);
-        vm.stopPrank();
+        MintParams memory builders = _stage(0, 2, 1, 1111);
+        bytes32 la = _leaf(alice, builders);
+        bytes32 lb = _leaf(bob, builders);
+        _setAllowList(_hashPair(la, lb));
 
         bytes32[] memory proofA = new bytes32[](1);
         proofA[0] = lb;
         vm.prank(alice);
-        minter.mint(2, 2, proofA);
+        seaDrop.mintAllowList(address(faces), openseaFee, address(0), 2, builders, proofA);
         assertEq(faces.balanceOf(alice), 2);
+        assertTrue(seeder.seedOf(1).funded, "free Faces are seeded too");
 
         vm.prank(alice);
-        vm.expectRevert(NeonMinter.WalletLimit.selector);
-        minter.mint(1, 2, proofA);
+        vm.expectRevert(abi.encodeWithSignature("MintQuantityExceedsMaxMintedPerWallet(uint256,uint256)", 3, 2));
+        seaDrop.mintAllowList(address(faces), openseaFee, address(0), 1, builders, proofA);
 
+        MintParams memory forged = _stage(0, 5, 1, 1111);
         bytes32[] memory proofB = new bytes32[](1);
         proofB[0] = la;
         vm.prank(bob);
-        vm.expectRevert(NeonMinter.NotAllowlisted.selector); // forged allowance
-        minter.mint(2, 5, proofB);
+        vm.expectRevert(abi.encodeWithSignature("InvalidProof()")); // forged terms
+        seaDrop.mintAllowList(address(faces), openseaFee, address(0), 1, forged, proofB);
 
         vm.prank(carol);
-        vm.expectRevert(NeonMinter.NotAllowlisted.selector); // not on list
-        minter.mint(1, 1, proofB);
+        vm.expectRevert(abi.encodeWithSignature("InvalidProof()")); // not on the list
+        seaDrop.mintAllowList(address(faces), openseaFee, address(0), 1, builders, proofB);
 
         vm.prank(bob);
-        minter.mint(1, 1, proofB);
+        seaDrop.mintAllowList(address(faces), openseaFee, address(0), 1, builders, proofB);
         assertEq(faces.balanceOf(bob), 1);
+        assertEq(address(payout).balance, 0, "free stage: nothing paid");
     }
 
-    function test_PhaseSupplyCap() public {
+    function test_AllowlistStage_SupplyCapAndPaidSplit() public {
         _commitProvenance();
-        bytes32 la = _leaf(alice, 5);
-        bytes32 lb = _leaf(bob, 5);
-        vm.startPrank(admin);
-        minter.configurePhase(NeonMinter.Phase.Allowlist, AL_PRICE, 0, 6, _hashPair(la, lb));
-        minter.setPhase(NeonMinter.Phase.Allowlist);
-        vm.stopPrank();
+        MintParams memory al = _stage(AL_PRICE, 5, 2, 6); // stage closes at total supply 6
+        bytes32 la = _leaf(alice, al);
+        bytes32 lb = _leaf(bob, al);
+        _setAllowList(_hashPair(la, lb));
         bytes32[] memory pa = new bytes32[](1);
         pa[0] = lb;
         bytes32[] memory pb = new bytes32[](1);
         pb[0] = la;
+
         vm.prank(alice);
-        minter.mint{value: AL_PRICE * 5}(5, 5, pa);
+        seaDrop.mintAllowList{value: uint256(AL_PRICE) * 5}(address(faces), openseaFee, address(0), 5, al, pa);
         vm.prank(bob);
-        vm.expectRevert(NeonMinter.PhaseSoldOut.selector);
-        minter.mint{value: AL_PRICE * 2}(2, 5, pb);
+        vm.expectRevert(abi.encodeWithSignature("MintQuantityExceedsMaxTokenSupplyForStage(uint256,uint256)", 7, 6));
+        seaDrop.mintAllowList{value: uint256(AL_PRICE) * 2}(address(faces), openseaFee, address(0), 2, al, pb);
         vm.prank(bob);
-        minter.mint{value: AL_PRICE}(1, 5, pb);
+        seaDrop.mintAllowList{value: AL_PRICE}(address(faces), openseaFee, address(0), 1, al, pb);
+        assertEq(address(payout).balance, uint256(AL_PRICE) * 6 * 9 / 10);
     }
 
-    function test_FinishedIsTerminal() public {
-        vm.startPrank(admin);
-        minter.setPhase(NeonMinter.Phase.Finished);
-        vm.expectRevert(NeonMinter.PhaseFinished.selector);
-        minter.setPhase(NeonMinter.Phase.Public);
+    // ------------------------------------------------------------------
+    // OpenSea Studio configuration: what the sale manager can and cannot do
+    // ------------------------------------------------------------------
+    function test_Studio_MultiConfigure() public {
+        _commitProvenance();
+        MultiConfigureStruct memory c;
+        c.maxSupply = 10_000; // ignored: supply is fixed in bytecode
+        c.baseURI = "https://evil.example/"; // ignored: art is on-chain
+        c.seaDropImpl = SEADROP;
+        c.publicDrop = _publicDrop(3);
+        c.dropURI = "https://opensea.io/drop";
+        c.creatorPayoutAddress = address(payout);
+        c.allowedFeeRecipients = new address[](1);
+        c.allowedFeeRecipients[0] = makeAddr("otherFeeRecipient");
+        vm.prank(saleManager);
+        faces.multiConfigure(c);
+
+        assertEq(seaDrop.getCreatorPayoutAddress(address(faces)), address(payout));
+        assertEq(seaDrop.getPublicDrop(address(faces)).maxTotalMintableByWallet, 3);
+        assertEq(faces.maxSupply(), faces.PUBLIC_CAP());
+        assertEq(faces.baseURI(), "");
+        _mintPublic(alice, 3);
+        assertEq(faces.balanceOf(alice), 3);
+    }
+
+    function test_Studio_PayoutCanOnlyBeTheSplit() public {
+        vm.startPrank(saleManager);
+        vm.expectRevert(NeonFaces.PayoutIsFixed.selector);
+        faces.updateCreatorPayoutAddress(SEADROP, saleManager);
+
+        MultiConfigureStruct memory c;
+        c.seaDropImpl = SEADROP;
+        c.creatorPayoutAddress = saleManager;
+        vm.expectRevert(NeonFaces.PayoutIsFixed.selector);
+        faces.multiConfigure(c);
         vm.stopPrank();
+        assertEq(seaDrop.getCreatorPayoutAddress(address(faces)), address(payout));
+    }
+
+    function test_Studio_SaleManagerPowersAreNarrow() public {
+        assertEq(faces.owner(), saleManager, "OpenSea Studio sees the sale manager as owner");
+        vm.startPrank(saleManager);
+        address[] memory evil = new address[](1);
+        evil[0] = saleManager;
+        vm.expectRevert(); // cannot let itself mint
+        faces.updateAllowedSeaDrop(evil);
+        vm.expectRevert();
+        faces.teamMint(saleManager, 1);
+        vm.expectRevert();
+        faces.setRoyaltyInfo(RoyaltyInfo(saleManager, 500));
+        vm.expectRevert(NeonFaces.OnlyAllowedSeaDrop.selector); // only the allowed SeaDrop is configured
+        faces.updatePublicDrop(alice, _publicDrop(5));
+        vm.stopPrank();
+
+        vm.prank(alice);
+        vm.expectRevert(NeonFaces.OnlySaleManager.selector);
+        faces.updatePublicDrop(SEADROP, _publicDrop(5));
+
+        vm.prank(admin);
+        faces.setSaleManager(address(0)); // after the sale: the Safe is the owner again
+        assertEq(faces.owner(), admin);
+        vm.prank(saleManager);
+        vm.expectRevert(NeonFaces.OnlySaleManager.selector);
+        faces.updatePublicDrop(SEADROP, _publicDrop(5));
+    }
+
+    function test_SeaDropInterfaces() public view {
+        // SeaDrop only accepts configuration from contracts reporting these ids (checked by the real
+        // bytecode in every update above); the values are the upstream ones
+        assertEq(type(INonFungibleSeaDropToken).interfaceId, bytes4(0x1890fe8e));
+        assertEq(type(ISeaDropTokenContractMetadata).interfaceId, bytes4(0x9c154415));
+        assertTrue(faces.supportsInterface(0x1890fe8e));
+        assertTrue(faces.supportsInterface(0x9c154415));
+        (uint256 minted, uint256 supply, uint256 max) = faces.getMintStats(alice);
+        assertEq(minted + supply, 0);
+        assertEq(max, 5444, "the unminted team reserve is not for sale");
+    }
+
+    function test_SetMaxSupplyReverts() public {
+        vm.prank(admin);
+        vm.expectRevert(NeonFaces.SupplyIsFixed.selector);
+        faces.setMaxSupply(6000);
     }
 
     // ------------------------------------------------------------------
@@ -313,25 +413,25 @@ contract NeonFacesTest is Base {
         faces.teamMint(admin, 1);
         vm.stopPrank();
         assertEq(faces.teamMinted(), 111);
-
-        uint256[] memory ids = new uint256[](3);
-        (ids[0], ids[1], ids[2]) = (1, 2, 111);
-        vm.prank(carol); // team faces are activated permissionlessly
-        seeder.activateBatch(ids);
+        assertTrue(seeder.seedOf(1).funded, "team Faces get account + seed at mint too");
         assertTrue(seeder.seedOf(111).funded);
     }
 
     function test_PublicCapReservesTeamAllocation() public {
         _commitProvenance();
-        _grantMinter(address(this));
-        for (uint256 i; i < 54; ++i) faces.mint(alice, 100);
-        faces.mint(alice, 44);
+        _allowTestAsSeaDrop();
+        vm.prank(admin);
+        faces.teamMint(admin, 11);
+        assertEq(faces.maxSupply(), 5455, "team Faces already minted count toward the supply");
+        for (uint256 i; i < 54; ++i) faces.mintSeaDrop(alice, 100);
+        faces.mintSeaDrop(alice, 44);
         assertEq(faces.publicMinted(), 5444);
         vm.expectRevert(NeonFaces.ExceedsPublicAllocation.selector);
-        faces.mint(alice, 1);
+        faces.mintSeaDrop(alice, 1);
         vm.prank(admin);
-        faces.teamMint(admin, 111);
+        faces.teamMint(admin, 100);
         assertEq(faces.totalSupply(), faces.MAX_SUPPLY());
+        assertEq(faces.maxSupply(), faces.MAX_SUPPLY());
     }
 
     // ------------------------------------------------------------------
@@ -424,16 +524,17 @@ contract NeonFacesTest is Base {
         (address recv, uint256 amt) = faces.royaltyInfo(1, 1 ether);
         assertEq(recv, royaltyReceiver);
         assertEq(amt, 0.05 ether);
+        assertEq(faces.royaltyAddress(), royaltyReceiver);
+        assertEq(faces.royaltyBasisPoints(), 500);
         vm.prank(admin);
         vm.expectRevert(NeonFaces.RoyaltyTooHigh.selector);
-        faces.setDefaultRoyalty(royaltyReceiver, 501);
+        faces.setRoyaltyInfo(RoyaltyInfo(royaltyReceiver, 501));
     }
 
     function test_SupportsInterfaces() public view {
         assertTrue(faces.supportsInterface(0x80ac58cd)); // ERC721
         assertTrue(faces.supportsInterface(0x2a55205a)); // ERC2981
         assertTrue(faces.supportsInterface(0x49064906)); // ERC4906
-        assertEq(faces.owner(), admin); // OpenSea collection owner
     }
 
     // ------------------------------------------------------------------
@@ -443,27 +544,28 @@ contract NeonFacesTest is Base {
         _openPublic();
         _mintPublic(alice, 5);
         _mintPublic(bob, 5);
-        uint256 total = PUBLIC_PRICE * 10;
+        uint256 total = uint256(PUBLIC_PRICE) * 10 * 9 / 10; // after OpenSea's 10%
 
         vm.prank(carol); // anyone can push
-        minter.releaseAll();
+        payout.releaseAll();
         assertEq(seedVault.balance, total * 40 / 100);
         assertEq(treasury.balance, total * 25 / 100);
         assertEq(address(teamVesting).balance, total * 20 / 100);
         assertEq(growth.balance, total * 15 / 100);
-        assertEq(address(minter).balance, 0);
+        assertEq(address(payout).balance, 0);
 
         _mintPublic(carol, 1);
-        minter.release(seedVault);
-        assertEq(seedVault.balance, (total + PUBLIC_PRICE) * 40 / 100);
-        assertEq(minter.releasable(treasury), uint256(PUBLIC_PRICE) * 25 / 100);
-        assertEq(minter.releasable(alice), 0);
+        uint256 net = uint256(PUBLIC_PRICE) * 9 / 10;
+        payout.release(seedVault);
+        assertEq(seedVault.balance, (total + net) * 40 / 100);
+        assertEq(payout.releasable(treasury), net * 25 / 100);
+        assertEq(payout.releasable(alice), 0);
     }
 
     function test_TeamVesting_Linear6Months() public {
         _openPublic();
         _mintPublic(alice, 5);
-        minter.releaseAll();
+        payout.releaseAll();
         uint256 teamTotal = address(teamVesting).balance;
         vm.warp(block.timestamp + 90 days);
         teamVesting.release();
@@ -473,8 +575,8 @@ contract NeonFacesTest is Base {
         assertEq(teamBeneficiary.balance, teamTotal);
     }
 
-    function test_Minter_RejectsDuplicatePayees() public {
-        vm.expectRevert(NeonMinter.DuplicatePayee.selector);
-        new NeonMinter(faces, seeder, admin, seedVault, seedVault, growth, treasury);
+    function test_Payout_RejectsDuplicatePayees() public {
+        vm.expectRevert(NeonPayout.DuplicatePayee.selector);
+        new NeonPayout(seedVault, seedVault, growth, treasury);
     }
 }

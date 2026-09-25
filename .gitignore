@@ -17,4 +17,4 @@ safe/
 .claude/
 web/public/agent-presets.json
 web/public/deployment.json
-web/public/allowlist/
+config/allowlists/opensea/

@@ -9,8 +9,9 @@
 #   # real testnet (deployer needs testnet ETH):
 #   RPC=https://rpc.testnet.chain.robinhood.com PK=<deployer key> ./script/rehearsal.sh
 #
-# Steps: deploy (mock tokens) -> upload + seal the 5555 Faces -> Builders allowlist phase (free)
-# -> Public phase config -> export deployment.json for the site -> mint 20 Faces -> reveal -> Stare top-ups.
+# Steps: deploy (mock tokens) -> upload + seal the 5555 Faces -> configure the SeaDrop public stage the way
+# OpenSea Studio does (payout = NeonPayout, OpenSea fee recipient, price) -> export deployment.json for the site
+# -> mint 20 Faces through SeaDrop (what OpenSea's mint button calls) -> reveal -> Stare top-ups.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -24,6 +25,13 @@ REGISTRY=0x000000006551c19487814612e58FE06813775758
 if [[ $LOCAL == 1 && "$(cast code $REGISTRY --rpc-url "$RPC")" == "0x" ]]; then
   cast rpc anvil_setCode $REGISTRY "$(tr -d '[:space:]' < test/fixtures/erc6551-registry.hex)" --rpc-url "$RPC" >/dev/null
   echo "== installed canonical ERC-6551 registry bytecode (from mainnet) at $REGISTRY"
+fi
+SEADROP=0x00005EA00Ac477B1030CE78506496e8C2dE24bf5
+if [[ $LOCAL == 1 && "$(cast code $SEADROP --rpc-url "$RPC")" == "0x" ]]; then
+  # 21 KB of bytecode is too long for a Windows command line: pipe the RPC call through stdin
+  printf '{"jsonrpc":"2.0","id":1,"method":"anvil_setCode","params":["%s","%s"]}' $SEADROP "$(tr -d '[:space:]' < test/fixtures/seadrop.hex)"     | curl -s -X POST -H 'content-type: application/json' --data @- "$RPC" >/dev/null
+  cast rpc anvil_setStorageAt $SEADROP 0x0 0x0000000000000000000000000000000000000000000000000000000000000001 --rpc-url "$RPC" >/dev/null # reentrancy guard
+  echo "== installed OpenSea SeaDrop bytecode (from mainnet) at $SEADROP"
 fi
 
 export ADMIN="${ADMIN:-$DEPLOYER}"
@@ -43,20 +51,17 @@ echo "== art uploaded and sealed: $(grep -oE '0x[0-9a-f]{64}' ${TMPDIR:-/tmp}/nf
 
 DEP="deployments/$CHAIN_ID.json"
 jqr() { python -c "import json,sys;print(json.load(open('$DEP'))['$1'])"; }
-MINTER=$(jqr minter); FACES=$(jqr faces)
-
-# Builders allowlist for the rehearsal: the deployer (+ addresses in ../config/allowlists/builders.csv)
-ALCSV=$(mktemp); printf 'address,allowance\n%s,20\n' "$DEPLOYER" > "$ALCSV"
-[[ -f ../config/allowlists/builders.csv ]] && tail -n +2 ../config/allowlists/builders.csv >> "$ALCSV"
-(cd ../tools && node allowlist.mjs builders "$ALCSV" >/dev/null)
-ROOT=$(python -c "import json;print(json.load(open('../web/public/allowlist/builders.json'))['root'])")
-PROOF=$(python -c "import json;d=json.load(open('../web/public/allowlist/builders.json'));print('['+','.join(d['entries']['$(echo "$DEPLOYER" | tr A-Z a-z)']['proof'])+']')")
+PAYOUT=$(jqr payout); FACES=$(jqr faces)
+# stands in for OpenSea's fee recipient; on OpenSea, Studio sets the real one
+FEE_RECIPIENT="${FEE_RECIPIENT:-0x976EA74026E726554dB657fA54763abd0C3a0aa9}"
+PRICE="${PRICE:-100000000000000}" # 0.0001 ETH keeps a testnet rehearsal cheap
 
 send() { cast send "$@" --rpc-url "$RPC" --private-key "$PK" >/dev/null; }
-send "$MINTER" "configurePhase(uint8,uint128,uint32,uint32,bytes32)" 1 0 0 1111 "$ROOT"
-send "$MINTER" "configurePhase(uint8,uint128,uint32,uint32,bytes32)" 3 20000000000000000 5 0 0x0000000000000000000000000000000000000000000000000000000000000000
-send "$MINTER" "setPhase(uint8)" 1
-echo "== Builders phase open (free, cap 1111), Public configured (0.02 ETH, 5/wallet)"
+NOW=$(cast block latest -f timestamp --rpc-url "$RPC")
+send "$FACES" "updateCreatorPayoutAddress(address,address)" "$SEADROP" "$PAYOUT"
+send "$FACES" "updateAllowedFeeRecipient(address,address,bool)" "$SEADROP" "$FEE_RECIPIENT" true
+send "$FACES" "updatePublicDrop(address,(uint80,uint48,uint48,uint16,uint16,bool))" "$SEADROP" "($PRICE,$NOW,$((NOW + 30 * 86400)),20,1000,true)"
+echo "== SeaDrop public stage live (price $PRICE wei, 20/wallet, 10% fee), payout -> NeonPayout $PAYOUT"
 
 EXPORT_RPC=$([[ $LOCAL == 1 ]] && echo "$RPC" || echo "")
 (cd ../tools && node export-web.mjs "$CHAIN_ID" $EXPORT_RPC >/dev/null)
@@ -81,9 +86,10 @@ JSON
 echo "== demo agent actions published (test router $ROUTER)"
 
 if [[ "${MINT:-1}" == 1 ]]; then
-  send "$MINTER" "mint(uint256,uint256,bytes32[])" 10 20 "$PROOF"
-  send "$MINTER" "mint(uint256,uint256,bytes32[])" 10 20 "$PROOF"
-  echo "== minted 20 Faces: supply $(cast call "$FACES" 'totalSupply()(uint256)' --rpc-url "$RPC")"
+  for _ in 1 2; do
+    send "$SEADROP" "mintPublic(address,address,address,uint256)" "$FACES" "$FEE_RECIPIENT" 0x0000000000000000000000000000000000000000 10 --value $((PRICE * 10))
+  done
+  echo "== minted 20 Faces through SeaDrop: supply $(cast call "$FACES" 'totalSupply()(uint256)' --rpc-url "$RPC"), NeonPayout holds $(cast balance "$PAYOUT" --rpc-url "$RPC") wei"
 fi
 
 if [[ "${REVEAL:-1}" == 1 ]]; then

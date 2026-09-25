@@ -10,7 +10,6 @@ import {NeonRenderer} from "../src/NeonRenderer.sol";
 import {NeonFaces} from "../src/NeonFaces.sol";
 import {NeonSeeder} from "../src/NeonSeeder.sol";
 import {MockStockToken} from "./mocks/MockStockToken.sol";
-import {NeonMinter} from "../src/NeonMinter.sol";
 import {NeonFaceAccount} from "../src/NeonFaceAccount.sol";
 
 /// @notice Fully on-chain art: storage, provenance seal, byte-exact SVG, JSON metadata.
@@ -206,9 +205,7 @@ contract OnChainTest is Base {
         bytes memory rec = _tinyRecord();
         _uploadAll(rec);
         artStore.seal();
-        _openPublic();
-        vm.prank(admin);
-        minter.configurePhase(NeonMinter.Phase.Public, PUBLIC_PRICE, 100, 0, bytes32(0));
+        _openPublic(100);
         for (uint256 i; i < 4; ++i) _mintPublic(alice, 10);
 
         string memory pre = _json(faces.tokenURI(1));

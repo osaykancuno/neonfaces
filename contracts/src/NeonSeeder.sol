@@ -130,7 +130,7 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     // ------------------------------------------------------------------
 
     /// @notice Create the Face account and try to deliver its base seed.
-    /// Called by the minter in the mint transaction; anyone can call it (team mints, retries).
+    /// Called by NeonFaces in every mint transaction; anyone can call it again (idempotent, retries).
     function activate(uint256 tokenId) public nonReentrant returns (address account) {
         faces.ownerOf(tokenId); // reverts for ids that do not exist
         account = registry.createAccount(accountImplementation, ACCOUNT_SALT, block.chainid, address(faces), tokenId);

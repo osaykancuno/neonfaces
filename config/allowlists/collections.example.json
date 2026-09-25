@@ -1,5 +1,5 @@
 {
-  "_readme": "Copy to collections.json, list the collections whose holders get the allowlist, run: node tools/snapshot.mjs (writes <phase>.csv + <phase>.report.json), then node tools/allowlist.mjs <phase> config/allowlists/<phase>.csv. fromBlock = collection deploy block (speeds up the scan). Pin snapshotBlock to a number and announce it before taking the snapshot.",
+  "_readme": "Copy to collections.json, list the collections whose holders get the allowlist, run: node tools/snapshot.mjs (writes <phase>.csv + <phase>.report.json), then node tools/allowlist.mjs config/allowlists/<phase>.csv (writes config/allowlists/opensea/<phase>.csv to upload in OpenSea Studio). fromBlock = collection deploy block (speeds up the scan). Pin snapshotBlock to a number and announce it before taking the snapshot.",
   "phase": "allowlist",
   "rules": { "perNft": 1, "maxPerWallet": 3 },
   "collections": [

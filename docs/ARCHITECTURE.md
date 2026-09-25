@@ -1,39 +1,43 @@
 # Architecture
 
 ```
-                 ┌──────────────┐ mint(qty, allowance, proof)  ┌───────────────┐
- holder ───────▶ │  NeonMinter  │ ───────────────────────────▶ │   NeonFaces   │ ERC-721 + 2981 + 4906
-                 │ phases, AL,  │                              │ caps in code  │ provenance, reveal,
-                 │ 40/25/20/15  │ activate(id) ─┐              │ Unblinking    │ mint closes at reveal
-                 └──────────────┘               ▼              └──────┬────────┘
-                                         ┌──────────────┐             │ tokenURI / contractURI
-   canonical ERC-6551 registry ◀──────── │  NeonSeeder  │             ▼
-   createAccount(impl, 0, chain, NFT, id)│ base seeds,  │      ┌──────────────┐   artData(artId)   ┌──────────┐
-                 │                       │ reveal perm, │◀──── │ NeonRenderer │ ─────────────────▶ │ NeonArt  │
-                 ▼                       │ top-ups      │ seed │ SVG + JSON   │                    │ SSTORE2  │
-        ┌──────────────────┐   Stock     └──────┬───────┘ Of() └──────────────┘                    │ sealed   │
-        │ NeonFaceAccount  │ ◀──────────────────┘                                                  └──────────┘
-        │ (TBA per Face)   │  execute (holder) · executeAsAgent (scoped agent) · lock
-        └──────────────────┘
+ OpenSea mint ──▶ ┌──────────────┐  mintSeaDrop(minter, qty)   ┌───────────────┐
+                  │   SeaDrop    │ ──────────────────────────▶ │   NeonFaces   │ ERC-721 + 2981 + 4906
+                  │  (OpenSea)   │                             │ caps in code  │ provenance, reveal,
+                  │ stages, AL,  │                             │ Unblinking    │ mint closes at reveal
+                  │ price, limit │                             └──┬─────────┬──┘
+                  └──────┬───────┘                   activate(id) │         │ tokenURI / contractURI
+      creator share (90%)▼                                        ▼         ▼
+                  ┌──────────────┐                 ┌──────────────┐  ┌──────────────┐ artData ┌──────────┐
+                  │  NeonPayout  │ canonical 6551 ◀│  NeonSeeder  │◀─│ NeonRenderer │───────▶ │ NeonArt  │
+                  │ 40/25/20/15  │ registry        │ base seeds,  │  │ SVG + JSON   │         │ SSTORE2  │
+                  └──────────────┘     │           │ reveal perm, │  └──────────────┘         │ sealed   │
+                                       ▼           │ top-ups      │                           └──────────┘
+                              ┌──────────────────┐ └──────┬───────┘
+                              │ NeonFaceAccount  │◀───────┘ Stock Tokens
+                              │ (TBA per Face)   │  execute (holder) · executeAsAgent (scoped agent) · lock
+                              └──────────────────┘
 ```
 
 ## Contracts
 
 | Contract | Role | Admin powers | Cannot |
 |---|---|---|---|
-| `NeonFaces` | ERC-721 "NEONFACES"/"NEON", ids 1..5555, "Unblinking" clock | set renderer / fallback URIs until frozen, royalty receiver (≤5%), team mint (≤111), pause **minting**, set provenance once, request reveal | exceed 5555 / 111, mint without provenance, mint after the reveal request, pause transfers, blocklist, upgrade, change art |
-| `NeonMinter` | sale phases, Merkle allowlists (allowance in leaf), wallet caps, phase caps, proceeds split | configure phases, switch phase (Finished is terminal) | change split shares or payees |
+| `NeonFaces` | ERC-721 "NEONFACES"/"NEON", ids 1..5555, "Unblinking" clock, SeaDrop 1.0 token interface | set renderer / fallback URIs until frozen, royalty receiver (≤5%), team mint (≤111), pause **minting**, set provenance and seeder once, request reveal, choose which SeaDrop may mint and the sale manager | exceed 5555 / 111, mint without provenance or seeder, mint after the reveal request, pay mint proceeds anywhere but `NeonPayout`, pause transfers, blocklist, upgrade, change art |
+| `NeonPayout` | receives the creator share of every OpenSea mint, splits 40 / 25 / 20 / 15 | none (no owner) | change shares or payees |
 | `NeonSeeder` | creates the TBA, delivers base seeds at mint, maps tokens to art at reveal, delivers tier top-ups | configure baskets until `lockConfig()`, withdraw unused pool | touch tokens already in Face accounts, influence tiers |
 | `NeonFaceAccount` | ERC-6551 account (Solady base), immutable | — (only the Face holder) | be upgraded; agents can't sign, exceed their calls or ETH budget, act while locked, or survive a sale |
 | `NeonArt` | 174 SSTORE2 chunks of 32 records, running keccak | add chunks / reset **until sealed** | change anything after `seal()` (permissionless, requires provenance match) |
 | `NeonRenderer` | builds SVG + JSON on-chain; "Holds" lists seed tokens plus tradable tokens the Face holds | none (no owner) | — |
 | `NeonTrader` | the only trading door for agents: Uniswap v3 SwapRouter02, output to the caller, Chainlink-bounded price, daily USD cap per account | none (no owner, no upgrade) | pay anyone but the caller, trade unlisted tokens, use stale prices |
 
-Admin roles sit behind `AccessControlDefaultAdminRules` (2-step transfer, 2-day delay on NeonFaces / Seeder / Minter).
+External: **SeaDrop** (OpenSea, `0x00005EA0…4bf5`) holds the drop configuration — stage windows, prices, per-wallet limits, stage supply caps, the allowlist Merkle root built by OpenSea Studio — checks every mint against it, keeps OpenSea's fee and pays the rest to the payout address. `NeonFaces` only forwards configuration from the **sale manager** (the wallet used in OpenSea Studio, reported as `owner()` while set) or the admin, and rejects any payout address other than `NeonPayout`. Studio configures everything in one `multiConfigure` call; its supply, base URI, contract URI and provenance fields are ignored because those are fixed on-chain.
+
+Admin roles sit behind `AccessControlDefaultAdminRules` (2-step transfer, 2-day delay on NeonFaces / Seeder).
 
 ## Lifecycle of a Face
 
-**Mint (one transaction).** `NeonMinter.mint` checks phase, exact price, Merkle proof `(address, allowance)`, wallet and phase caps → `NeonFaces.mint` (requires provenance, mint not closed) → for each id `NeonSeeder.activate`: `registry.createAccount(impl, 0, chainid, NeonFaces, id)` (idempotent) and a `try` delivery of a **base basket** (all base baskets have equal target value). If the pool is short or a token refuses, the seed is pending and anyone can `fund(id)` later — the mint never fails for seeding reasons. Nothing valuable is decided inside the mint transaction.
+**Mint (one transaction, on OpenSea).** SeaDrop checks the stage window, exact price, per-wallet limit (every Face the wallet minted through SeaDrop counts), stage supply cap and, for presale stages, the Merkle proof → `NeonFaces.mintSeaDrop` (only the allowed SeaDrop; requires provenance and seeder, mint not closed, within the 5444 sale allocation) mints the ids → for each id `NeonSeeder.activate`: `registry.createAccount(impl, 0, chainid, NeonFaces, id)` (idempotent) and a `try` delivery of a **base basket** (all base baskets have equal target value). If the pool is short or a token refuses, the seed is pending and anyone can `fund(id)` later — the mint never fails for seeding reasons. Then SeaDrop pays OpenSea's fee and sends the rest to `NeonPayout`. Team mints (`teamMint`, admin, ≤ 111) activate their Faces the same way. Nothing valuable is decided inside the mint transaction.
 
 **Reveal.** `requestReveal()` closes minting forever and sets `revealBlock = L2 block + 5`. Anyone calls `reveal()` while that block's hash is readable (256 blocks ≈ 25 s at 100 ms; `tools/reveal-watch.mjs`). `revealSeed = keccak(arbBlockHash(revealBlock), provenance, address)`. A new request is only possible once the window has passed; requests are counted.
 

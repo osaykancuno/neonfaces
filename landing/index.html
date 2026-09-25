@@ -193,12 +193,12 @@
   .cam-idle[hidden], #cam-tools[hidden], .cam-btn[hidden] { display: none; }
   .cam-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 2px solid var(--neon); background: var(--neon); color: #000; font: 700 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; box-sizing: border-box; }
   .cam-btn.ghost { background: transparent; color: var(--neon); }
-  .cam-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; max-width: 560px; }
+  .cam-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; max-width: 560px; }
   .cam-seg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
   .cam-seg > span { font: 600 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); min-width: 56px; }
   .cam-seg button { min-height: 36px; padding: 6px 12px; border: 1px solid var(--line); background: #070900; color: var(--text); font: 600 12px/1 var(--mono); cursor: pointer; }
   .cam-seg button[aria-pressed="true"] { border-color: var(--neon); color: #000; background: var(--neon); }
-  .cam-msg { font-size: 14px; color: var(--dim); min-height: 1.4em; }
+  .cam-msg { font-size: 14px; color: var(--dim); min-height: 1.4em; margin: 10px 0 6px; }
   @media (max-width: 760px) {
     body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); font-size: 17px; }
     .tabbar {
@@ -423,20 +423,21 @@
         <label class="cam-btn ghost">Use a photo<input type="file" accept="image/*" id="cam-file" hidden></label>
       </div>
     </div>
+    <p class="cam-msg" id="cam-msg" aria-live="polite"></p>
     <div id="cam-tools" hidden>
-      <div class="cam-seg" data-opt="cells"><span>Cells</span><button type="button" data-v="24" aria-pressed="true">24</button><button type="button" data-v="32" aria-pressed="false">32</button><button type="button" data-v="48" aria-pressed="false">48</button></div>
-      <div class="cam-seg" data-opt="neon"><span>Neon</span><button type="button" data-v="0" aria-pressed="true">Standard</button><button type="button" data-v="1" aria-pressed="false">Deep</button><button type="button" data-v="2" aria-pressed="false">Hot</button></div>
-      <div class="cam-seg" data-opt="grain"><span>Grain</span><button type="button" data-v="0" aria-pressed="true">Clean print</button><button type="button" data-v="1" aria-pressed="false">Dusty</button><button type="button" data-v="2" aria-pressed="false">Heavy scan</button></div>
-      <div class="cam-seg" data-opt="gaze"><span>Gaze</span><button type="button" data-v="0" aria-pressed="true">None</button><button type="button" data-v="1" aria-pressed="false">Steady</button><button type="button" data-v="2" aria-pressed="false">Fixed</button><button type="button" data-v="3" aria-pressed="false">Burning</button></div>
       <div class="cam-row">
         <button class="cam-btn" id="cam-shot" type="button">Take the photo</button>
         <button class="cam-btn ghost" id="cam-flip" type="button" hidden>Switch camera</button>
         <button class="cam-btn" id="cam-save" type="button" hidden>Save</button>
         <button class="cam-btn" id="cam-share" type="button" hidden>Share</button>
+        <button class="cam-btn" id="cam-x" type="button" hidden>Post on X</button>
         <button class="cam-btn ghost" id="cam-again" type="button" hidden>Again</button>
       </div>
+      <div class="cam-seg" data-opt="cells"><span>Cells</span><button type="button" data-v="24" aria-pressed="true">24</button><button type="button" data-v="32" aria-pressed="false">32</button><button type="button" data-v="48" aria-pressed="false">48</button></div>
+      <div class="cam-seg" data-opt="neon"><span>Neon</span><button type="button" data-v="0" aria-pressed="true">Standard</button><button type="button" data-v="1" aria-pressed="false">Deep</button><button type="button" data-v="2" aria-pressed="false">Hot</button></div>
+      <div class="cam-seg" data-opt="grain"><span>Grain</span><button type="button" data-v="0" aria-pressed="true">Clean print</button><button type="button" data-v="1" aria-pressed="false">Dusty</button><button type="button" data-v="2" aria-pressed="false">Heavy scan</button></div>
+      <div class="cam-seg" data-opt="gaze"><span>Gaze</span><button type="button" data-v="0" aria-pressed="true">None</button><button type="button" data-v="1" aria-pressed="false">Steady</button><button type="button" data-v="2" aria-pressed="false">Fixed</button><button type="button" data-v="3" aria-pressed="false">Burning</button></div>
     </div>
-    <p class="cam-msg" id="cam-msg" aria-live="polite"></p>
   </section>
   </div>
 
@@ -640,9 +641,14 @@
       buttons(false);
       if (!raf) raf = requestAnimationFrame(loop);
     }
+    // the system share sheet (phones: Instagram, X, WhatsApp…) only where it can carry the photo itself
+    const canShareFiles = (() => {
+      try { return !!navigator.canShare?.({ files: [new File([""], "neoncam.png", { type: "image/png" })] }); } catch { return false; }
+    })();
     function buttons(taken) {
       $("cam-shot").hidden = taken;
-      $("cam-save").hidden = $("cam-share").hidden = $("cam-again").hidden = !taken;
+      $("cam-save").hidden = $("cam-x").hidden = $("cam-again").hidden = !taken;
+      $("cam-share").hidden = !taken || !canShareFiles;
       if (taken) $("cam-flip").hidden = true;
     }
 
@@ -677,10 +683,16 @@
     async function share() {
       if (!shot) return;
       const file = new File([shot], "neoncam.png", { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
-        try { await navigator.share({ files: [file], text: TEXT, url: LINK }); return; } catch (e) { if (e?.name === "AbortError") return; }
+      try {
+        await navigator.share({ files: [file], text: TEXT, url: LINK });
+      } catch (e) {
+        if (e?.name !== "AbortError") postX();
       }
-      save(); // no system share sheet (most desktops): save the photo and open a post to attach it to
+    }
+    // X can't receive a photo through a link: save it first, then open the post, ready to attach it
+    function postX() {
+      if (!shot) return;
+      save();
       open(`https://x.com/intent/post?text=${encodeURIComponent(TEXT)}&url=${encodeURIComponent(LINK)}`, "_blank", "noopener");
       say("The photo is saved: attach it to the post that just opened.");
     }
@@ -699,6 +711,7 @@
     $("cam-shot").addEventListener("click", takePhoto);
     $("cam-save").addEventListener("click", save);
     $("cam-share").addEventListener("click", share);
+    $("cam-x").addEventListener("click", postX);
     $("cam-again").addEventListener("click", () => { say(""); if (!still && !stream) startCam(); else ready(); });
     document.querySelectorAll("#cam-tools .cam-seg").forEach((seg) =>
       seg.addEventListener("click", (e) => {

@@ -1,11 +1,11 @@
-// JavaScript port of NeonRenderer.renderSVG: byte-identical output (checked against the Solidity
-// fixtures by web/test/render.test.mjs). The site draws every Face from the same bytes that live
-// on-chain in NeonArt: [grid][10 trait bytes][RLE (color<<5 | len-1)...]
+// JavaScript port of NeonRenderer.renderSVG / renderSetSVG: byte-identical output (checked against the
+// Solidity fixtures by web/test/render.test.mjs). The site draws every Face from the same bytes that live
+// on-chain in NeonArt: [grid][11 trait bytes][RLE (color<<5 | len-1)...]
 import { keccak256, encodeAbiParameters, hexToBytes } from "viem";
 
-export const TRAITS = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expression", "Accessory", "Block", "Anomaly"];
+export const TRAITS = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expression", "Accessory", "Block", "Anomaly", "Face"];
 export const VALUES = [
-  ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge"],
+  ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge", "Left eye", "Right eye", "Left mouth", "Right mouth"],
   ["Sparse", "Mid", "Heavy"],
   ["Standard", "Deep", "Hot"],
   ["Stair-step", "Hard cut", "Bleed dither"],
@@ -15,6 +15,7 @@ export const VALUES = [
   ["None", "Mole", "Scar", "Stud", "Tape", "Visor"],
   ["Standard", "Fine", "Coarse"],
   ["None", "Dead pixel", "Inverted blocks", "Extra-wide crop", "Double-eye fragment"],
+  ["", "Woman", "Man"],
 ];
 export const PALETTES = [
   ["#000000", "#1f2504", "#414d12", "#677920", "#94b21d", "#ccff00", "#f2ffc8", "#ffffff"],
@@ -22,8 +23,15 @@ export const PALETTES = [
   ["#000000", "#202609", "#454e1b", "#6d7b2d", "#9cb432", "#d6ff1f", "#f2ffc8", "#ffffff"],
 ];
 const BG = 5;
+const HEADER = 12;
+export const ART_COUNT = 5555;
+export const SINGLES = 3335; // set k (1..555) = art ids SINGLES + 4(k-1) .. +3
+export const PIECES = ["Left eye", "Right eye", "Left mouth", "Right mouth"];
 
 const bytesOf = (rec) => (typeof rec === "string" ? hexToBytes(rec) : rec);
+
+/** Set id (1..555) and piece (0..3) of an art id, or null for a single close-up. */
+export const setOfArt = (artId) => (artId >= SINGLES && artId < ART_COUNT ? { set: Math.floor((artId - SINGLES) / 4) + 1, piece: (artId - SINGLES) % 4 } : null);
 
 /** Decode a record into grid size, palette, traits and a flat array of palette indices. */
 export function decode(rec) {
@@ -31,13 +39,13 @@ export function decode(rec) {
   const g = b[0];
   const cells = new Uint8Array(g * g);
   let p = 0;
-  for (let k = 11; k < b.length; k++) {
+  for (let k = HEADER; k < b.length; k++) {
     const c = b[k] >> 5;
     const n = (b[k] & 31) + 1;
     cells.fill(c, p, p + n);
     p += n;
   }
-  const traits = TRAITS.map((t, i) => ({ trait_type: t, value: VALUES[i][b[1 + i]] }));
+  const traits = TRAITS.map((t, i) => ({ trait_type: t, value: VALUES[i][b[1 + i]] })).filter((t) => t.value);
   return { g, cells, palette: PALETTES[b[3]], traits, grain: b[5] };
 }
 
@@ -45,27 +53,38 @@ const rand = (artId, i) => BigInt(keccak256(encodeAbiParameters([{ type: "uint25
 const dec2 = (v) => `${v / 100n}.${(v % 100n).toString().padStart(2, "0")}`;
 
 /** Exactly the SVG the contract returns for (artId, record). */
-export function renderSVG(artId, rec) {
-  const b = bytesOf(rec);
-  const g = b[0];
-  const pal = PALETTES[b[3]];
+export const renderSVG = (artId, rec) => svg(artId, [rec], 1);
+
+/** Exactly the SVG the contract returns for an assembled set (setId 1..555, its 4 records in piece order). */
+export const renderSetSVG = (setId, recs) => svg(ART_COUNT + setId, recs, 2);
+
+function svg(artId, recs, side) {
+  const first = bytesOf(recs[0]);
+  let g = first[0];
+  const pal = PALETTES[first[3]];
   const paths = Array.from({ length: 8 }, () => []);
-  let pos = 0;
-  for (let k = 11; k < b.length; k++) {
-    const c = b[k] >> 5;
-    let n = (b[k] & 31) + 1;
-    while (n > 0) {
-      const x = pos % g;
-      const seg = Math.min(n, g - x);
-      if (c !== BG) paths[c].push(`M${x} ${Math.floor(pos / g)}h${seg}v1h-${seg}z`);
-      pos += seg;
-      n -= seg;
+  recs.forEach((rec, q) => {
+    const b = bytesOf(rec);
+    const ox = (q % 2) * g;
+    const oy = Math.floor(q / 2) * g;
+    let pos = 0;
+    for (let k = HEADER; k < b.length; k++) {
+      const c = b[k] >> 5;
+      let n = (b[k] & 31) + 1;
+      while (n > 0) {
+        const x = pos % g;
+        const seg = Math.min(n, g - x);
+        if (c !== BG) paths[c].push(`M${ox + x} ${oy + Math.floor(pos / g)}h${seg}v1h-${seg}z`);
+        pos += seg;
+        n -= seg;
+      }
     }
-  }
+  });
+  g *= side;
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${g} ${g}" width="1200" height="1200" shape-rendering="crispEdges"><rect width="${g}" height="${g}" fill="${pal[BG]}"/>`;
   for (let c = 0; c < 8; c++) if (c !== BG && paths[c].length) s += `<path fill="${pal[c]}" d="${paths[c].join("")}"/>`;
 
-  const grain = b[5];
+  const grain = first[5];
   const G = BigInt(g);
   if (grain === 1) {
     const dark = [];
@@ -91,6 +110,7 @@ export function renderSVG(artId, rec) {
 }
 
 export const svgDataURI = (artId, rec) => `data:image/svg+xml;base64,${btoa(renderSVG(artId, rec))}`;
+export const setDataURI = (setId, recs) => `data:image/svg+xml;base64,${btoa(renderSetSVG(setId, recs))}`;
 
 /** Draw a record's blocks onto a canvas (no grain), used by the live mosaic. */
 export function drawBlocks(ctx, rec, size) {

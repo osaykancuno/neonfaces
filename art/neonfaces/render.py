@@ -73,6 +73,7 @@ class FaceParams:
     accessory: str = "None"
     anomaly: str = "None"
     block: str = "Standard"
+    face: str = ""  # "Woman" / "Man" for set pieces; "" keeps the neutral close-up anatomy
     # continuous anatomy (sampled from the rng)
     eye_dx: float = 0.40
     eye_y: float = 0.0
@@ -131,6 +132,23 @@ def sample_anatomy(p: FaceParams, rng: np.random.Generator) -> None:
     p.face_w = u(0.93, 1.06)
     p.skin = u(0.90, 0.97)
     p.contrast = u(1.15, 1.38)
+
+    if p.face == "Woman":
+        p.face_w *= 0.94
+        p.brow_t *= 0.62
+        p.brow_arch = p.brow_arch * 1.5 + 0.02
+        p.brow_gap *= 1.08
+        p.lip *= 1.45
+        p.mouth_w *= 0.94
+        p.eye_h *= 1.08
+        p.nose_w *= 0.88
+    elif p.face == "Man":
+        p.face_w *= 1.04
+        p.brow_t *= 1.35
+        p.brow_arch *= 0.45
+        p.brow_gap *= 0.86
+        p.lip *= 0.78
+        p.hairline = min(p.hairline + 0.06, -0.48)
 
     ex = p.expression
     if ex == "Squint":
@@ -207,7 +225,7 @@ def face_luminance(p: FaceParams, x: np.ndarray, y: np.ndarray, rng) -> np.ndarr
     L = np.full_like(x, p.skin)
 
     # ---- head silhouette ------------------------------------------------
-    taper = 1.0 - 0.42 * _ss(0.35, 1.45, y)
+    taper = 1.0 - {"Woman": 0.50, "Man": 0.30}.get(p.face, 0.42) * _ss(0.35, 1.45, y)
     hw = p.face_w * taper
     d = np.abs(x) / hw                          # 0 center .. 1 edge
     inside = ((np.abs(x) / hw) ** 2.3 + (np.abs(y - 0.05) / 1.42) ** 2.4) < 1.0
@@ -284,7 +302,9 @@ def face_luminance(p: FaceParams, x: np.ndarray, y: np.ndarray, rng) -> np.ndarr
     upper = in_m & (y > curve - lip * np.clip(1 - mx ** 2, 0, 1) ** 0.5) & (y < curve)
     lower = in_m & (y > curve) & (y < curve + lip * 1.3 * np.clip(1 - mx ** 2, 0, 1) ** 0.5)
     L = np.where(upper, L - 0.46, L)
-    L = np.where(lower, L - 0.12, L)
+    L = np.where(lower, L - (0.24 if p.face == "Woman" else 0.12), L)
+    if p.face == "Woman":  # lower-lip highlight
+        L += 0.16 * lower * np.exp(-((y - (curve + lip * 0.75)) / (lip * 0.35)) ** 2)
     L -= 0.95 * np.exp(-((y - curve) / 0.016) ** 2) * (np.abs(mx) < 1.05)
     L -= 0.50 * _g(x, y, 0, my + lip * 1.3 + 0.05, mw * 0.6, 0.04)   # under-lip
     L -= 0.25 * _g(x, y, 0, my - lip - 0.07, 0.035, 0.05)              # philtrum
@@ -318,12 +338,13 @@ def face_luminance(p: FaceParams, x: np.ndarray, y: np.ndarray, rng) -> np.ndarr
         cl = in_eye & (np.hypot(x - (ix - 0.025 * (lx or -1)), y - (iy - 0.022)) < p.iris_r * 0.22)
         L = np.where(cl, 0.95, L)
         # upper lid line + lashes (thick, black)
-        lid_t = 0.022 + 0.01 * (p.expression in ("Glare", "Squint"))
+        lid_t = 0.022 + 0.01 * (p.expression in ("Glare", "Squint")) + 0.01 * (p.face == "Woman")
         lid = (np.abs(dx) < 1.08) & (np.abs(y - up) < lid_t) & (y < up + lid_t * 0.4)
         L = np.where(lid, 0.02, L)
         # outer lash wedge
         ox = ex + e * w
-        wedge = (e * (x - ox) > -0.02) & (e * (x - ox) < 0.07) & (np.abs(y - (ey - 0.012 - 0.25 * e * (x - ox))) < 0.018)
+        wl, wt, ws = (0.13, 0.024, 0.45) if p.face == "Woman" else (0.07, 0.018, 0.25)  # eyeliner wing
+        wedge = (e * (x - ox) > -0.02) & (e * (x - ox) < wl) & (np.abs(y - (ey - 0.012 - ws * e * (x - ox))) < wt)
         L = np.where(wedge, 0.03, L)
         # lower lid line
         low = (np.abs(dx) < 0.95) & (np.abs(y - lo) < 0.008)
@@ -348,8 +369,20 @@ def face_luminance(p: FaceParams, x: np.ndarray, y: np.ndarray, rng) -> np.ndarr
     # small sideburn inside the silhouette + hair mass framing the head outside it
     sideburn = (np.abs(x) > hw * 0.95) & (y < 0.05 + (hn - 0.5) * 0.2)
     sideburn |= (~inside) & (y < 0.22 + (hn - 0.5) * 0.3) & (np.abs(x) < 1.4 * p.face_w)
+    if p.face == "Woman":  # long hair falling past the jaw on both sides
+        sideburn |= (~inside) & (y < 1.55 + (hn - 0.5) * 0.4) & (np.abs(x) < 1.45 * p.face_w)
+        sideburn |= (np.abs(x) > hw * 0.80) & (y < 1.0 + (hn - 0.5) * 0.3) & (y > p.hairline - 0.2)
     strands = 0.04 + 0.10 * _fbm(rng, x.shape, base=12, octaves=2)
     hair_all = hair | sideburn
+    if p.face == "Woman":
+        # a lit fringe swept over one temple: strands run parallel to its edge, so the hair reads on any background
+        u = (lx or 1.0) * x
+        v = y - (p.hairline + 0.15 + 1.6 * np.clip(u - 0.05, 0, None) ** 2)
+        fringe = (u > 0.05) & (v < 0)
+        sheen = np.where(fringe, (0.5 + 0.5 * np.sin(v * 44 + hn * 5)) ** 2 * _ss(-0.5, -0.05, v),
+                         (0.5 + 0.5 * np.sin(x * 52 + hn * 6)) ** 2 * 0.7)  # fringe follows its edge, side hair falls
+        strands = np.where(fringe | sideburn, 0.06 + 0.46 * sheen, strands)
+        hair_all = hair_all | fringe
     # soft hair edge
     L = np.where(hair_all, strands, L * (1 - 0.6 * np.exp(-((y - hairline) / 0.04) ** 2)))
 
@@ -359,6 +392,12 @@ def face_luminance(p: FaceParams, x: np.ndarray, y: np.ndarray, rng) -> np.ndarr
     # rim shadow where face meets background
     rim = np.exp(-((((np.abs(x) / hw) ** 2.3 + (np.abs(y - 0.05) / 1.42) ** 2.4) - 1.0) / 0.06) ** 2)
     L -= 0.35 * rim * (bg > 0.5)
+
+    if p.face == "Man":  # short beard: jaw, chin and upper lip
+        beard_zone = inside & (y > p.nose_len + 0.10) & ~hair_all
+        beard_zone &= (np.abs(x) > p.mouth_w * 0.55) | (y > p.mouth_y + p.lip * 1.3 + 0.06) | (y < p.mouth_y - p.lip - 0.02)
+        stub = _fbm(rng, x.shape, base=40, octaves=2)
+        L = np.where(beard_zone, L - 0.18 - 0.26 * (stub > 0.55), L)
 
     # ---- skin texture + print contrast ---------------------------------------
     L += (_fbm(rng, x.shape, base=3, octaves=5) - 0.5) * 0.26
@@ -610,3 +649,45 @@ def render_face(p: FaceParams, seed: int, with_image: bool = True) -> tuple[Imag
         return None, idx
     palette = build_palette(p.neon)
     return to_image(idx, palette, p.grain, rng), idx
+
+
+# --------------------------------------------------------------------------
+# Sets: one full face at 2G x 2G, split into 4 seamless G x G pieces
+# --------------------------------------------------------------------------
+PIECES = ["Left eye", "Right eye", "Left mouth", "Right mouth"]  # as seen: top-left, top-right, bottom-left, bottom-right
+
+
+def render_set(p: FaceParams, seed: int) -> tuple[np.ndarray, list[str]]:
+    """Full-face block grid (2G x 2G, palette indices) + the Accessory trait of each piece
+    (the set's accessory only on the pieces where it actually shows)."""
+    rng = np.random.default_rng(seed)
+    sample_anatomy(p, rng)
+    if p.density == "Heavy":
+        p.extra["bg"] = 0.03
+    else:
+        p.extra["bg"] = 0.03 if rng.random() < (0.35 if p.density == "Sparse" else 0.6) else 0.97
+    g = BLOCK_GRID[p.block]
+    win = Window(
+        cx=rng.uniform(-0.03, 0.03),
+        cy=0.40 + rng.uniform(-0.03, 0.03),
+        size=1.85 * rng.uniform(0.96, 1.04),
+        rot=math.radians(rng.uniform(-4, 4)),
+        flip=rng.random() < 0.5,
+    )
+    idx = quantize(render_grid(p, win, 2 * g, rng), p.edge)
+    before = idx.copy()
+    idx = apply_accessory(idx, p, win, 2 * g, rng)
+    if win.flip:
+        idx = idx[:, ::-1].copy()
+        before = before[:, ::-1]
+    acc = []
+    for q in range(4):
+        r0, c0 = (q // 2) * g, (q % 2) * g
+        changed = (idx[r0:r0 + g, c0:c0 + g] != before[r0:r0 + g, c0:c0 + g]).any()
+        acc.append(p.accessory if changed else "None")
+    return idx, acc
+
+
+def split_set(idx: np.ndarray) -> list[np.ndarray]:
+    g = idx.shape[0] // 2
+    return [idx[:g, :g].copy(), idx[:g, g:].copy(), idx[g:, :g].copy(), idx[g:, g:].copy()]

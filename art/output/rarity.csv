@@ -2,44 +2,51 @@ trait,value,count,percent
 Stare,Glance,4444,80.00
 Stare,Watch,833,15.00
 Stare,Heavy Stare,278,5.00
-Crop,Eye,1111,20.00
-Crop,Nose,1000,18.00
-Crop,Cheek,778,14.01
-Crop,Brow,778,14.01
-Crop,Temple,667,12.01
-Crop,Mouth,666,11.99
-Crop,Profile-edge,555,9.99
-Density,Mid,2458,44.25
-Density,Sparse,1680,30.24
+Crop,Eye,667,12.01
+Crop,Nose,600,10.80
+Crop,Left eye,555,9.99
+Crop,Right eye,555,9.99
+Crop,Left mouth,555,9.99
+Crop,Right mouth,555,9.99
+Crop,Brow,467,8.41
+Crop,Cheek,467,8.41
+Crop,Mouth,400,7.20
+Crop,Temple,400,7.20
+Crop,Profile-edge,334,6.01
+Density,Mid,2457,44.23
+Density,Sparse,1681,30.26
 Density,Heavy,1417,25.51
-Neon,Standard,3110,55.99
+Neon,Standard,3108,55.95
 Neon,Deep,1361,24.50
-Neon,Hot,1084,19.51
-Edge,Stair-step,2778,50.01
-Edge,Hard cut,1666,29.99
+Neon,Hot,1086,19.55
+Edge,Stair-step,2780,50.05
+Edge,Hard cut,1664,29.95
 Edge,Bleed dither,1111,20.00
-Grain,Clean print,2500,45.00
+Grain,Clean print,2501,45.02
 Grain,Dusty,2111,38.00
-Grain,Heavy scan,944,16.99
+Grain,Heavy scan,943,16.98
 Light,Left,2333,42.00
 Light,Right,2333,42.00
 Light,Top,889,16.00
-Expression,Flat,1889,34.01
+Expression,Flat,1890,34.02
 Expression,Squint,1222,22.00
 Expression,Glare,1000,18.00
-Expression,Wide,778,14.01
-Expression,Tense,666,11.99
-Accessory,None,3555,64.00
-Accessory,Mole,556,10.01
-Accessory,Scar,444,7.99
-Accessory,Stud,389,7.00
-Accessory,Tape,333,5.99
-Accessory,Visor,278,5.00
-Block,Standard,2944,53.00
-Block,Fine,1389,25.00
+Expression,Wide,779,14.02
+Expression,Tense,664,11.95
+Accessory,None,4102,73.84
+Accessory,Mole,392,7.06
+Accessory,Scar,324,5.83
+Accessory,Stud,273,4.91
+Accessory,Tape,241,4.34
+Accessory,Visor,223,4.01
+Block,Standard,2943,52.98
+Block,Fine,1390,25.02
 Block,Coarse,1222,22.00
-Anomaly,None,5027,90.50
-Anomaly,Dead pixel,222,4.00
-Anomaly,Inverted blocks,139,2.50
-Anomaly,Extra-wide crop,111,2.00
-Anomaly,Double-eye fragment,56,1.01
+Anomaly,None,5238,94.29
+Anomaly,Dead pixel,134,2.41
+Anomaly,Inverted blocks,83,1.49
+Anomaly,Extra-wide crop,67,1.21
+Anomaly,Double-eye fragment,33,0.59
+Face,None,3335,60.04
+Face,Woman,1112,20.02
+Face,Man,1108,19.95

@@ -1,7 +1,7 @@
-import { formatEther, formatUnits } from "viem";
+import { formatEther, formatUnits, encodeFunctionData } from "viem";
 import { ABI, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata, facesOf } from "./chain.js";
 import { pixelEye } from "./effects/eye.js";
-import { decode, svgDataURI } from "./render.js";
+import { decode, svgDataURI, PIECES, SINGLES } from "./render.js";
 import { holderPanel, knownTokens } from "./agent-ui.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 
@@ -9,6 +9,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let gallery = []; // [{ artId, stare, record }]: on-chain pixel records
+let sets = []; // [{ set, stare, face, records[4] }]: whole sets for the Sets section
 let placeholder = null;
 let rarity = null;
 const faceURI = (f) => svgDataURI(f.artId, f.record);
@@ -28,12 +29,14 @@ const [_, g, r] = await Promise.all([
   fetch("/data/rarity.json").then((x) => x.json()).catch(() => null),
 ]);
 gallery = g.faces ?? [];
+sets = g.sets ?? [];
 placeholder = g.placeholder;
 rarity = r;
 await liveRecords();
 
 mosaic($("#mosaic"), gallery.map((f) => f.record));
 renderGallery();
+renderSets();
 renderTraits();
 renderSplit();
 renderFooter();
@@ -94,7 +97,7 @@ function renderGallery(limit = 48) {
     .map(
       (f) => `<button class="g-item" data-art="${f.artId}" aria-label="Face preview ${f.artId}">
         <img loading="lazy" src="${faceURI(f)}" alt="">
-        <span class="g-meta">${esc(attr(f, "Crop"))} · ${esc(f.stare)}</span></button>`,
+        <span class="g-meta">${esc(attr(f, "Crop"))} · ${esc(f.stare)}${f.artId >= SINGLES ? ` · Set #${Math.floor((f.artId - SINGLES) / 4) + 1}` : ""}</span></button>`,
     )
     .join("");
   grid.querySelectorAll(".g-item").forEach((b) => b.addEventListener("click", () => openModal(Number(b.dataset.art))));
@@ -151,6 +154,19 @@ function dissolveIn(cv, src) {
     );
   };
   img.src = src;
+}
+
+// =====================================================================================
+// sets: the four pieces close up on hover into the whole face
+// =====================================================================================
+function renderSets() {
+  $("#sets-grid").innerHTML = sets
+    .map(
+      (s) => `<div class="set-card" tabindex="0">
+        <div class="set-quad">${s.records.map((r, q) => `<img loading="lazy" src="${svgDataURI(SINGLES + 4 * (s.set - 1) + q, r)}" alt="${PIECES[q]}">`).join("")}</div>
+        <span class="g-meta">Set #${s.set} · ${esc(s.face)} · ${esc(s.stare)}</span></div>`,
+    )
+    .join("");
 }
 
 // =====================================================================================
@@ -271,6 +287,9 @@ const FRIENDLY = {
   InvalidAgentConfig: "Check the agent address, expiry and calls (the account itself can't be a target).",
   InsufficientPool: "The seed pool is being refilled. Try again later.",
   NotUpgradeable: "Nothing to upgrade for this Face.",
+  OwnershipCycle: "That would put a Face inside itself. Move the pieces into one Face only.",
+  SetNotAssembled: "The other three pieces must be inside this Face's account first.",
+  SetBonusAlreadyPaid: "This set's bonus was already paid.",
   Unauthorized: "Only the holder can do this.",
 };
 
@@ -348,7 +367,8 @@ const fmtDate = (sec) => new Date(Number(sec) * 1000).toISOString().slice(0, 16)
 async function showFace(id) {
   $("#face-title").textContent = `NEONFACES #${id}`;
   $("#face-img").src = placeholder ? svgDataURI(5555, placeholder) : "";
-  ["#face-owner", "#face-account", "#face-balances", "#face-traits", "#face-agent", "#face-links", "#face-actions"].forEach((s) => ($(s).innerHTML = ""));
+  ["#face-owner", "#face-account", "#face-balances", "#face-traits", "#face-agent", "#face-links", "#face-actions", "#face-set"].forEach((s) => ($(s).innerHTML = ""));
+  $("#face-set").hidden = true;
   $("#face-holder")?.remove();
   $("#face-agent").hidden = $("#face-agent").previousElementSibling.hidden = false;
   $("#face-search").onsubmit = (e) => {
@@ -374,7 +394,7 @@ async function showFace(id) {
     $("#face-traits").innerHTML = meta.attributes.map((a) => `<div><span>${esc(a.trait_type)}</span>${esc(show(a))}</div>`).join("");
 
     // balances: seed tokens (always) + any tradable token the account holds + ETH
-    const seedTokens = [...seed.legs, ...seed.upgradeLegs].map((l) => l.token.toLowerCase());
+    const seedTokens = [...seed.legs, ...seed.upgradeLegs, ...(await bonusLegs(id))].map((l) => l.token.toLowerCase());
     const tokens = [...new Set([...seedTokens, ...(await knownTokens()).map((x) => x.toLowerCase())])];
     const deployed = !!(await state.pub.getCode({ address: seed.account }));
     const eth = await state.pub.getBalance({ address: seed.account });
@@ -402,6 +422,7 @@ async function showFace(id) {
     if (!seed.activated) act("Activate this Face", "activate");
     else if (!seed.funded) act("Seed pending: deliver it", "fund");
     if (seed.tier >= 2 && !seed.upgraded) act(`Deliver the ${TIERS[seed.tier]} top-up`, "upgrade");
+    if (seed.tier) await setPanel(id, owner, seed.account).catch(() => {});
 
     // agent + lock
     let agentInfo = null;
@@ -435,6 +456,86 @@ async function showFace(id) {
   } catch (e) {
     $("#face-owner").innerHTML = `<b>status</b>${/nonexistent|ERC721NonexistentToken/i.test(String(e)) ? "not minted yet" : esc(errMsg(e))}`;
   }
+}
+
+/** Legs of the set bonus this Face received (none if it isn't a set's bonus anchor). */
+async function bonusLegs(id) {
+  const [setId] = await read("seeder", "setOf", [BigInt(id)]);
+  if (!setId) return [];
+  const [anchor, basketId] = await read("seeder", "setBonus", [setId]);
+  return Number(anchor) === id ? read("seeder", "basket", [basketId]) : [];
+}
+
+// ---- set panel: where the four pieces are, assemble / take apart, the one-time bonus ----
+async function setPanel(id, owner, account) {
+  const [setId, piece, members] = await read("seeder", "setOf", [BigInt(id)]);
+  if (!setId) return;
+  const el = $("#face-set");
+  const ids = members.map(Number);
+  const [owners, accounts, assembledHere, bonus, sealed] = await Promise.all([
+    Promise.all(ids.map((m) => read("faces", "ownerOf", [BigInt(m)]))),
+    Promise.all(ids.map((m) => read("seeder", "accountOf", [BigInt(m)]))),
+    read("seeder", "isAssembled", [BigInt(id)]),
+    read("seeder", "setBonus", [setId]),
+    readAt(state.dep.art, "art", "isSealed").catch(() => false),
+  ]);
+  const recs = sealed ? await Promise.all(ids.map((_, q) => readAt(state.dep.art, "art", "artData", [BigInt(SINGLES + 4 * (Number(setId) - 1) + q)]))) : null;
+  const lc = (a) => a.toLowerCase();
+  const me = state.account && lc(state.account);
+  // where each piece is: in this Face's account, inside another piece, or with a holder
+  const where = (q) => {
+    if (ids[q] === id) return "this Face";
+    const k = accounts.findIndex((a) => lc(a) === lc(owners[q]));
+    if (k >= 0) return ids[k] === id ? "inside this Face" : `inside #${ids[k]}`;
+    return me && lc(owners[q]) === me ? "your wallet" : short(owners[q]);
+  };
+  const os = state.dep.chain.opensea;
+  el.innerHTML = `<h3>Set #${setId} · ${esc(PIECES[Number(piece)])}</h3>
+    <div class="pieces">${ids
+      .map((m, q) => `<div class="piece${m === id ? " here" : ""}">${recs ? `<img src="${svgDataURI(SINGLES + 4 * (Number(setId) - 1) + q, recs[q])}" alt="">` : ""}
+        <a href="/face/${m}" data-link><b>#${m}</b></a>${esc(PIECES[q])}<br>${esc(where(q))}${os && (!me || lc(owners[q]) !== me) && m !== id ? `<br><a href="${os}/${state.dep.faces}/${m}" target="_blank" rel="noopener">OpenSea ↗</a>` : ""}</div>`)
+      .join("")}</div>
+    <p class="fine">${assembledHere
+      ? `Assembled: this Face holds the other three pieces and shows the whole face. Selling it sells the set.`
+      : `Assemble the set by moving the other three pieces into one piece's account: that Face then shows the whole face.`}
+    ${Number(bonus[0]) ? ` Set bonus paid to #${bonus[0]}.` : " The first assembly earns a one-time bonus basket."}</p>
+    <div class="face-actions"></div>`;
+  $("#face-set").hidden = false;
+  const actions = el.querySelector(".face-actions");
+  const button = (label, fn) => {
+    const b = document.createElement("button");
+    b.className = "btn btn-neon";
+    b.textContent = label;
+    b.onclick = fn;
+    actions.appendChild(b);
+  };
+  const reload = () => showFace(id);
+  const mine = me && lc(owner) === me;
+  const others = ids.filter((m) => m !== id);
+  if (mine && !assembledHere && others.every((m) => lc(owners[ids.indexOf(m)]) === me)) {
+    button("Assemble here (3 transfers)", async () => {
+      for (const m of others) {
+        toast(`Moving #${m} into #${id}…`);
+        if (!(await send(state.dep.faces, ABI.faces, "safeTransferFrom", [state.account, account, BigInt(m)]))) return reload();
+      }
+      if (!Number(bonus[0])) await send(state.dep.seeder, ABI.seeder, "claimSetBonus", [BigInt(id)]);
+      reload();
+    });
+  } else if (mine && !assembledHere) {
+    const inside = others.filter((m) => where(ids.indexOf(m)).startsWith("inside #"));
+    el.querySelector(".fine").insertAdjacentHTML("beforeend", inside.length
+      ? ` To assemble here, first take the set apart on the Face that holds ${inside.map((m) => `#${m}`).join(", ")}.`
+      : " Hold all four pieces in this wallet to assemble.");
+  }
+  if (mine && assembledHere) {
+    button("Take apart", () =>
+      send(account, ABI.accountExec, "executeBatch", [
+        others.map((m) => ({ target: state.dep.faces, value: 0n, data: encodeFunctionData({ abi: ABI.faces, functionName: "transferFrom", args: [account, state.account, BigInt(m)] }) })),
+        0,
+      ], reload),
+    );
+  }
+  if (assembledHere && !Number(bonus[0])) button("Deliver the set bonus", () => send(state.dep.seeder, ABI.seeder, "claimSetBonus", [BigInt(id)], reload));
 }
 
 async function send(address, abi, functionName, args, done) {

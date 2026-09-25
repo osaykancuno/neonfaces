@@ -51,6 +51,7 @@
       <nav>
         <a href="/#lore" data-link>Lore</a>
         <a href="/#account" data-link>Native</a>
+        <a href="/#sets" data-link>Sets</a>
         <a href="/#traits" data-link>Traits</a>
         <a href="/#funds" data-link>Funds</a>
         <a href="/#principles" data-link>Principles</a>
@@ -123,7 +124,7 @@
           <div class="cards">
             <article class="card">
               <h3>Stare tiers</h3>
-              <p>Every Face gets a base basket at mint. At reveal the art decides the tier (<b>Glance</b> 4444, <b>Watch</b> 833, <b>Heavy Stare</b> 278, exact) and Watch / Heavy Stare Faces receive a top-up: a ticker plus USDG, or a richer basket. Nobody can know a tier inside the mint transaction, so bots can't snipe them.</p>
+              <p>Every Face gets a base basket at mint. At reveal the art decides the tier (<b>Glance</b> 4444, <b>Watch</b> 833, <b>Heavy Stare</b> 278 among the 5555 artworks) and Watch / Heavy Stare Faces receive a top-up: a ticker plus USDG, or a richer basket. Nobody can know a tier inside the mint transaction, so bots can't snipe them.</p>
             </article>
             <article class="card">
               <h3>Lock before you list</h3>
@@ -139,15 +140,27 @@
           <div id="gallery-grid" class="gallery"></div>
         </section>
 
+        <section id="sets" class="block reveal">
+          <div class="label">04 / Sets</div>
+          <h2>Four pieces. One face.</h2>
+          <p class="lead">555 faces were cut in four: left eye, right eye, left mouth, right mouth. Each piece is a Face of its own, with its own account. Half of them are women, half are men, and the four pieces of a set share its Stare tier.</p>
+          <div id="sets-grid" class="sets"></div>
+          <ol class="native sets-steps">
+            <li><b>Collect.</b><p>The reveal deals whole sets to random tokens, so every set that exists can be completed. Nobody is dealt a finished one: the pieces land far apart. Each piece shows <em>Set #n</em> and its part in the metadata, so you can make an offer on exactly the piece you miss.</p></li>
+            <li><b>Assemble.</b><p>Move the other three pieces into one piece's account. That Face now shows the whole face, and whoever buys it gets all four pieces in one sale. Take it apart whenever you like.</p></li>
+            <li><b>Bonus, once.</b><p>The first time a set is assembled, it receives a one-time bonus basket of Stock Tokens, paid by the mint like the seeds. Once per set, ever: taking it apart and assembling it again earns nothing more.</p></li>
+          </ol>
+        </section>
+
         <section id="traits" class="block reveal">
-          <div class="label">04 / Traits</div>
-          <h2>Eleven traits. Exact rarities.</h2>
-          <p class="lead">Every count is fixed and published before mint.</p>
+          <div class="label">05 / Traits</div>
+          <h2>Twelve traits. Exact rarities.</h2>
+          <p class="lead">Every count is fixed and published before mint. Face (woman or man) belongs to set pieces only.</p>
           <div id="trait-explorer" class="traits"></div>
         </section>
 
         <section id="onchain" class="block reveal">
-          <div class="label">05 / Different by construction</div>
+          <div class="label">06 / Different by construction</div>
           <h2>Everything here is checkable on-chain.</h2>
           <p class="lead">A busy chain means a lot of drops that look alike. Every line below is enforced by the contracts, not by a promise.</p>
           <div class="versus" role="table">
@@ -156,6 +169,7 @@
             <div class="vs-row" role="row"><b role="cell">Wallet</b><span role="cell">None, or an empty one</span><span role="cell">An ERC-6551 account created in the mint transaction and filled by the mint itself: the seed share can only buy the Faces' Stock Tokens</span></div>
             <div class="vs-row" role="row"><b role="cell">Rarity</b><span role="cell">An off-chain script and a spreadsheet</span><span role="cell">Published exact counts; each token's art and tier set at reveal by an on-chain permutation anyone can recompute</span></div>
             <div class="vs-row" role="row"><b role="cell">Metadata</b><span role="cell">Frozen JSON, stale on day two</span><span role="cell">Live: traits read what the Face actually holds</span></div>
+            <div class="vs-row" role="row"><b role="cell">Sets</b><span role="cell">"Collect them all" with no way to check</span><span role="cell">555 four-piece faces. The contract knows every set, deals only whole ones, shows an assembled set as one face and pays its bonus once</span></div>
             <div class="vs-row" role="row"><b role="cell">Holding</b><span role="cell">Nothing rewards patience</span><span role="cell"><b class="neon">Unblinking</b>: an on-chain clock of how long the stare has stayed with its holder. Selling resets it.</span></div>
             <div class="vs-row" role="row"><b role="cell">Agents</b><span role="cell">A slide</span><span role="cell">Delegation built into every account: allowed calls only, an ETH budget you set, no signatures, expires, dies on sale</span></div>
             <div class="vs-row" role="row"><b role="cell">Resale</b><span role="cell">Seller can empty the wallet before the sale lands</span><span role="cell">Account lock that survives the sale, visible in the metadata</span></div>
@@ -164,7 +178,7 @@
         </section>
 
         <section id="funds" class="block reveal">
-          <div class="label">06 / Where the mint goes</div>
+          <div class="label">07 / Where the mint goes</div>
           <h2>Said before, not after.</h2>
           <p class="lead">A major share turns the Faces on: the content of their wallets. A share stays in the treasury for art, site, presence and liquidity. A share is the team's, with rules against dumping on the floor. A share goes to growth and collaborations. If the Faces were born empty, NEONFACES would be just an aesthetic. The aesthetic is strong. It isn't enough.</p>
           <div class="split">
@@ -175,7 +189,7 @@
         </section>
 
         <section id="principles" class="block reveal">
-          <div class="label">07 / Principles</div>
+          <div class="label">08 / Principles</div>
           <h2>How this lasts. And how it fails.</h2>
           <div class="principles">
             <div class="works">
@@ -201,16 +215,16 @@
         </section>
 
         <section id="roadmap" class="block reveal">
-          <div class="label">08 / Three milestones</div>
+          <div class="label">09 / Three milestones</div>
           <ol class="roadmap">
-            <li><b>Mint + seeding</b><span>Every Face minted with its account and base basket. On-chain reveal, Stare top-ups.</span></li>
+            <li><b>Mint + seeding</b><span>Every Face minted with its account and base basket. On-chain reveal, Stare top-ups, sets to complete.</span></li>
             <li><b>Agent strategies</b><span>Delegation ships in every account from day one. Next: ready-made strategies ("accumulate one ticker", "keep 40% liquid") and a holder dashboard.</span></li>
             <li><b>Market + analytics</b><span>HoodMarket listing, account-value analytics, holder votes on which tickers join the pool.</span></li>
           </ol>
         </section>
 
         <section id="mint" class="block reveal">
-          <div class="label">09 / Mint</div>
+          <div class="label">10 / Mint</div>
           <div class="mint">
             <div class="mint-art">
               <img id="mint-preview" alt="" />
@@ -229,12 +243,13 @@
         </section>
 
         <section id="faq" class="block reveal">
-          <div class="label">10 / FAQ</div>
+          <div class="label">11 / FAQ</div>
           <div class="faq">
             <details><summary>Where do I mint?</summary><p>On OpenSea, on Robinhood Chain: the button above opens the drop. This site is where you look inside your Face and manage it: withdraw, lock, delegate an agent.</p></details>
             <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT: a base basket from mint, a top-up after reveal for Watch / Heavy Stare, plus anything you add. You can withdraw everything, add more, delegate an agent or lock it, all from the Face's page.</p></details>
             <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure. Stock Tokens are tokenized instruments that track the underlying; they give no legal ownership and no shareholder rights.</p></details>
             <details><summary>When do I know my Stare tier?</summary><p>At reveal, after the mint closes. The reveal maps every token to one art piece with a keyed permutation (check it with <code>artIdOf(tokenId)</code>) and the art decides the tier. Watch / Heavy Stare top-ups can then be delivered by anyone, in one call.</p></details>
+            <details><summary>How do sets work?</summary><p>2220 Faces are the pieces of 555 whole faces. After the reveal each piece shows its set and part. Hold all four, then press <em>Assemble</em> on the Face that should carry the set: the other three move into its account (three transfers from your wallet). That Face shows the whole face and gets the set's one-time bonus basket. To take it apart, press <em>Take apart</em>. If the mint doesn't sell out, fewer sets are dealt, but only whole ones.</p></details>
             <details><summary>What can an agent do with my Face?</summary><p>Only what you allow, within the ETH and daily limits you set. The ready-made action trades on Uniswap through a guard contract: everything bought comes back into the Face, never more than 1% below the Chainlink price. An agent can never sign for the account, it expires, and it stops the moment the Face changes hands.</p></details>
             <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and delivered as soon as the pool is restocked, usually within minutes; anyone can deliver it with one call from the Face's page. The pool is restocked by the mint itself: 40% of what reaches the split goes to a vault that can only buy the basket tokens for the pool. On weekends, when stock prices don't update, restocking waits for Monday.</p></details>
           </div>
@@ -254,6 +269,7 @@
               <h3>Inside the account</h3>
               <div id="face-balances" class="balances"></div>
               <div id="face-actions" class="face-actions"></div>
+              <div id="face-set" class="face-set" hidden></div>
               <h3>Traits</h3>
               <div id="face-traits" class="face-traits"></div>
               <h3>Agent</h3>

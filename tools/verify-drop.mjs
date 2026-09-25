@@ -50,7 +50,7 @@ const [drop, payout, root, fees, signers, payers, gated, owner, manager, admin, 
 ok(getAddress(payout) === getAddress(dep.payout), `creator payout is NeonPayout (${payout})`);
 ok(drop.feeBps <= 1000 && drop.restrictFeeRecipients, `public stage fee ${drop.feeBps / 100}% with restricted recipients`);
 info(`public stage: ${formatEther(drop.mintPrice)} ETH, ${drop.maxTotalMintableByWallet}/wallet, ${new Date(Number(drop.startTime) * 1000).toISOString()} -> ${new Date(Number(drop.endTime) * 1000).toISOString()}`);
-ok(drop.mintPrice === 0n || drop.mintPrice >= 8_000_000_000_000_000n, "public price is at or above the self-funding floor (0.008 ETH)");
+ok(drop.mintPrice === 0n || drop.mintPrice >= 9_000_000_000_000_000n, "public price is at or above the self-funding floor (0.009 ETH)");
 ok(fees.length === 1, `exactly one allowed fee recipient: ${fees.join(", ") || "none"}`);
 if (process.env.OPENSEA_FEE_RECIPIENT) {
   ok(fees.every((f) => getAddress(f) === getAddress(process.env.OPENSEA_FEE_RECIPIENT)), "fee recipient is OpenSea's");

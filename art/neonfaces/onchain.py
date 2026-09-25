@@ -3,9 +3,13 @@ On-chain encoding for NEONFACES + a byte-exact Python mirror of NeonRenderer's S
 
 Record (one per art piece):
     [0]      grid size G (20 / 24 / 30 / 40)
-    [1..10]  trait indices, order = ONCHAIN_TRAITS
-    [11..]   RLE pixels, row-major over G*G cells, one byte per run:
+    [1..11]  trait indices, order = ONCHAIN_TRAITS (Face = 0 "None" on single close-ups)
+    [12..]   RLE pixels, row-major over G*G cells, one byte per run:
              (color << 5) | (length - 1), color 0..7, length 1..32
+
+A set is 4 records (art ids 3335 + 4k .. + 3): the pieces of one 2G x 2G face, in the order
+left eye, right eye, left mouth, right mouth (top-left, top-right, bottom-left, bottom-right).
+An assembled set renders as one SVG of the 4 records side by side (render_set_svg).
 
 Chunk (one SSTORE2 contract, up to PER_CHUNK records):
     [2 bytes big-endian offset of record i, for i < n] + records
@@ -22,9 +26,12 @@ from .render import build_palette
 
 PER_CHUNK = 32
 
-ONCHAIN_TRAITS = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expression", "Accessory", "Block", "Anomaly"]
+ONCHAIN_TRAITS = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expression", "Accessory", "Block", "Anomaly", "Face"]
+HEADER = 1 + len(ONCHAIN_TRAITS)
+ART_COUNT = 5555
 TRAIT_VALUES = {
-    "Crop": ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge"],
+    "Crop": ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge",
+             "Left eye", "Right eye", "Left mouth", "Right mouth"],
     "Density": ["Sparse", "Mid", "Heavy"],
     "Neon": ["Standard", "Deep", "Hot"],
     "Edge": ["Stair-step", "Hard cut", "Bleed dither"],
@@ -34,6 +41,7 @@ TRAIT_VALUES = {
     "Accessory": ["None", "Mole", "Scar", "Stud", "Tape", "Visor"],
     "Block": ["Standard", "Fine", "Coarse"],
     "Anomaly": ["None", "Dead pixel", "Inverted blocks", "Extra-wide crop", "Double-eye fragment"],
+    "Face": ["None", "Woman", "Man"],
 }
 NEON_ORDER = TRAIT_VALUES["Neon"]
 BG = 5  # palette index of the neon field (drawn as the background rect)
@@ -59,7 +67,7 @@ def encode_record(idx, traits: dict) -> bytes:
     g = idx.shape[0]
     out = bytearray([g])
     for t in ONCHAIN_TRAITS:
-        out.append(TRAIT_VALUES[t].index(traits[t]))
+        out.append(TRAIT_VALUES[t].index(traits.get(t, "None")))
     flat = [int(v) for v in idx.ravel()]
     i = 0
     while i < len(flat):
@@ -75,7 +83,7 @@ def encode_record(idx, traits: dict) -> bytes:
 def decode_record(rec: bytes):
     g = rec[0]
     traits = {t: TRAIT_VALUES[t][rec[1 + k]] for k, t in enumerate(ONCHAIN_TRAITS)}
-    runs = [(b >> 5, (b & 31) + 1) for b in rec[11:]]
+    runs = [(b >> 5, (b & 31) + 1) for b in rec[HEADER:]]
     return g, traits, runs
 
 
@@ -115,18 +123,30 @@ def _rand(art_id: int, i: int) -> int:
 
 
 def render_svg(art_id: int, rec: bytes) -> str:
-    g, traits, runs = decode_record(rec)
+    return _svg(art_id, [rec], 1)
+
+
+def render_set_svg(set_id: int, recs: list[bytes]) -> str:
+    """Assembled set (set_id 1..555): the 4 pieces side by side on a 2G grid, grain keyed by 5555 + set_id."""
+    return _svg(ART_COUNT + set_id, recs, 2)
+
+
+def _svg(art_id: int, recs: list[bytes], side: int) -> str:
+    g, traits, _ = decode_record(recs[0])
     pal = palettes_hex()[traits["Neon"]]
     paths = {c: [] for c in range(8)}
-    p = 0
-    for c, n in runs:
-        while n > 0:
-            x, y = p % g, p // g
-            seg = min(n, g - x)
-            if c != BG:
-                paths[c].append(f"M{x} {y}h{seg}v1h-{seg}z")
-            p += seg
-            n -= seg
+    for q, rec in enumerate(recs):
+        ox, oy = (q % 2) * g, (q // 2) * g
+        p = 0
+        for c, n in decode_record(rec)[2]:
+            while n > 0:
+                x, y = p % g, p // g
+                seg = min(n, g - x)
+                if c != BG:
+                    paths[c].append(f"M{ox + x} {oy + y}h{seg}v1h-{seg}z")
+                p += seg
+                n -= seg
+    g *= side
     s = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {g} {g}" width="1200" height="1200" shape-rendering="crispEdges">',
         f'<rect width="{g}" height="{g}" fill="{pal[BG]}"/>',
@@ -168,16 +188,32 @@ def render_svg(art_id: int, rec: bytes) -> str:
 # ----------------------------------------------------------------------------
 # Raster preview (PNG) of the same data — for the site / social, not canonical
 # ----------------------------------------------------------------------------
-def raster_preview(art_id: int, rec: bytes, size: int = 1200):
+def _grid(rec: bytes):
     import numpy as np
-    from PIL import Image
 
-    g, traits, runs = decode_record(rec)
-    pal = np.array([[int(h[i:i + 2], 16) for i in (1, 3, 5)] for h in palettes_hex()[traits["Neon"]]], dtype=np.float64)
+    g, _, runs = decode_record(rec)
     flat = []
     for c, n in runs:
         flat += [c] * n
-    idx = np.array(flat, dtype=np.uint8).reshape(g, g)
+    return np.array(flat, dtype=np.uint8).reshape(g, g)
+
+
+def raster_set_preview(set_id: int, recs: list[bytes], size: int = 1200):
+    import numpy as np
+
+    t = [_grid(r) for r in recs]
+    return raster_preview(ART_COUNT + set_id, recs[0], size, np.block([[t[0], t[1]], [t[2], t[3]]]))
+
+
+def raster_preview(art_id: int, rec: bytes, size: int = 1200, idx=None):
+    import numpy as np
+    from PIL import Image
+
+    _, traits, _ = decode_record(rec)
+    pal = np.array([[int(h[i:i + 2], 16) for i in (1, 3, 5)] for h in palettes_hex()[traits["Neon"]]], dtype=np.float64)
+    if idx is None:
+        idx = _grid(rec)
+    g = idx.shape[0]
     scale = size // g
     img = np.repeat(np.repeat(pal[idx], scale, 0), scale, 1)
     grain = traits["Grain"]

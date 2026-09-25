@@ -1,14 +1,16 @@
 // Keeps the seed pool stocked from the mint itself and delivers every pending seed and top-up.
 //
 //   PK=<keeper key> node seed-keeper.mjs <chainId> [--once]
-//   env: RPC_URL, INTERVAL (seconds, default 60), BUFFER (Faces to stock ahead, default 25), SLIPPAGE (bps, default 100)
+//   env: RPC_URL, INTERVAL (seconds, default 60), BUFFER (Faces to stock ahead, default 25), SLIPPAGE (bps, default 100),
+//        SET_EVERY (rounds between set scans after the reveal, default 5), SET_BUFFER (set bonuses to stock ahead, default 5)
 //
 // Each round:
 //   1. pushes the vault's share out of NeonPayout (anyone can),
 //   2. works out what the pool needs: pending base seeds + a buffer for the next Faces, and after the reveal the
 //      exact top-up basket of every Watch / Heavy Stare Face still waiting,
 //   3. makes NeonSeedVault buy the missing tokens (NeonTrader: Uniswap v3, Chainlink-bounded, straight into the pool),
-//   4. delivers pending seeds (activateBatch) and the top-ups the pool can cover (upgradeBatch).
+//   4. delivers pending seeds (activateBatch) and the top-ups the pool can cover (upgradeBatch),
+//   5. after the reveal, delivers the one-time bonus of every assembled set (claimSetBonus), so holders don't have to.
 // The keeper key needs gas only. It can't move the vault's ETH anywhere but into the pool.
 // Stock Token feeds only update on trading days: over a weekend the buys wait, the mint doesn't.
 import { readFileSync } from "node:fs";
@@ -23,6 +25,8 @@ const once = process.argv.includes("--once");
 const INTERVAL = Number(process.env.INTERVAL ?? 60);
 const BUFFER = Number(process.env.BUFFER ?? 25);
 const SLIPPAGE = BigInt(process.env.SLIPPAGE ?? 100);
+const SET_EVERY = Number(process.env.SET_EVERY ?? 5);
+const SET_BUFFER = Number(process.env.SET_BUFFER ?? 5);
 const MIN_BUY_USD8 = 2n * 10n ** 8n; // skip dust buys
 
 const dep = JSON.parse(readFileSync(resolve(here, `../contracts/deployments/${chainId}.json`), "utf8"));
@@ -42,6 +46,10 @@ const abi = parseAbi([
   "function basket(uint32) view returns ((address token, uint256 amount)[])",
   "function activateBatch(uint256[] tokenIds)",
   "function upgradeBatch(uint256[] tokenIds) returns (uint256)",
+  "function setOf(uint256) view returns (uint256 setId, uint256 piece, uint256[4] members)",
+  "function isAssembled(uint256) view returns (bool)",
+  "function setBonus(uint256) view returns (uint32 anchorId, uint32 basketId)",
+  "function claimSetBonus(uint256 anchorId)",
   "function releasable(address) view returns (uint256)",
   "function release(address payee)",
   "function price(address) view returns (uint256)",
@@ -69,6 +77,32 @@ const route = (token) => (token === USDG ? [[cfg.weth, token], [100]] : [[cfg.we
 // what we know about each Face, refreshed incrementally
 const faces = new Map(); // id -> { funded, tier, upgraded }
 let scanned = 0;
+let rounds = 0;
+let unpaidSets = null; // setId -> [4 member ids], sets whose bonus is not paid yet (after the reveal)
+
+/** Anchors of assembled sets whose one-time bonus is unpaid: [{ anchor, setId }]. */
+async function assembledSets(supply) {
+  if (!unpaidSets) {
+    unpaidSets = new Map();
+    const ids = Array.from({ length: supply }, (_, i) => BigInt(i + 1));
+    for (let i = 0; i < ids.length; i += 500) {
+      const r = await Promise.all(ids.slice(i, i + 500).map((id) => read(dep.seeder, "setOf", [id])));
+      for (const [setId, , members] of r) if (setId) unpaidSets.set(setId, members);
+    }
+  }
+  const due = [];
+  for (const [setId, members] of unpaidSets) {
+    const [anchor] = await read(dep.seeder, "setBonus", [setId]);
+    if (anchor) {
+      unpaidSets.delete(setId);
+      continue;
+    }
+    const flags = await Promise.all(members.map((m) => read(dep.seeder, "isAssembled", [m])));
+    const k = flags.indexOf(true);
+    if (k >= 0) due.push({ anchor: members[k], setId });
+  }
+  return due;
+}
 
 async function refresh(ids) {
   const seeds = await Promise.all(ids.map((id) => read(dep.seeder, "seedOf", [BigInt(id)])));
@@ -105,6 +139,19 @@ async function round() {
     }
   }
 
+  // sets: the bonus basket of every assembled set still unpaid (same draw as NeonSeeder.claimSetBonus)
+  const bonusDue = new Map(); // anchor -> basketId
+  let bonusOpts = [];
+  if (revealSeed && rounds++ % SET_EVERY === 0) {
+    bonusOpts = (await read(dep.seeder, "tierBaskets", [4])).map(Number);
+    if (bonusOpts.length) {
+      for (const { anchor, setId } of await assembledSets(supply)) {
+        const k = BigInt(keccak256(encodeAbiParameters([{ type: "uint256" }, { type: "uint256" }, { type: "uint8" }], [revealSeed, setId, 4])));
+        bonusDue.set(anchor, bonusOpts[Number(k % BigInt(bonusOpts.length))]);
+      }
+    }
+  }
+
   // needs per token: first what is owed now, then the buffer for the next Faces (the mint may still be open)
   const owed = new Map();
   const add = async (map, b, times) => {
@@ -116,8 +163,10 @@ async function round() {
   const perBase = Math.ceil(pendingBase.length / baseIds.length);
   for (const b of baseIds) await add(owed, b, perBase);
   for (const b of pendingTop.values()) await add(owed, b, 1);
+  for (const b of bonusDue.values()) await add(owed, b, 1);
   const ahead = new Map(owed);
   if (!revealSeed) for (const b of baseIds) await add(ahead, b, Math.ceil(BUFFER / baseIds.length));
+  else if (unpaidSets?.size > bonusDue.size) for (const b of bonusOpts) await add(ahead, b, Math.ceil(SET_BUFFER / bonusOpts.length));
 
   // 3. buy what is missing: one buy per token; if the vault can't cover the buffer too, what is owed comes first
   const pool = new Map();
@@ -178,6 +227,19 @@ async function round() {
     log(`top up ${Math.min(60, ready.length - i)} Faces`, await send(dep.seeder, "upgradeBatch", [ready.slice(i, i + 60)]));
   }
   if (pendingTop.size > ready.length) log(`${pendingTop.size - ready.length} top-ups wait for stock`);
+  for (const [anchor, b] of bonusDue) {
+    const l = await legs(b);
+    if (!l.every((x) => (pool.get(x.token.toLowerCase()) ?? 0n) >= x.amount)) {
+      log(`set bonus for #${anchor} waits for stock`);
+      continue;
+    }
+    l.forEach((x) => pool.set(x.token.toLowerCase(), pool.get(x.token.toLowerCase()) - x.amount));
+    try {
+      log(`set bonus to #${anchor}`, await send(dep.seeder, "claimSetBonus", [anchor]));
+    } catch (e) {
+      log(`set bonus #${anchor}: ${e.shortMessage ?? e.message}`); // e.g. taken apart or paid meanwhile
+    }
+  }
   if (pendingBase.length) await refresh(pendingBase);
   const stillPending = [...faces].filter(([, f]) => !f.funded).length;
   log(`supply ${supply} · pending seeds ${stillPending} · vault ${formatEther(await pub.getBalance({ address: dep.seedVault }))} ETH`);

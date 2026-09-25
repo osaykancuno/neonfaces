@@ -1,7 +1,7 @@
 {
-  "_generated": "from C:\\Users\\Utente\\Desktop\\NEONFACES\\config\\baskets.plan.json on 2026-09-24T21:25:19.338Z with prices as of 2026-09-24T04:04:06.000Z (Chainlink, oldest feed update)",
+  "_generated": "from C:\\Users\\Utente\\Desktop\\NEONFACES\\config\\baskets.plan.json on 2026-09-25T14:39:48.657Z with prices as of 2026-09-24T21:17Z (Chainlink, Robinhood Chain mainnet)",
   "chainId": 4663,
-  "basketCount": 9,
+  "basketCount": 10,
   "baskets": [
     {
       "name": "Base / TSLA",
@@ -18,7 +18,7 @@
         "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC"
       ],
       "amounts": [
-        "13368460000000000"
+        "13368390000000000"
       ]
     },
     {
@@ -27,7 +27,7 @@
         "0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9"
       ],
       "amounts": [
-        "8920470000000000"
+        "8920340000000000"
       ]
     },
     {
@@ -36,7 +36,7 @@
         "0x12f190a9F9d7D37a250758b26824B97CE941bF54"
       ],
       "amounts": [
-        "12058720000000000"
+        "12058850000000000"
       ]
     },
     {
@@ -45,7 +45,7 @@
         "0xe93237C50D904957Cf27E7B1133b510C669c2e74"
       ],
       "amounts": [
-        "6024200000000000"
+        "6024220000000000"
       ]
     },
     {
@@ -55,7 +55,7 @@
         "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
       ],
       "amounts": [
-        "40105380000000000",
+        "40105160000000000",
         "3000000"
       ]
     },
@@ -66,7 +66,7 @@
         "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
       ],
       "amounts": [
-        "26322100000000000",
+        "26321950000000000",
         "3000000"
       ]
     },
@@ -77,7 +77,7 @@
         "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
       ],
       "amounts": [
-        "11564460000000000",
+        "11564410000000000",
         "3000000"
       ]
     },
@@ -91,9 +91,20 @@
       ],
       "amounts": [
         "32607280000000000",
-        "53473830000000000",
+        "53473550000000000",
         "31717500000000000",
         "8000000"
+      ]
+    },
+    {
+      "name": "Set bonus / SPY + USDG",
+      "tokens": [
+        "0x117cc2133c37B721F49dE2A7a74833232B3B4C0C",
+        "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
+      ],
+      "amounts": [
+        "9130040000000000",
+        "3000000"
       ]
     }
   ],
@@ -112,6 +123,9 @@
     ],
     "3": [
       9
+    ],
+    "4": [
+      10
     ]
   }
 }

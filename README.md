@@ -6,7 +6,8 @@
 - **Minted on OpenSea.** The drop runs on OpenSea through SeaDrop; the token itself creates each Face's account and seed during that mint. The site presents the project and is where holders manage their Faces.
 - **Every Face is a wallet.** An ERC-6551 Token Bound Account is created through the canonical registry in the mint transaction and filled with a base basket of Stock Tokens from the seed pool.
 - **The mint funds itself.** 40% of the split goes to `NeonSeedVault`, which can only buy basket tokens (Uniswap v3, Chainlink-checked prices) straight into the pool; `tools/seed-keeper.mjs` runs it during the sale. No inventory is needed before the first mint.
-- **Stare tiers set at reveal**: a keyed on-chain permutation maps tokens to art; the art decides the tier (exactly 4444 Glance / 833 Watch / 278 Heavy Stare) and Watch / Heavy Stare Faces get a top-up. Nothing valuable is decided at mint, so it can't be sniped.
+- **Stare tiers set at reveal**: a keyed on-chain mapping assigns tokens their art; the art decides the tier (4444 Glance / 833 Watch / 278 Heavy Stare over the 5555 artworks) and Watch / Heavy Stare Faces get a top-up. Nothing valuable is decided at mint, so it can't be sniped.
+- **Sets of four**: 555 faces come in four pieces (left eye, right eye, left mouth, right mouth; half women, half men; one tier per set). The reveal deals whole sets only, never to a run of consecutive ids. Moving three pieces into the fourth's account assembles the set: that Face shows the whole face, sells as one, and earns a one-time bonus basket.
 - **Unblinking**: an on-chain clock of how long each Face has stayed with its holder, shown in the metadata. Selling resets it.
 - **Scoped agents**: holders delegate an agent in a plain-language wizard; it may only call what they allow, within an ETH budget — no signatures, expiring, void on sale. Trading goes through **NeonTrader**: Uniswap v3 on Robinhood Chain, output always back into the Face, price bounded by Chainlink, daily USD cap. See [docs/AGENTS.md](docs/AGENTS.md).
 - **Lock before listing**: a holder can freeze the account until a date; the lock survives the sale, so buyers get exactly what they see.
@@ -35,8 +36,8 @@ Requirements: Foundry, Node ≥ 20, Python ≥ 3.11 with `numpy pillow pycryptod
 # 1. art: generate the 5555 Faces (≈9 min) and the site assets
 cd art && python generate.py && python export_site.py && python export_brand.py && cd ..   # brand: icons, link preview, logo, banner
 
-# 2. contracts: build + test (72 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
-#    full-supply permutation, byte-exact SVG, agents, lock)
+# 2. contracts: build + test (89 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
+#    full-supply mapping, whole sets on any sale size, ownership cycles, byte-exact SVG, agents, lock)
 cd contracts && forge test && cd ..
 
 # 3. mainnet-fork tests: real SeaDrop, real Stock Tokens, real Uniswap v3 pools, real Chainlink feeds
@@ -62,6 +63,6 @@ Launching for real: follow [docs/LAUNCH-RUNBOOK.md](docs/LAUNCH-RUNBOOK.md) — 
 - Safe v1.4.1 (SafeL2, ProxyFactory) is deployed on mainnet and testnet.
 - Stock Tokens (TSLA, AAPL, NVDA, AMZN, MSFT, GOOGL, META, MSTR, SPY, QCOM) are 18-decimals ERC-20s; USDG is 6 decimals — addresses in `config/baskets.plan.json`.
 - A mainnet-fork test transfers **real** TSLA/NVDA/SPY/USDG into a freshly created Face account at mint and back out by the holder: Stock Tokens are not blocked from TBAs.
-- ArbSys (`0x64`) exposes `arbBlockNumber` / `arbBlockHash`; gas ≈ 0.044 gwei, L1 data fee ≈ 0. Storing the whole art set (0.94 MB) costs ≈ 0.01 ETH.
+- ArbSys (`0x64`) exposes `arbBlockNumber` / `arbBlockHash`; gas ≈ 0.044 gwei, L1 data fee ≈ 0. Storing the whole art set (1.0 MB) costs ≈ 0.01 ETH.
 - Uniswap v2/v3/v4 are live (addresses from the official Uniswap registry, in `config/trader.4663.json`); every basket ticker has a v3 pool against USDG with $185k–$3.5M liquidity; WETH/USDG 0.01% ≈ $10.9M.
 - Chainlink publishes a feed per Stock Token (8 decimals, 24 h heartbeat, 24/5 market hours); no L2 sequencer-uptime feed is published.

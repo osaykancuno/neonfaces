@@ -46,6 +46,13 @@ contract OnChainTest is Base {
         }
     }
 
+    function test_SVG_SetMatchesPythonMirror() public view {
+        string memory f = vm.readFile("test/fixtures/svg-set-sample.json");
+        bytes[] memory recs = new bytes[](4);
+        for (uint256 q; q < 4; ++q) recs[q] = f.readBytes(string.concat(".records[", vm.toString(q), "]"));
+        assertEq(renderer.renderSetSVG(f.readUint(".set"), recs), f.readString(".svg"));
+    }
+
     // ---- storage + provenance seal --------------------------------------------
     function _fakeChunks(uint256 n, bytes memory rec) internal pure returns (bytes[] memory chunks) {
         // chunk = 32 x uint16 offsets + 32 identical records (just for storage mechanics)
@@ -64,10 +71,10 @@ contract OnChainTest is Base {
 
     /// @dev a valid 20x20 record: all neon field (12 runs of 32 + 1 run of 16), default traits
     function _tinyRecord() internal pure returns (bytes memory r) {
-        r = new bytes(24);
+        r = new bytes(25);
         r[0] = bytes1(uint8(20));
-        for (uint256 i = 11; i < 23; ++i) r[i] = bytes1(uint8((5 << 5) | 31));
-        r[23] = bytes1(uint8((5 << 5) | 15));
+        for (uint256 i = 12; i < 24; ++i) r[i] = bytes1(uint8((5 << 5) | 31));
+        r[24] = bytes1(uint8((5 << 5) | 15));
     }
 
     function _uploadAll(bytes memory rec) internal returns (bytes32 h) {

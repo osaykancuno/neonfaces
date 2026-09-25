@@ -11,12 +11,15 @@ import {ChainEntropy} from "./lib/ChainEntropy.sol";
 import {NeonFaces} from "./NeonFaces.sol";
 
 /// @title NeonSeeder — gives every Face its account and its first stare at the market
-/// @notice Two moments, both recorded on-chain per tokenId:
+/// @notice Three moments, all recorded on-chain:
 ///  1. **Mint** (`activate`): the ERC-6551 account is created through the canonical registry and funded
-///     with a *base* basket (all base baskets have the same target value). A Face is never born empty.
-///  2. **Reveal** (`upgrade`): the reveal seed maps every token to one art piece through a keyed
-///     permutation of [0, 5555). The art decides the Stare tier (4444 Glance / 833 Watch / 278 Heavy
-///     Stare, exact by construction). Watch and Heavy Stare Faces then receive a tier top-up basket.
+///     with a *base* basket (all base baskets have the same target value).
+///  2. **Reveal** (`upgrade`): the reveal seed maps every token to one art piece (see `artIdOf`). The art
+///     decides the Stare tier (4444 Glance / 833 Watch / 278 Heavy Stare over the 5555 artworks).
+///     Watch and Heavy Stare Faces then receive a tier top-up basket.
+///  3. **Sets** (`claimSetBonus`): 2220 of the artworks are 555 sets of 4 pieces of one face. The reveal
+///     only hands out whole sets, so every set that exists can be completed. A set is *assembled* when
+///     one piece's account holds the other three; its first assembly earns a one-time bonus basket.
 ///
 /// @dev Why the tier is NOT drawn at mint: anything decided inside the mint transaction can be
 /// re-rolled by a contract that reverts on a bad outcome. The tier is unknowable until the reveal seed
@@ -75,11 +78,20 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     IERC6551Registry public immutable registry;
     address public immutable accountImplementation;
 
-    // art ids [0,4444) Glance, [4444,5277) Watch, [5277,5555) Heavy Stare
+    /// @dev `_tierBaskets[SET_BONUS]` = one-time bonus baskets for the first assembly of a set.
+    uint8 public constant SET_BONUS = 4;
+
+    // Art ids: [0, 3335) single close-ups, then set k (1..555) = 3335 + 4(k-1) .. +3
+    // (left eye, right eye, left mouth, right mouth). Tiers by range, singles and sets separately:
+    // singles [0,2668) Glance, [2668,3169) Watch, [3169,3335) Heavy Stare; sets 1..444 Glance, 445..527
+    // Watch, 528..555 Heavy Stare. Totals: 4444 / 833 / 278.
     uint256 public constant ART_COUNT = 5555;
-    uint256 public constant GLANCE_SIZE = 4444;
-    uint256 public constant WATCH_SIZE = 833;
-    uint256 public constant HEAVY_SIZE = 278;
+    uint256 public constant SINGLES = 3335;
+    uint256 public constant SETS = 555;
+    uint256 public constant SINGLE_GLANCE = 2668;
+    uint256 public constant SINGLE_WATCH = 501;
+    uint256 public constant SET_GLANCE = 444;
+    uint256 public constant SET_WATCH = 83;
 
     // ------------------------------------------------------------------
     // Storage
@@ -95,6 +107,14 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     mapping(uint8 tier => uint32[]) internal _tierBaskets;
     bool public configLocked;
 
+    struct SetBonusPaid {
+        uint32 anchorId; // the Face whose account received it (0 = not paid yet)
+        uint32 basketId;
+    }
+
+    mapping(uint256 setId => SetBonusPaid) public setBonus;
+    uint256 public setBonusCount;
+
     // ------------------------------------------------------------------
     // Events / errors
     // ------------------------------------------------------------------
@@ -106,6 +126,7 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     event TierBasketsSet(uint8 indexed tier, uint32[] basketIds);
     event ConfigLocked();
     event PoolWithdrawn(address indexed token, address indexed to, uint256 amount);
+    event SetBonusPaidTo(uint256 indexed setId, uint256 indexed anchorId, address indexed account, uint32 basketId);
 
     error InvalidTier();
     error InvalidBasket();
@@ -116,6 +137,8 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     error NotUpgradeable(uint256 tokenId);
     error NoBasketForTier();
     error InsufficientPool(address token, uint256 needed, uint256 available);
+    error SetNotAssembled(uint256 anchorId);
+    error SetBonusAlreadyPaid(uint256 setId);
 
     constructor(NeonFaces faces_, IERC6551Registry registry_, address accountImplementation_, address admin)
         AccessControlDefaultAdminRules(2 days, admin)
@@ -221,6 +244,29 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
         return true;
     }
 
+    // ------------------------------------------------------------------
+    // Sets: one-time bonus on the first assembly (permissionless)
+    // ------------------------------------------------------------------
+
+    /// @notice Deliver the one-time bonus basket of an assembled set into the anchor's account. Anyone can
+    /// call it (the keeper does it for every assembled set); it pays once per set, ever, so taking a set
+    /// apart and assembling it again earns nothing.
+    function claimSetBonus(uint256 anchorId) external nonReentrant {
+        if (!isAssembled(anchorId)) revert SetNotAssembled(anchorId);
+        (uint256 setId,,) = setOf(anchorId);
+        if (setBonus[setId].anchorId != 0) revert SetBonusAlreadyPaid(setId);
+        uint32[] storage options = _tierBaskets[SET_BONUS];
+        if (options.length == 0) revert NoBasketForTier();
+        uint32 basketId = options[uint256(keccak256(abi.encode(faces.revealSeed(), setId, SET_BONUS))) % options.length];
+        address account = accountOf(anchorId);
+        setBonus[setId] = SetBonusPaid(uint32(anchorId), basketId);
+        unchecked {
+            ++setBonusCount;
+        }
+        _deliver(basketId, account);
+        emit SetBonusPaidTo(setId, anchorId, account, basketId);
+    }
+
     function _deliver(uint32 basketId, address account) internal {
         Leg[] storage legs = _baskets[basketId];
         for (uint256 i; i < legs.length; ++i) {
@@ -233,34 +279,129 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     }
 
     // ------------------------------------------------------------------
-    // Reveal mapping: keyed permutation of [0, 5555)
+    // Reveal mapping
     // ------------------------------------------------------------------
 
-    /// @notice Art piece of a Face: `(a * (tokenId - 1) + b) mod 5555`, with `a` coprime to 5555
-    /// (= 5 * 11 * 101) and `(a, b)` derived from the reveal seed — a bijection, verifiable by anyone.
-    /// Returns type(uint256).max while unrevealed or for nonexistent tokens.
+    /// @notice Art piece of a Face (type(uint256).max while unrevealed or for nonexistent tokens).
+    /// With n Faces minted, every token gets a slot `p = (a·(id−1) + b) mod n` (a bijection, `a` coprime
+    /// to n). The first `4·setsIn(n)` slots are whole sets, four slots per set; the other slots are single
+    /// close-ups. Which sets and which singles is a second keyed permutation of each range, so a partial
+    /// sale keeps tiers proportional on average, and every set handed out has all four pieces minted.
+    /// Everything derives from the reveal seed: anyone can recompute it.
     function artIdOf(uint256 tokenId) public view returns (uint256) {
-        uint256 seed = faces.revealSeed();
-        if (seed == 0 || tokenId == 0 || tokenId > ART_COUNT || !faces.exists(tokenId)) return type(uint256).max;
-        (uint256 a, uint256 b) = permutationKey(seed);
-        return (a * (tokenId - 1) + b) % ART_COUNT;
+        (uint256 seed, uint256 n, uint256 p,) = _slot(tokenId);
+        if (seed == 0) return type(uint256).max;
+        uint256 setSlots = 4 * setsIn(n);
+        if (p < setSlots) return SINGLES + 4 * (_setAt(seed, p / 4) - 1) + p % 4;
+        return _perm(p - setSlots, SINGLES, uint256(keccak256(abi.encode(seed, 2))));
     }
 
-    function permutationKey(uint256 seed) public pure returns (uint256 a, uint256 b) {
-        a = 1 + (seed % (ART_COUNT - 1));
-        while (a % 5 == 0 || a % 11 == 0 || a % 101 == 0) {
-            a = a + 1 == ART_COUNT ? 1 : a + 1;
+    /// @notice Sets handed out when n Faces were minted: all 555 on a sell-out, proportionally fewer otherwise.
+    function setsIn(uint256 n) public pure returns (uint256) {
+        return n * SETS / ART_COUNT;
+    }
+
+    /// @notice The set of a Face: `setId` 1..555 (0 for a single close-up), its piece (0 left eye, 1 right
+    /// eye, 2 left mouth, 3 right mouth) and the token ids of all four pieces, in piece order.
+    function setOf(uint256 tokenId) public view returns (uint256 setId, uint256 piece, uint256[4] memory members) {
+        (uint256 seed, uint256 n, uint256 p, uint256 inv) = _slot(tokenId);
+        if (seed == 0 || p >= 4 * setsIn(n)) return (0, 0, members);
+        setId = _setAt(seed, p / 4);
+        piece = p % 4;
+        uint256 b = (seed >> 128) % n;
+        for (uint256 q; q < 4; ++q) {
+            members[q] = mulmod(inv, p - piece + q + n - b, n) + 1; // id − 1 = a⁻¹ · (slot − b) mod n
         }
-        b = (seed >> 128) % ART_COUNT;
     }
 
-    /// @notice Stare tier of a Face (0 until revealed).
+    /// @notice True when the other three pieces of this Face's set sit inside this Face's account.
+    function isAssembled(uint256 anchorId) public view returns (bool) {
+        (uint256 setId,, uint256[4] memory m) = setOf(anchorId);
+        if (setId == 0) return false;
+        address account = accountOf(anchorId);
+        for (uint256 q; q < 4; ++q) {
+            if (m[q] != anchorId && faces.ownerOf(m[q]) != account) return false;
+        }
+        return true;
+    }
+
+    /// @notice The slot key for n minted Faces: `a` is coprime to n and, for n ≥ 256, chosen so the four
+    /// ids of a set are never within n/64 of each other: minting a run of consecutive ids can't yield a
+    /// finished set. Returns `a⁻¹ mod n` too (to list a set's members).
+    function revealKey(uint256 seed, uint256 n) public pure returns (uint256 a, uint256 b, uint256 inv) {
+        b = (seed >> 128) % n;
+        if (n < 2) return (1, b, 1);
+        uint256 gap = n >= 256 ? n >> 6 : 0;
+        a = seed % (n - 1);
+        while (true) {
+            a = a + 1; // 1 .. n-1, wrapping
+            if (a == n) a = 1;
+            inv = _inverse(a, n);
+            if (inv != 0 && (gap == 0 || _apart(inv, n, gap))) return (a, b, inv);
+        }
+    }
+
+    /// @dev (seed, n, slot, a⁻¹); seed 0 while unrevealed or for nonexistent tokens.
+    function _slot(uint256 tokenId) internal view returns (uint256 seed, uint256 n, uint256 p, uint256 inv) {
+        seed = faces.revealSeed();
+        n = faces.totalSupply(); // ids 1..n, no burn, minting closed before the reveal seed exists
+        if (seed == 0 || tokenId == 0 || tokenId > n) return (0, 0, 0, 0);
+        uint256 a;
+        uint256 b;
+        (a, b, inv) = revealKey(seed, n);
+        p = mulmod(a, tokenId - 1, n) + b;
+        if (p >= n) p -= n;
+    }
+
+    /// @dev Set id (1..555) handed out in set slot k.
+    function _setAt(uint256 seed, uint256 k) internal pure returns (uint256) {
+        return _perm(k, SETS, uint256(keccak256(abi.encode(seed, 1)))) + 1;
+    }
+
+    /// @dev Keyed permutation of [0, m): (c·x + d) mod m with c coprime to m.
+    function _perm(uint256 x, uint256 m, uint256 key) internal pure returns (uint256) {
+        uint256 c = 1 + key % (m - 1);
+        while (_inverse(c, m) == 0) {
+            c = c + 1 == m ? 1 : c + 1;
+        }
+        return (c * x + (key >> 128) % m) % m;
+    }
+
+    /// @dev k·inv mod n stays more than `gap` away from 0 for k = 1, 2, 3.
+    function _apart(uint256 inv, uint256 n, uint256 gap) internal pure returns (bool) {
+        for (uint256 k = 1; k < 4; ++k) {
+            uint256 r = (k * inv) % n;
+            if (r <= gap || n - r <= gap) return false;
+        }
+        return true;
+    }
+
+    /// @dev Modular inverse of x mod n, 0 if none (gcd ≠ 1).
+    function _inverse(uint256 x, uint256 n) internal pure returns (uint256) {
+        int256 t;
+        int256 t1 = 1;
+        uint256 r = n;
+        uint256 r1 = x % n;
+        while (r1 != 0) {
+            uint256 q = r / r1;
+            (t, t1) = (t1, t - int256(q) * t1);
+            (r, r1) = (r1, r - q * r1);
+        }
+        if (r != 1) return 0;
+        return t < 0 ? uint256(t + int256(n)) : uint256(t);
+    }
+
+    /// @notice Stare tier of a Face (0 until revealed). The four pieces of a set share its tier.
     function tierOf(uint256 tokenId) public view returns (uint8) {
         uint256 art = artIdOf(tokenId);
         if (art == type(uint256).max) return 0;
-        if (art < GLANCE_SIZE) return TIER_GLANCE;
-        if (art < GLANCE_SIZE + WATCH_SIZE) return TIER_WATCH;
-        return TIER_HEAVY;
+        if (art < SINGLES) {
+            if (art < SINGLE_GLANCE) return TIER_GLANCE;
+            return art < SINGLE_GLANCE + SINGLE_WATCH ? TIER_WATCH : TIER_HEAVY;
+        }
+        uint256 set = (art - SINGLES) / 4;
+        if (set < SET_GLANCE) return TIER_GLANCE;
+        return set < SET_GLANCE + SET_WATCH ? TIER_WATCH : TIER_HEAVY;
     }
 
     // ------------------------------------------------------------------
@@ -280,10 +421,11 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
         emit BasketSet(basketId, legs);
     }
 
-    /// @notice Tier 1 = base baskets (delivered at mint to every Face); tiers 2/3 = top-ups at reveal.
+    /// @notice Tier 1 = base baskets (delivered at mint to every Face); tiers 2/3 = top-ups at reveal;
+    /// 4 (SET_BONUS) = one-time bonus for the first assembly of a set.
     function setTierBaskets(uint8 tier, uint32[] calldata basketIds) external onlyRole(CONFIG_ROLE) {
         if (configLocked) revert ConfigIsLocked();
-        if (tier < TIER_GLANCE || tier > TIER_HEAVY) revert InvalidTier();
+        if (tier < TIER_GLANCE || tier > SET_BONUS) revert InvalidTier();
         for (uint256 i; i < basketIds.length; ++i) {
             if (basketIds[i] == 0 || basketIds[i] > basketCount) revert InvalidBasket();
         }

@@ -220,10 +220,17 @@ contract NeonFacesTest is Base {
         assertEq(count[3], 278);
     }
 
-    function testFuzz_PermutationKeyIsCoprime(uint256 seed) public view {
-        (uint256 a, uint256 b) = seeder.permutationKey(seed);
-        assertTrue(a > 0 && a < 5555 && b < 5555);
-        assertTrue(a % 5 != 0 && a % 11 != 0 && a % 101 != 0);
+    function testFuzz_RevealKeyIsABijectionKey(uint256 seed, uint256 n) public view {
+        n = bound(n, 1, 5555);
+        (uint256 a, uint256 b, uint256 inv) = seeder.revealKey(seed, n);
+        assertTrue(a > 0 && (n == 1 || a < n) && b < n);
+        assertEq(mulmod(a, inv, n), 1 % n, "a is invertible mod n");
+        if (n >= 256) {
+            for (uint256 k = 1; k < 4; ++k) {
+                uint256 r = (k * inv) % n;
+                assertTrue(r > n / 64 && n - r > n / 64, "set members are far apart");
+            }
+        }
     }
 
     function test_Reveal_TopUpsForWatchAndHeavy() public {

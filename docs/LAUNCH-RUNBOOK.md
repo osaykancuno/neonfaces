@@ -64,11 +64,11 @@ node tools/safe-tx.mjs 4663 accept-admin     # import safe/4663-accept-admin.jso
 
 ## 5. Seed keeper
 
-Start it before the first stage opens and leave it running until every top-up is delivered:
+Start it before the first stage opens and leave it running after the reveal: it delivers the top-ups, then the set bonuses as holders assemble sets:
 ```bash
 PK=<keeper key> node tools/seed-keeper.mjs 4663
 ```
-Every minute it pushes the vault's share out of `NeonPayout`, buys what the pool is missing (pending seeds first, then a stock of 25 Faces ahead) and delivers pending seeds; after the reveal it delivers the top-ups. Tested end to end on a mainnet fork with the live SeaDrop, Uniswap and Chainlink. Open the sale Tuesday–Thursday: over a weekend stock prices go stale and purchases wait.
+Every minute it pushes the vault's share out of `NeonPayout`, buys what the pool is missing (pending seeds first, then a stock of 25 Faces ahead) and delivers pending seeds; after the reveal it delivers the top-ups and, every few rounds, finds assembled sets and delivers their one-time bonus (keeping 5 bonuses in stock). Tested end to end on a mainnet fork with the live SeaDrop, Uniswap and Chainlink. Open the sale Tuesday–Thursday: over a weekend stock prices go stale and purchases wait.
 
 ## 6. Team allocation (after the sale, before the reveal)
 
@@ -97,7 +97,7 @@ In OpenSea Studio, connected with the sale manager: create the drop from the exi
 | 2. Partners | `opensea/partners.csv` | 0.012 ETH | from CSV | 1500 + 2000 = 3500 |
 | 3. Public | — | 0.02 ETH | 5 | — |
 
-Never below the self-funding floor (≈ 0.008 ETH at ETH $2,691, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
+Never below the self-funding floor (≈ 0.009 ETH at ETH $2,691, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
 
 - **Payout address = `NeonPayout`** (`payout` in the deployments file). Any other address is rejected on-chain.
 - SeaDrop's stage cap is a ceiling on the collection's total supply (team Faces included), and per-wallet limits count every Face a wallet minted through SeaDrop, across stages. Check how Studio labels both before publishing.
@@ -125,7 +125,7 @@ Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers ne
 - `node tools/safe-tx.mjs 4663 release` whenever — pushes 40/25/20/15 (anyone can).
 - `node tools/safe-tx.mjs 4663 sale-manager none` — the Safe becomes the collection owner on OpenSea again.
 - OpenSea collection settings: creator earnings 5% (optional for buyers — transfers are never restricted) to the Safe. The collection reads `contractURI()` on-chain. List on HoodMarket too.
-- `lock-seeder` once every top-up is delivered; then the vault's leftover ETH can go to the treasury: `node tools/safe-tx.mjs 4663 vault-surplus <eth>`. `freeze-metadata` only when no future renderer is planned.
+- `lock-seeder` once every top-up is delivered (set bonuses keep working after the lock: they use the locked baskets); then the vault's leftover ETH can go to the treasury: `node tools/safe-tx.mjs 4663 vault-surplus <eth>`. `freeze-metadata` only when no future renderer is planned.
 - Refill pending seeds: `NeonSeeder.fund(id)` is permissionless.
 - Point holders to their Face page (`/face/<id>`): withdraw, lock and agent delegation are there. Agent builders: [AGENTS.md](AGENTS.md).
 

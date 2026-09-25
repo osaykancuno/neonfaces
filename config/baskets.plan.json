@@ -1,5 +1,5 @@
 {
-  "_readme": "Seed baskets by USD target. Tier 1 = BASE baskets delivered at mint to every Face (keep them equal in value: the draw among them is not secret). Tier 2 / 3 = TOP-UPS delivered after reveal to Watch / Heavy Stare Faces, on top of the base. `node tools/baskets.mjs --live` reads current prices from the Chainlink feeds listed per token (verified 2026-09-24); without --live it uses `prices`. Token addresses verified on-chain (symbol + decimals).",
+  "_readme": "Seed baskets by USD target. Tier 1 = BASE baskets delivered at mint to every Face (keep them equal in value: the draw among them is not secret). Tier 2 / 3 = TOP-UPS delivered after reveal to Watch / Heavy Stare Faces, on top of the base. Tier 4 = SET BONUS, delivered once per set on its first assembly (555 sets). `node tools/baskets.mjs --live` reads current prices from the Chainlink feeds listed per token (verified 2026-09-24); without --live it uses `prices`. Token addresses verified on-chain (symbol + decimals).",
   "chainId": 4663,
   "pricesAsOf": "2026-09-24T21:17Z (Chainlink, Robinhood Chain mainnet)",
   "prices": {
@@ -129,6 +129,13 @@
         "TSLA": 12.0,
         "USDG": 8.0
       }
+    },
+    {
+      "name": "Set bonus / SPY + USDG",
+      "legs": {
+        "SPY": 7.0,
+        "USDG": 3.0
+      }
     }
   ],
   "tiers": {
@@ -146,12 +153,16 @@
     ],
     "3": [
       9
+    ],
+    "4": [
+      10
     ]
   },
   "tierSizes": {
     "1": 5555,
     "2": 833,
-    "3": 278
+    "3": 278,
+    "4": 555
   },
-  "_tierSizes": "deliveries per tier: every Face gets a base basket (5555), then 833 Watch and 278 Heavy Stare top-ups"
+  "_tierSizes": "deliveries per tier: every Face gets a base basket (5555), then 833 Watch and 278 Heavy Stare top-ups, and at most 555 set bonuses"
 }

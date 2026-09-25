@@ -133,6 +133,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     event SeaDropTokenDeployed();
     event AllowedSeaDropUpdated(address[] allowedSeaDrop);
 
+    error OwnershipCycle();
     error ExceedsPublicAllocation();
     error ExceedsTeamAllocation();
     error MintIsPaused();
@@ -231,10 +232,32 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         emit MintPaused(paused);
     }
 
-    /// @dev Records the "Unblinking" clock on every mint / transfer. No restrictions, no hooks for admins.
+    /// @dev Records the "Unblinking" clock on every mint / transfer. No admin hooks; the only transfer ever
+    /// refused is one that would leave a Face owned by itself through Face accounts (A inside its own
+    /// account, or A inside B's account while B is inside A's): nobody could ever move it again. Nesting is
+    /// capped at 4 levels for the same reason. A Face moving into or out of another Face's account refreshes
+    /// that Face's metadata (an assembled set changes its image).
     function _update(address to, uint256 tokenId, address auth) internal override returns (address from) {
         from = super._update(to, tokenId, auth);
         heldSince[tokenId] = uint64(block.timestamp);
+        uint256 holder = _faceOfAccount(from);
+        if (holder != 0) emit MetadataUpdate(holder);
+        holder = _faceOfAccount(to);
+        if (holder != 0) emit MetadataUpdate(holder);
+        for (uint256 depth; holder != 0; ++depth) {
+            if (holder == tokenId || depth == 4) revert OwnershipCycle();
+            holder = _faceOfAccount(_ownerOf(holder));
+        }
+    }
+
+    /// @dev The Face whose ERC-6551 account `a` is, or 0. A contract that only claims to be one can at worst
+    /// refuse Faces sent to itself.
+    function _faceOfAccount(address a) internal view returns (uint256) {
+        if (a.code.length == 0) return 0;
+        (bool ok, bytes memory r) = a.staticcall{gas: 20_000}(abi.encodeWithSignature("token()"));
+        if (!ok || r.length != 96) return 0;
+        (uint256 chainId, uint256 tokenContract, uint256 id) = abi.decode(r, (uint256, uint256, uint256));
+        return chainId == block.chainid && tokenContract == uint256(uint160(address(this))) ? id : 0;
     }
 
     /// @notice Seconds the current holder has kept this Face (0 for nonexistent tokens).

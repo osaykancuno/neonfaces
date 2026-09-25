@@ -71,7 +71,8 @@ abstract contract Base is Test {
         faces.grantRole(faces.METADATA_ROLE(), admin);
         seeder.grantRole(seeder.CONFIG_ROLE(), admin);
 
-        // baskets: 1-2 = base (every Face, at mint), 3 = Watch top-up, 4 = Heavy Stare top-up (at reveal)
+        // baskets: 1-2 = base (every Face, at mint), 3 = Watch top-up, 4 = Heavy Stare top-up (at reveal),
+        // 5 = one-time bonus for the first assembly of a set
         _basket(1, _legs1(address(tsla), 0.002e18));
         _basket(2, _legs1(address(nvda), 0.003e18));
         _basket(3, _legs2(address(nvda), 0.01e18, address(usdg), 2e6));
@@ -86,6 +87,10 @@ abstract contract Base is Test {
         uint32[] memory h = new uint32[](1);
         h[0] = 4;
         seeder.setTierBaskets(3, h);
+        _basket(5, _legs2(address(spy), 0.013e18, address(usdg), 3e6));
+        uint32[] memory sb = new uint32[](1);
+        sb[0] = 5;
+        seeder.setTierBaskets(4, sb);
         vm.stopPrank();
 
         // what OpenSea Studio sets up for every drop: payout address + OpenSea's fee recipient

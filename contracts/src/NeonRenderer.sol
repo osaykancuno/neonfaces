@@ -16,7 +16,9 @@ import {NeonArt} from "./NeonArt.sol";
 ///  - the image is an SVG drawn from the pixel record stored in NeonArt (SSTORE2),
 ///  - the art traits are decoded from the same record,
 ///  - the Stare tier, the Face account (ERC-6551) and the seed basket are read live from NeonSeeder,
-///  - the basket tickers are read from the Stock Token contracts themselves.
+///  - the basket tickers are read from the Stock Token contracts themselves,
+///  - set pieces show their set; an assembled set (one piece's account holds the other three) shows the
+///    whole face, drawn from the four records side by side.
 /// No IPFS, no server. This contract has no owner; its only storage (watchTokens) is set in the constructor.
 contract NeonRenderer {
     using DynamicBufferLib for DynamicBufferLib.DynamicBuffer;
@@ -32,6 +34,8 @@ contract NeonRenderer {
 
     uint256 private constant BG = 5;
     uint256 private constant PLACEHOLDER_ART_ID = 5555;
+    uint256 private constant HEADER = 12; // grid + 11 trait bytes, then RLE runs
+    uint256 private constant SINGLES = 3335; // art ids of set pieces start here, 4 per set
 
     constructor(
         NeonFaces faces_,
@@ -60,6 +64,8 @@ contract NeonRenderer {
     function tokenURI(uint256 tokenId) external view returns (string memory) {
         NeonSeeder.SeedView memory s = seeder.seedOf(tokenId);
         (bool revealed, uint256 artId, bytes memory rec) = _artOf(tokenId);
+        (uint256 setId, bool assembled, bytes memory setAttrs, NeonSeeder.Leg[] memory bonus) =
+            revealed ? _set(tokenId) : (0, false, bytes(""), new NeonSeeder.Leg[](0));
 
         DynamicBufferLib.DynamicBuffer memory j;
         j.p('{"name":"NEONFACES #', bytes(tokenId.toString()), '","description":"They don\'t blink. Face #');
@@ -69,22 +75,23 @@ contract NeonRenderer {
             "underlying shares, and are not available to US persons. Art and metadata are fully on-chain.",
             '","image":"data:image/svg+xml;base64,'
         );
-        j.p(bytes(Base64.encode(bytes(renderSVG(revealed ? artId : PLACEHOLDER_ART_ID, rec)))));
+        j.p(bytes(Base64.encode(bytes(assembled ? renderSetSVG(setId, _setRecords(setId)) : renderSVG(revealed ? artId : PLACEHOLDER_ART_ID, rec)))));
         j.p('","external_url":"', bytes(siteURL()), "face/", bytes(tokenId.toString()));
         j.p('","account":"', bytes(LibString.toHexStringChecksummed(s.account)), '","attributes":[');
         j.p(_attr("Stare", _tierName(s.tier), false));
         if (revealed) {
-            (string[10] memory names, string[10] memory values) = _traits(rec);
-            for (uint256 i; i < 10; ++i) {
-                j.p(_attr(names[i], values[i], true));
+            (string[11] memory names, string[11] memory values) = _traits(rec);
+            for (uint256 i; i < 11; ++i) {
+                if (bytes(values[i]).length != 0) j.p(_attr(names[i], values[i], true));
             }
+            j.p(setAttrs);
         } else {
             j.p(_attr("Status", "Unrevealed", true));
         }
         j.p(_attr("Seed", s.funded ? _basketLabel(s.legs) : (s.activated ? "Pending" : "None"), true));
         j.p(_attr("Seed Status", s.funded ? "Funded" : (s.activated ? "Pending" : "Inactive"), true));
         if (s.tier >= 2) j.p(_attr("Stare Upgrade", s.upgraded ? _basketLabel(s.upgradeLegs) : "Pending", true));
-        j.p(_holdings(s));
+        j.p(_holdings(s, bonus));
         j.p(_unblinking(tokenId));
         j.p(_lock(s.account));
         if (revealed) j.p(',{"trait_type":"Art ID","display_type":"number","value":', bytes(artId.toString()), "}");
@@ -92,10 +99,50 @@ contract NeonRenderer {
         return string.concat("data:application/json;base64,", Base64.encode(j.data));
     }
 
-    /// @notice Raw SVG of a token (for sites and agents).
+    /// @notice Raw SVG of a token (for sites and agents): the whole face when it anchors an assembled set.
     function svgOf(uint256 tokenId) external view returns (string memory) {
         (bool revealed, uint256 artId, bytes memory rec) = _artOf(tokenId);
+        if (revealed) {
+            (uint256 setId, bool assembled,,) = _set(tokenId);
+            if (assembled) return renderSetSVG(setId, _setRecords(setId));
+        }
         return renderSVG(revealed ? artId : PLACEHOLDER_ART_ID, rec);
+    }
+
+    /// @dev Set attributes: "Set" #n, "Set status" (Assembled here / Inside #id) and the one-time "Set bonus"
+    /// (with its legs when this Face received it, so "Holds" lists them).
+    function _set(uint256 tokenId)
+        internal
+        view
+        returns (uint256 setId, bool assembled, bytes memory attrs, NeonSeeder.Leg[] memory bonus)
+    {
+        uint256[4] memory members;
+        (setId,, members) = seeder.setOf(tokenId);
+        if (setId == 0) return (0, false, "", bonus);
+        attrs = _attr("Set", string.concat("#", setId.toString()), true);
+        assembled = seeder.isAssembled(tokenId);
+        if (assembled) {
+            attrs = abi.encodePacked(attrs, _attr("Set status", "Assembled", true));
+        } else {
+            address owner = faces.ownerOf(tokenId);
+            for (uint256 q; q < 4; ++q) {
+                if (members[q] != tokenId && owner == seeder.accountOf(members[q])) {
+                    attrs = abi.encodePacked(attrs, _attr("Set status", string.concat("Inside #", members[q].toString()), true));
+                }
+            }
+        }
+        (uint32 anchorId, uint32 basketId) = seeder.setBonus(setId);
+        if (anchorId == tokenId) {
+            bonus = seeder.basket(basketId);
+            attrs = abi.encodePacked(attrs, _attr("Set bonus", _basketLabel(bonus), true));
+        }
+    }
+
+    function _setRecords(uint256 setId) internal view returns (bytes[] memory recs) {
+        recs = new bytes[](4);
+        for (uint256 q; q < 4; ++q) {
+            recs[q] = art.artData(SINGLES + 4 * (setId - 1) + q);
+        }
     }
 
     /// @notice Collection metadata (ERC-7572 contractURI), on-chain.
@@ -103,8 +150,9 @@ contract NeonRenderer {
         (address receiver, uint256 fee) = faces.royaltyInfo(1, 10_000);
         DynamicBufferLib.DynamicBuffer memory j;
         j.p(
-            '{"name":"NEONFACES","description":"They don\'t blink. 5555 close-up faces on Robinhood Chain. ',
-            "Every Face is an account (ERC-6551) seeded with Stock Tokens. Art and metadata fully on-chain.",
+            '{"name":"NEONFACES","description":"They don\'t blink. 5555 close-up faces on Robinhood Chain; 555 faces ',
+            "come in four pieces to collect and assemble. Every Face is an account (ERC-6551) seeded with Stock ",
+            "Tokens. Art and metadata fully on-chain.",
             '","image":"data:image/svg+xml;base64,'
         );
         j.p(bytes(Base64.encode(bytes(renderSVG(PLACEHOLDER_ART_ID, SSTORE2.read(placeholder))))));
@@ -126,42 +174,63 @@ contract NeonRenderer {
     // SVG — mirrored byte for byte by art/neonfaces/onchain.py (render_svg)
     // ------------------------------------------------------------------
     function renderSVG(uint256 artId, bytes memory rec) public pure returns (string memory) {
-        uint256 g = uint8(rec[0]);
-        string[8] memory pal = _palette(uint8(rec[3])); // byte 3 = Neon trait
-        bytes memory gs = bytes(g.toString());
+        bytes[] memory recs = new bytes[](1);
+        recs[0] = rec;
+        return _svg(artId, recs, 1);
+    }
 
+    /// @notice An assembled set (setId 1..555): its 4 pieces side by side on a 2G grid, grain keyed by 5555 + setId.
+    function renderSetSVG(uint256 setId, bytes[] memory recs) public pure returns (string memory) {
+        return _svg(PLACEHOLDER_ART_ID + setId, recs, 2);
+    }
+
+    function _svg(uint256 grainId, bytes[] memory recs, uint256 side) internal pure returns (string memory) {
+        uint256 g = uint8(recs[0][0]);
+        string[8] memory pal = _palette(uint8(recs[0][3])); // byte 3 = Neon trait
+
+        DynamicBufferLib.DynamicBuffer[8] memory paths;
+        for (uint256 q; q < recs.length; ++q) {
+            _draw(paths, recs[q], g, (q % 2) * g, (q / 2) * g);
+        }
+
+        g *= side;
+        bytes memory gs = bytes(g.toString());
         DynamicBufferLib.DynamicBuffer memory out;
         out.p('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ', gs, " ", gs);
         out.p('" width="1200" height="1200" shape-rendering="crispEdges"><rect width="', gs, '" height="', gs);
         out.p('" fill="', bytes(pal[BG]), '"/>');
-
-        DynamicBufferLib.DynamicBuffer[8] memory paths;
-        uint256 pos;
-        for (uint256 k = 11; k < rec.length; ++k) {
-            uint256 b = uint8(rec[k]);
-            uint256 c = b >> 5;
-            uint256 n = (b & 31) + 1;
-            while (n > 0) {
-                uint256 x = pos % g;
-                uint256 seg = n < g - x ? n : g - x;
-                if (c != BG) _run(paths[c], x, pos / g, seg);
-                pos += seg;
-                n -= seg;
-            }
-        }
         for (uint256 c; c < 8; ++c) {
             if (c == BG || paths[c].data.length == 0) continue;
             out.p('<path fill="', bytes(pal[c]), '" d="', paths[c].data, '"/>');
         }
 
-        uint256 grain = uint8(rec[5]); // byte 5 = Grain trait
-        if (grain == 1) _dusty(out, artId, g);
-        else if (grain == 2) _scan(out, artId, g, gs);
+        uint256 grain = uint8(recs[0][5]); // byte 5 = Grain trait
+        if (grain == 1) _dusty(out, grainId, g);
+        else if (grain == 2) _scan(out, grainId, g, gs);
         out.p("</svg>");
         return out.s();
     }
 
-    function _run(DynamicBufferLib.DynamicBuffer memory path, uint256 x, uint256 y, uint256 len) internal pure {
+    /// @dev RLE runs of one record -> one path per palette color, offset by (ox, oy), split per row.
+    function _draw(DynamicBufferLib.DynamicBuffer[8] memory paths, bytes memory rec, uint256 g, uint256 ox, uint256 oy)
+        internal
+        pure
+    {
+        uint256 pos;
+        for (uint256 k = HEADER; k < rec.length; ++k) {
+            uint256 c = uint8(rec[k]) >> 5;
+            uint256 n = (uint8(rec[k]) & 31) + 1;
+            while (n > 0) {
+                uint256 x = pos % g;
+                uint256 seg = n < g - x ? n : g - x;
+                if (c != BG) _run(paths[c], ox + x, oy + pos / g, seg);
+                pos += seg;
+                n -= seg;
+            }
+        }
+    }
+
+        function _run(DynamicBufferLib.DynamicBuffer memory path, uint256 x, uint256 y, uint256 len) internal pure {
         bytes memory sg = bytes(len.toString());
         path.p("M", bytes(x.toString()), " ", bytes(y.toString()), "h", sg, "v1h-");
         path.p(sg, "z");
@@ -219,10 +288,13 @@ contract NeonRenderer {
     // ------------------------------------------------------------------
     // Traits
     // ------------------------------------------------------------------
-    function _traits(bytes memory rec) internal pure returns (string[10] memory n, string[10] memory v) {
-        n = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expression", "Accessory", "Block", "Anomaly"];
-        uint256 i0 = uint8(rec[1]);
-        v[0] = ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge"][i0];
+    /// @dev Face is "" (omitted) on single close-ups.
+    function _traits(bytes memory rec) internal pure returns (string[11] memory n, string[11] memory v) {
+        n = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expression", "Accessory", "Block", "Anomaly", "Face"];
+        v[0] = [
+            "Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge", "Left eye", "Right eye", "Left mouth",
+            "Right mouth"
+        ][uint8(rec[1])];
         v[1] = ["Sparse", "Mid", "Heavy"][uint8(rec[2])];
         v[2] = ["Standard", "Deep", "Hot"][uint8(rec[3])];
         v[3] = ["Stair-step", "Hard cut", "Bleed dither"][uint8(rec[4])];
@@ -232,6 +304,7 @@ contract NeonRenderer {
         v[7] = ["None", "Mole", "Scar", "Stud", "Tape", "Visor"][uint8(rec[8])];
         v[8] = ["Standard", "Fine", "Coarse"][uint8(rec[9])];
         v[9] = ["None", "Dead pixel", "Inverted blocks", "Extra-wide crop", "Double-eye fragment"][uint8(rec[10])];
+        v[10] = ["", "Woman", "Man"][uint8(rec[11])];
     }
 
     function _tierName(uint8 tier) internal pure returns (string memory) {
@@ -253,13 +326,14 @@ contract NeonRenderer {
         }
     }
 
-    /// @dev Live balances of the seed tokens inside the Face account, e.g. {"trait_type":"Holds TSLA","value":"0.003"}
-    function _holdings(NeonSeeder.SeedView memory s) internal view returns (bytes memory out) {
+    /// @dev Live balances of the seed tokens (base, top-up, set bonus) inside the Face account, e.g. {"trait_type":"Holds TSLA","value":"0.003"}
+    function _holdings(NeonSeeder.SeedView memory s, NeonSeeder.Leg[] memory bonus) internal view returns (bytes memory out) {
         uint256 n;
         uint256 seedCount;
-        address[] memory tokens = new address[](s.legs.length + s.upgradeLegs.length + watchTokens.length);
+        address[] memory tokens = new address[](s.legs.length + s.upgradeLegs.length + bonus.length + watchTokens.length);
         for (uint256 i; i < s.legs.length; ++i) n = _addUnique(tokens, n, s.legs[i].token);
         for (uint256 i; i < s.upgradeLegs.length; ++i) n = _addUnique(tokens, n, s.upgradeLegs[i].token);
+        for (uint256 i; i < bonus.length; ++i) n = _addUnique(tokens, n, bonus[i].token);
         seedCount = n;
         for (uint256 i; i < watchTokens.length; ++i) n = _addUnique(tokens, n, watchTokens[i]);
         for (uint256 i; i < n; ++i) {

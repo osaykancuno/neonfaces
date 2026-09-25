@@ -140,7 +140,7 @@ contract Deploy is Script {
             for (uint256 j; j < tokens.length; ++j) legs[j] = NeonSeeder.Leg(tokens[j], amounts[j]);
             seeder.setBasket(uint32(i + 1), legs);
         }
-        for (uint8 t = 1; t <= 3; ++t) {
+        for (uint8 t = 1; t <= 4; ++t) { // 1 base, 2 Watch, 3 Heavy Stare, 4 set bonus
             uint256[] memory ids = vm.parseJsonUintArray(json, string.concat(".tiers.", vm.toString(t)));
             uint32[] memory ids32 = new uint32[](ids.length);
             for (uint256 j; j < ids.length; ++j) ids32[j] = uint32(ids[j]);
@@ -187,6 +187,13 @@ contract Deploy is Script {
         uint32[] memory hv = new uint32[](1);
         hv[0] = 5;
         seeder.setTierBaskets(3, hv);
+        NeonSeeder.Leg[] memory sb = new NeonSeeder.Leg[](2);
+        sb[0] = NeonSeeder.Leg(address(spy), 0.009e18);
+        sb[1] = NeonSeeder.Leg(address(usdg), 3e6);
+        seeder.setBasket(6, sb);
+        uint32[] memory sbIds = new uint32[](1);
+        sbIds[0] = 6;
+        seeder.setTierBaskets(4, sbIds);
         console2.log("mock TSLA", address(tsla));
         console2.log("mock NVDA", address(nvda));
         console2.log("mock AAPL", address(aapl));

@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { renderSVG } from "../src/render.js";
+import { renderSVG, renderSetSVG } from "../src/render.js";
 
 const fixtures = JSON.parse(readFileSync(new URL("../../contracts/test/fixtures/svg-samples.json", import.meta.url)));
 
@@ -11,3 +11,8 @@ for (const f of fixtures) {
     assert.equal(renderSVG(f.artId, f.record), f.svg);
   });
 }
+
+const set = JSON.parse(readFileSync(new URL("../../contracts/test/fixtures/svg-set-sample.json", import.meta.url)));
+test(`assembled set ${set.set} renders byte-identical to NeonRenderer`, () => {
+  assert.equal(renderSetSVG(set.set, set.records), set.svg);
+});

@@ -5,10 +5,14 @@ Rarities are *exact*: every trait value gets a fixed count (largest-remainder
 rounding of its weight), then the deck is shuffled. No luck involved, the
 published rarity table is what ships.
 
+The 5555 art pieces are 3335 single close-ups plus 555 sets of 4 pieces
+(one full face split into left eye / right eye / left mouth / right mouth).
+Art ids: singles [0, 3335), set k = 3335 + 4k .. 3335 + 4k + 3.
+
 Stare tiers are the backbone: the tier decides the on-chain seed basket AND
-biases the art (heavier stare = darker, more neon). Art pieces are grouped by
-tier; the on-chain Seeder assigns every minted token a tier and an index inside
-that tier, and the reveal maps (tier, index) -> art piece.
+biases the art (heavier stare = darker, more neon). Tiers are fixed by art id
+range (singles and sets separately), so the totals are exact: 4444 / 833 / 278.
+The four pieces of a set always share its tier. NeonSeeder mirrors these ranges.
 """
 from __future__ import annotations
 
@@ -21,6 +25,18 @@ TIERS = {
     3: ("Heavy Stare", 278),   # 5%   - rich seed
 }
 assert sum(c for _, c in TIERS.values()) == SUPPLY
+
+SINGLES = 3335
+SETS = 555
+assert SINGLES + 4 * SETS == SUPPLY
+# tier -> count, singles and sets (each set = 4 pieces of the same tier)
+SINGLE_TIERS = {1: 2668, 2: 501, 3: 166}
+SET_TIERS = {1: 444, 2: 83, 3: 28}
+for _t, (_, _c) in TIERS.items():
+    assert SINGLE_TIERS[_t] + 4 * SET_TIERS[_t] == _c
+PIECES = ["Left eye", "Right eye", "Left mouth", "Right mouth"]
+# every set is a woman or a man, half and half inside each tier
+FACE = {"Woman": 50, "Man": 50}
 
 # Global traits: value -> weight (percent-ish, normalised)
 GLOBAL = {
@@ -54,10 +70,13 @@ BY_TIER = {
     },
 }
 
-# attribute order in metadata
+# Set-level traits: shared by the 4 pieces (Crop is the piece, Anomaly is always None)
+SET_TRAITS = ["Grain", "Edge", "Light", "Expression", "Accessory", "Block"]
+
+# attribute order in metadata (Face and Set only on set pieces)
 TRAIT_ORDER = [
     "Stare", "Crop", "Density", "Neon", "Edge", "Grain",
-    "Light", "Expression", "Accessory", "Block", "Anomaly",
+    "Light", "Expression", "Accessory", "Block", "Anomaly", "Face",
 ]
 
 

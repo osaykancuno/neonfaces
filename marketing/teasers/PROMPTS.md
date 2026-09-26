@@ -29,7 +29,7 @@ Start frame: `1-signal-hook-start.png` (the collection's set face, lit, so the c
 
 > From the very first frame there is movement: the bright pixel-art face glitches hard, its pixel rows jolting sideways and snapping back, while the camera makes a fast, punchy push-in toward the eyes. In the first second a calm, low, close-mic female voice says: "They don't blink." The eyes flare acid lime neon and lock onto the viewer, wide open, never closing. Then the neon flickers off and on twice like a failing sign, each flicker revealing the same face staring even harder, and the camera settles in an extreme close-up on the unblinking eyes. At the end the voice whispers again: "Look closer." Sound: a sharp electric zap and bass hit on the first frame, the buzz and click of neon tubes, a deep sub-bass pulse, silence on the last word.
 
-The model turned the face into a smoother, near-photographic one; the user preferred it. Virality proxy: 50 (hook 37, sustain 87) against 51 (39, 85) for the first take: the proxy does not separate them. Scores of the others: video 2 51 (hook 38, sustain 91).
+The model turned the face into a smoother, near-photographic one; the user preferred it. Virality proxy: 50 (hook 37, sustain 87) against 51 (39, 85) for the first take: the proxy does not separate them. Scores of the others: video 2 51 (hook 38, sustain 91), video 3 48 (hook 35, sustain 92).
 
 ## 2. Watching
 Start frame and end frame: `2-watching-start.png`

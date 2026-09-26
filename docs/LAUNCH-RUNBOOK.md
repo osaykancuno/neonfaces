@@ -15,7 +15,8 @@ The Safe accepts the admin role 2 days after the deploy, and `verify-drop.mjs` f
 | Sun 4 Oct | announce the sale: Wednesday 7 October 14:00 UTC on OpenSea, 24 hours reserved to the list (0.013 ETH, 3 per wallet; wallets check themselves on the preview, neonfaces.xyz), then the public from Thursday 8 October 14:00 UTC (0.018 ETH, 5 per wallet in total) until the last Face sells; team Faces and reveal after the sell-out |
 | Mon 5 Oct | the Safe accepts the admin role (2 days after the deploy); check the Studio draft |
 | Tue 6 Oct | the list's CSV is in the presale stage (rebuilt with the extra wallets if any, see section 7), `verify-drop.mjs` passes, then publish the drop in Studio (it opens by itself at the start time) |
-| Wed 7 Oct | 14:00 UTC the list stage opens for 24 hours; Thursday 8 October 14:00 UTC the public stage, until the last Face sells; after the sell-out: team mint and reveal the same day (a sell-out on a weekend only delays the Stare top-ups to Monday's prices) |
+| Wed 7 Oct | 14:00 UTC the list stage opens for 24 hours; neonfaces.xyz stays the preview, so listed wallets can use its wallet check for the whole window |
+| Thu 8 Oct | 14:00 UTC the public stage opens, until the last Face sells; at the same time replace the preview with the web app on Netlify (the wallet check lives only on the preview and is no longer needed); after the sell-out: team mint and reveal the same day (a sell-out on a weekend only delays the Stare top-ups to Monday's prices) |
 
 ## 0. Accounts
 
@@ -129,7 +130,7 @@ Site:
 ```bash
 OPENSEA_URL=https://opensea.io/collection/<slug> node tools/export-web.mjs 4663
 ```
-`web/public/{deployment.json, agent-presets.json}` are generated (git-ignored). Set `VITE_SITE_URL` in `web/.env` to the final domain (same as `SITE_URL`): link previews on X, Telegram, WhatsApp and Discord need that absolute URL. `npm run build` and host `dist/` on Vercel / Cloudflare Pages / Netlify (`/face/:id` rewrites included; on IPFS use `/#/face/:id`).
+`web/public/{deployment.json, agent-presets.json}` are generated (git-ignored). Set `VITE_SITE_URL` in `web/.env` to the final domain (same as `SITE_URL`): link previews on X, Telegram, WhatsApp and Discord need that absolute URL. `npm run build` and host `dist/` on Vercel / Cloudflare Pages / Netlify (`/face/:id` rewrites included; on IPFS use `/#/face/:id`). It replaces the preview (landing/) on Thursday 8 October at 14:00 UTC, when the list window ends and the public stage opens: the wallet check lives only on the preview, so it stays online for the whole list window.
 
 Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers never pause).
 

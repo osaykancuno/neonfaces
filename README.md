@@ -23,7 +23,7 @@
 
 | Path | What |
 |---|---|
-| `art/` | Procedural renderer + collection generator (Python). Produces the on-chain records, provenance, previews. |
+| `art/` | Collection generator (Python): portraits of people who don't exist (`portraits.py`, manifest of every prompt) turned into the on-chain pixel records (`neonfaces/photo.py`), provenance, previews. |
 | `contracts/` | Foundry project: `NeonFaces` (ERC-721, SeaDrop-compatible), `NeonPayout` (proceeds split), `NeonSeedVault` (seed share -> pool), `NeonSeeder`, `NeonFaceAccount` (ERC-6551), `NeonArt` (SSTORE2), `NeonRenderer` (SVG/JSON), `NeonTrader` (agent trading guard), `NeonSetVotes` (the assembled sets' advisory say). Tests, deploy + upload + rehearsal scripts. |
 | `.github/workflows/keeper.yml` | The keeper and the strategy agent, scheduled every 10 minutes on GitHub Actions. |
 | `tools/` | Node ops tools: seed keeper, drop-config checker, live-priced baskets, NFT-holder snapshots, OpenSea Studio allowlist CSVs, Safe batches, reveal watcher, top-ups, agent presets, trading agent, on-chain verifier, site export. |

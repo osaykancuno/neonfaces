@@ -4,6 +4,7 @@ for the single close-ups (each pool portrait gives about eight crops). The pixel
 them by neonfaces/photo.py.
 
     python portraits.py plan            # write portraits/manifest.json: id, who, light, expression, prompt
+    python portraits.py pool [4] [300]  # singles on a budget: reuse earlier set takes, plan only what is missing
     python portraits.py todo [n]        # the next n portraits without an image (prompts to generate)
     python portraits.py generate [n] [--backend muapi|pollinations] [--ids set-1,pool-3]
                                         # generate the missing portraits (or regenerate --ids) through an API;
@@ -32,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 DIR = ROOT / "portraits"
 MANIFEST = DIR / "manifest.json"
-CROPS_PER_PORTRAIT = 1  # every single close-up gets its own person
+CROPS_PER_PORTRAIT = 1  # for `plan` from scratch; the budgeted pool (`pool`) gives about 4 crops per person
 MODEL = "z_image"
 
 LOOKS = [
@@ -169,7 +170,7 @@ def assign_singles(pieces: list[dict], manifest: list[dict]) -> dict[int, list[t
     (light, expression) pool are used in turn, never the same crop on the same side twice."""
     pools = defaultdict(list)
     for e in manifest:
-        if e["id"].startswith("pool"):
+        if e["id"].startswith(("pool", "spare")) and not e.get("exclude"):
             pools[(e["light"], e["expression"])].append(e["id"])
     used = set()
     cursor = defaultdict(int)
@@ -395,10 +396,65 @@ def diversify(thr: float, rounds: int, backend: str, only: str | None = None) ->
     print("stopped after the last round: check `python portraits.py similar` by eye")
 
 
+def budget_pool(per_portrait: int, max_new: int) -> None:
+    """Singles on a budget: every earlier take of a set face (set aside by `diversify`, already paid) becomes a
+    `spare-*` portrait for single close-ups, and only the portraits still missing to give each (light, expression)
+    group about `per_portrait` crops per person are planned as new `pool-*` entries."""
+    sys.path.insert(0, str(ROOT))
+    from generate import MASTER_SEED, plan
+    from neonfaces.traits import SUPPLY
+    manifest = load()
+    by_id = {e["id"]: e for e in manifest}
+    # 1. adopt the earlier takes
+    spare = DIR / "replaced"
+    for f in sorted(spare.glob("set-*.png")) if spare.exists() else []:
+        slot = "-".join(f.stem.split("-")[:2])
+        e = by_id[slot]
+        sid = "spare-" + f.stem[len("set-"):]
+        f.replace(DIR / f"{sid}.png")
+        manifest.append({"id": sid, "light": e["light"], "expression": e["expression"], "gender": e["gender"],
+                         "look": e["look"], "age": e["age"], "source": slot,
+                         "prompt": f"an earlier take for {slot} (too close to another set face), reused for single close-ups"})
+    # 2. drop planned pool portraits that were never generated, then plan only what is missing
+    manifest = [e for e in manifest if not (e["id"].startswith("pool") and not (DIR / f"{e['id']}.png").exists())]
+    need = defaultdict(int)
+    for piece in plan(SUPPLY, MASTER_SEED):
+        if "set" not in piece:
+            need[("top" if piece["traits"]["Light"] == "Top" else "side", piece["traits"]["Expression"])] += 1
+    have = defaultdict(int)
+    for e in manifest:
+        if e["id"].startswith(("pool", "spare")):
+            have[(e["light"], e["expression"])] += 1
+    missing = {b: max(0, math.ceil(n / per_portrait) - have[b]) for b, n in need.items()}
+    if sum(missing.values()) > max_new:
+        sys.exit(f"{sum(missing.values())} new portraits needed at {per_portrait} per person, over the cap of {max_new}")
+    rng = random.Random(MASTER_SEED ^ 0xB0D6E7)
+    looks_ = _Looks(random.Random(MASTER_SEED ^ 0x5EED), {e["prompt"] for e in manifest})
+    k = 1 + max([int(e["id"].split("-")[1]) for e in manifest if e["id"].startswith("pool")] or [-1])
+    for (light, expression), m in sorted(missing.items()):
+        genders = _deck({"Woman": 1, "Man": 1}, m, rng)
+        looks = _deck({x: 1 for x in LOOKS}, m, rng)
+        ages = _deck(AGES, m, rng)
+        for i in range(m):
+            who = looks_.who(genders[i], looks[i], ages[i])
+            manifest.append({"id": f"pool-{k}", "light": light, "expression": expression, "gender": genders[i],
+                             "look": looks[i], "age": ages[i], "prompt": prompt(who, light, expression)})
+            k += 1
+    save(manifest)
+    total = sum(1 for e in manifest if e["id"].startswith(("pool", "spare")))
+    print(f"singles: {sum(need.values())} crops from {total} people ({sum(missing.values())} new to generate, "
+          f"about ${sum(missing.values()) * 0.007:.2f} on MuAPI)")
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     DIR.mkdir(exist_ok=True)
-    if cmd == "plan":
+    if cmd == "pool":  # portraits.py pool [per_portrait] [max_new]
+        nums = [int(x) for x in sys.argv[2:] if x.isdigit()]
+        budget_pool(nums[0] if nums else 4, nums[1] if len(nums) > 1 else 300)
+    elif cmd == "plan":
+        if any(e["id"].startswith("spare") for e in (load() if MANIFEST.exists() else [])) and "--force" not in sys.argv:
+            sys.exit("the singles pool is budgeted (spare-* portraits): `plan --force` would plan it again from scratch")
         sys.path.insert(0, str(ROOT))
         from generate import MASTER_SEED, plan
         from neonfaces.traits import SUPPLY

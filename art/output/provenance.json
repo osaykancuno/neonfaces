@@ -1,9 +1,9 @@
 {
- "provenanceHash": "0x74d09a64d73beb97fe58e2979ec4c216bbf56997a8f8084b00dbbe7c3f5ed870",
+ "provenanceHash": "0x6525337e762b1a53b64f339a88d9659dad12c139cfc7fed1b2a539612612cf51",
  "algorithm": "h0 = 0x00..00; h(k+1) = keccak256(h(k) || chunk(k)); chunks = onchain/chunks.json in order",
  "count": 5555,
  "chunks": 174,
- "totalBytes": 995321,
+ "totalBytes": 1086046,
  "tiers": {
   "1": {
    "name": "Glance",

@@ -26,3 +26,5 @@ contracts/deployments/trader.*.json
 config/trader.46630.json
 config/agent-presets.46630.json
 tools/.runner-state.json
+# teaser takes as delivered by the video model (finals are in marketing/teasers/)
+marketing/teasers/raw/

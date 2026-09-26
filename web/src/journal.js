@@ -23,7 +23,7 @@ const ZERO = "0x0000000000000000000000000000000000000000";
 const TIER = ["", "Glance", "Watch", "Heavy Stare"];
 
 /** Logs of one event, from the node (eth_getLogs) or, if the node refuses the range, from Blockscout's API. */
-async function logs(address, event, args = {}, from = null) {
+export async function logs(address, event, args = {}, from = null) {
   const fromBlock = from ?? BigInt(state.dep.deployBlock ?? 0);
   try {
     return await state.pub.getLogs({ address, event, args, fromBlock, toBlock: "latest" });
@@ -43,7 +43,7 @@ async function logs(address, event, args = {}, from = null) {
 }
 
 const times = new Map();
-async function when(l) {
+export async function when(l) {
   if (l.timeStamp) return l.timeStamp;
   if (!times.has(l.blockNumber)) times.set(l.blockNumber, state.pub.getBlock({ blockNumber: l.blockNumber }).then((b) => Number(b.timestamp)));
   return times.get(l.blockNumber);

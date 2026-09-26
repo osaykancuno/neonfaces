@@ -6,6 +6,7 @@ import { journal, longestStares, completedSets, fmtDay, openApprovals } from "./
 import { holderPanel, knownTokens } from "./agent-ui.js";
 import { hunt } from "./hunter.js";
 import { route as tradeRoute } from "./actions.js";
+import { liveValue, valueHistory, sparkline } from "./value.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 
@@ -511,11 +512,16 @@ async function showFace(id) {
           readAt(t, "erc20", "symbol").catch(() => "?"),
           readAt(t, "erc20", "decimals").catch(() => 18),
         ]);
-        return { sym, v: formatUnits(bal, dec), keep: bal > 0n || seedTokens.includes(t) };
+        return { sym, token: t, bal, dec: Number(dec), v: formatUnits(bal, dec), keep: bal > 0n || seedTokens.includes(t) };
       }),
     ).then((r) => r.filter((x) => x.keep));
-    rows.push({ sym: "ETH", v: formatEther(eth) });
-    $("#face-balances").innerHTML = rows.map((b) => `<div class="bal"><span>${esc(b.sym)}</span><b>${Number(b.v).toLocaleString("en-US", { maximumFractionDigits: 6 })}</b></div>`).join("");
+    rows.push({ sym: "ETH", token: null, bal: eth, dec: 18, v: formatEther(eth) });
+    const balRow = (b) =>
+      `<div class="bal"><span>${esc(b.sym)}</span><b>${Number(b.v).toLocaleString("en-US", { maximumFractionDigits: 6 })}</b>${
+        b.usd == null ? "" : `<em>${usd(b.usd)}</em>`
+      }</div>`;
+    $("#face-balances").innerHTML = rows.map(balRow).join("");
+    showValue(seed.account, rows, balRow).catch(() => {});
 
     // permissionless actions: anyone can push a pending seed or a top-up
     const act = (label, fn) => {
@@ -744,6 +750,37 @@ async function sayPanel(el, id, setId, act, reload) {
       box.querySelector(".face-actions").appendChild(b);
     }
     el.appendChild(box);
+  }
+}
+
+function usd(n) {
+  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Dollar value of what the Face holds (Chainlink, live) and a 30-day line; refreshed every minute while open. */
+async function showValue(account, rows, balRow) {
+  const box = $("#face-value");
+  if (!box || !state.dep.trader) return;
+  const paint = async () => {
+    const live = await liveValue(rows.filter((r) => r.bal > 0n));
+    if (!live.rows.some((r) => r.usd != null)) return;
+    const priced = new Map(live.rows.map((r) => [r.sym, r]));
+    $("#face-balances").innerHTML = rows.map((r) => balRow(priced.get(r.sym) ?? r)).join("");
+    const age = live.oldest ? Math.round((Date.now() / 1000 - live.oldest) / 3600) : null;
+    box.querySelector(".v-total").innerHTML = `<b>${usd(live.total)}</b><span class="fine">at Chainlink prices${
+      age != null && age >= 2 ? `, some last updated ${age < 48 ? `${age} h` : `${Math.round(age / 24)} days`} ago (stock markets closed)` : ", live"
+    }</span>`;
+  };
+  box.hidden = false;
+  box.innerHTML = `<h4>Value inside</h4><div class="v-total"><span class="fine">Reading Chainlink prices…</span></div><div class="v-chart"></div>`;
+  await paint();
+  clearInterval(box.dataset.timer); // one refresh loop, for the Face on screen
+  const timer = setInterval(() => (location.pathname.startsWith("/face/") ? paint().catch(() => {}) : clearInterval(timer)), 60_000);
+  box.dataset.timer = timer;
+  const hist = await valueHistory(account, rows.filter((r) => r.bal > 0n));
+  if (hist && hist.v.some((x) => x > 0)) {
+    box.querySelector(".v-chart").innerHTML =
+      sparkline(hist) + `<p class="fine">The tokens inside over the last 30 days, at each day's Chainlink price (ETH at today's amount). A record of prices, not a forecast.</p>`;
   }
 }
 

@@ -1,20 +1,21 @@
 # Launch runbook
 
-Everything below has been rehearsed end-to-end on a local node with the canonical registry and OpenSea SeaDrop bytecode (`contracts/script/rehearsal.sh`). Do it once more on **testnet (46630)** with real wallets before mainnet.
+Everything below has been rehearsed end-to-end on a local node with the canonical registry and OpenSea SeaDrop bytecode (`contracts/script/rehearsal.sh`, `contracts/script/launch-day.sh`) and on **testnet (46630)** with the final art (26 Sep).
 
-## Calendar (sale on Tuesday 2026-10-13)
+## Calendar (sale on Wednesday 2026-10-07)
 
-The Safe accepts the admin role 2 days after the deploy, and `verify-drop.mjs` fails until it has: deploy by **Saturday 10 October** (Sunday 11 at the latest).
+The Safe accepts the admin role 2 days after the deploy, and `verify-drop.mjs` fails until it has: deploy by **Saturday 3 October** (Sunday 4 at the latest).
 
 | When | What |
 |---|---|
-| by Sun 4 Oct | addresses ready (step 0); public GitHub repo (both done 26 Sep, Safe tested with two signatures) |
-| week of 5 Oct | nothing required: the testnet rehearsal with the final art passed on 26 Sep (deploy, art sealed with provenance `0x6525337e…` and verified byte for byte, SeaDrop stage, 20 mints, reveal, top-ups, split paid, a set assembled in one transaction with its bonus, a set vote, the set fused, a withdrawal and a lock from a Face account; ≈ 0.0033 test ETH; addresses in `contracts/deployments/46630.json`). The same day a local launch-day run at the real price covered the rest: six wallets buying, keeper, team mint, reveal by a stranger, `restockAndDeliver` with an empty pool, a NeonTrader trade from a Face account, a resale under lock, vesting, a stand-in Safe accepting admin after 2 days, `lockConfig`, `releaseSurplus`. OpenSea no longer supports testnets, so Studio is checked on mainnet in Draft mode on deploy day |
-| Fri 9 Oct | `node tools/baskets.mjs --live` during US market hours (Friday's prices are the last fresh ones before the weekend). It also quotes a $50 buy of every leg on the real pools: a leg marked BLOCKED (its pool more than 1% above Chainlink, so the vault would refuse to buy it) is replaced before the deploy (USO was blocked on Sat 26 Sep: its pool was 1.6% above the feed); re-check the floor in [ECONOMICS.md](ECONOMICS.md) against the ETH price |
-| Sat 10 Oct | deploy, upload the art, verify, keeper on; import the contract in OpenSea Studio with the sale-manager account and build the drop as a **Draft** (stages, prices, CSV lists, payout), check the preview, publish only when `verify-drop.mjs` passes |
-| Sun 11 Oct | announce the snapshot time (Monday 18:00 UTC), the stage times and the rules (NFTs held in vaults, pools or loan contracts don't count: withdraw them before the snapshot) |
-| Mon 12 Oct | 18:00 UTC: snapshots (stage 1 list first, then partners, ≈ 1 h 30), `allowlist.mjs`, upload both lists to Studio; the Safe accepts admin; `verify-drop.mjs` passes |
-| Tue 13 Oct | 14:00 UTC stage 1, 15:30 stage 2, 17:00 public (24 h at most); when it ends: team mint and reveal the same day |
+| done 26 Sep | addresses ready (step 0); public GitHub repo; Safe tested with two signatures; the testnet rehearsal with the final art passed (deploy, art sealed with provenance `0x6525337e…` and verified byte for byte, SeaDrop stage, 20 mints, reveal, top-ups, split paid, a set assembled in one transaction with its bonus, a set vote, the set fused, a withdrawal and a lock from a Face account; ≈ 0.0033 test ETH; addresses in `contracts/deployments/46630.json`). The same day a local launch-day run at the real price covered the rest: six wallets buying, keeper, team mint, reveal by a stranger, `restockAndDeliver` with an empty pool, a NeonTrader trade from a Face account, a resale under lock, vesting, a stand-in Safe accepting admin after 2 days, `lockConfig`, `releaseSurplus`. OpenSea no longer supports testnets, so Studio is checked on mainnet in Draft mode on deploy day |
+| by Fri 2 Oct | the founder funds the mainnet wallets: deployer 0.015 ETH, keeper 0.01 ETH, sale manager 0.003 ETH |
+| Fri 2 Oct | `node tools/baskets.mjs --live` during US market hours (Friday's prices are the last fresh ones before the weekend). It also quotes a $50 buy of every leg on the real pools: a leg marked BLOCKED (its pool more than 1% above Chainlink, so the vault would refuse to buy it) is replaced before the deploy (USO was blocked on Sat 26 Sep: its pool was 1.6% above the feed); re-check the floor in [ECONOMICS.md](ECONOMICS.md) against the ETH price |
+| Sat 3 Oct | deploy, upload the art, verify, keeper on; import the contract in OpenSea Studio with the sale-manager account and build the drop as a **Draft** (stages, one price of 0.013 ETH, CSV lists, payout), check the preview, publish only when `verify-drop.mjs` passes |
+| Sun 4 Oct | announce the sale: Wednesday 7 October 14:00 UTC on OpenSea, one stage open to everyone, 0.013 ETH, up to 3 Faces per wallet, open until the last Face sells, team Faces and reveal after the sell-out |
+| Mon 5 Oct | the Safe accepts the admin role (2 days after the deploy); check the Studio draft |
+| Tue 6 Oct | `verify-drop.mjs` passes, then publish the drop in Studio (it opens by itself at the start time) |
+| Wed 7 Oct | 14:00 UTC the public stage opens, until the last Face sells; after the sell-out: team mint and reveal the same day (a sell-out on a weekend only delays the Stare top-ups to Monday's prices) |
 
 ## 0. Accounts
 
@@ -88,7 +89,7 @@ Each run it pays the split (`releaseAll`) and the team's vested share, buys what
 
 Sale day: the sale lasts hours (a day at most), and GitHub's schedule can run late. For those hours disable the scheduled workflow (Actions > keeper > Disable workflow) and run the keeper by hand every minute, `PK=<keeper key> INTERVAL=60 node tools/seed-keeper.mjs 4663`, so Faces wait minutes, not a delayed run, for their basket; enable the workflow again when the sale ends. Never run both at once with the same key (their transactions would collide).
 
-## 6. Team allocation (after the sale, before the reveal)
+## 6. Team allocation (after the sell-out, before the reveal)
 
 ```bash
 node tools/safe-tx.mjs 4663 team-mint <safe> 50    # account + base seed in the same tx (~190k gas per Face)
@@ -99,39 +100,19 @@ Minting the team Faces last means the sale's proceeds already stocked their seed
 
 ## 7. The drop on OpenSea
 
-Allowlist CSVs (OpenSea format `address,limit`, no header):
-```bash
-node tools/snapshot.mjs config/allowlists/robinhood.json     # holders of Robinhood Chain collections -> config/allowlists/robinhood.csv
-node tools/snapshot.mjs config/allowlists/partners.json      # holders of collections on other chains -> config/allowlists/partners.csv
-node tools/allowlist.mjs config/allowlists/robinhood.csv      # -> config/allowlists/opensea/robinhood.csv
-node tools/allowlist.mjs config/allowlists/partners.csv       # -> config/allowlists/opensea/partners.csv
-```
-
-The two configs list the chosen collections (4 on Robinhood Chain, 22 on Ethereum plus the two wrapped-Punk contracts). They read every token's owner through Multicall3 (`"method": "ownerOf"`; CryptoPunks through `punkIndexToAddress`). How the lists are cleaned, so every count is per real wallet:
-
-- a wallet appears once per list, its NFTs summed across all the collections of that list;
-- an ERC-6551 account (on Robinhood Chain every StonkBroker has one, and many hold Interns or other NFTs) counts for the wallet that owns its NFT;
-- vaults, pools, loan and escrow contracts are left out (listed in `<phase>.report.json`); on Ethereum every contract is left out, since the same address on Robinhood Chain is usually no wallet at all;
-- stage 1 (`robinhood.json`): the Robinhood Chain collections plus NORMIES and Normies Yacht Club, 1 Face per wallet;
-- partners: at least 2 NFTs (`minNfts`), 2 Faces per wallet; a wallet also on the stage 1 list keeps at most 1 here (`notIn` + `notInLimit`). SeaDrop counts a wallet's Faces across stages, so it can't mint on stage 2 once it minted on stage 1. Run `robinhood.json` first.
-
-Every scan saves each collection's counts in `config/allowlists/holders.json` (git-ignored): after changing rules, weights or which list a collection belongs to, `node tools/snapshot.mjs <config> --rules-only` rebuilds the list without reading the chain again.
-
-Run both at the announced time with `"snapshotBlock": "latest"`: each collection is read at the block reached when its turn comes, recorded in the report (a pinned past block needs an archive RPC in `rpc`). Publish the two reports' blocks with the lists.
+One public stage for everyone, no allowlist (decided 26 Sep). The snapshot tools (`tools/snapshot.mjs`, `tools/allowlist.mjs`, `config/allowlists/`) stay in the repo but are not used for this sale.
 
 In OpenSea Studio, connected with the sale manager: create the drop from the existing contract (Robinhood Chain, `faces` in `contracts/deployments/4663.json`), then set:
 
-| Stage | Allowlist | Start / end (UTC, Tue 29) | Price | Per wallet | Stage cap (total supply) |
+| Stage | Allowlist | Start / end (UTC) | Price | Per wallet | Supply |
 |---|---|---|---|---|---|
-| 1. Robinhood Chain + Normies | `opensea/robinhood.csv` | 14:00 / 15:30 | 0.011 ETH | from CSV (1) | 2000 |
-| 2. Partners | `opensea/partners.csv` | 15:30 / 17:00 | 0.013 ETH | from CSV (2, or 1) | 4444 |
-| 3. Public | none | 17:00 / 17:00 the next day at most | 0.018 ETH | 3 | 5444 |
+| Public | none | Wed 7 Oct 14:00 / months ahead (Studio needs an end; minting really closes with the reveal request after the sell-out) | 0.013 ETH | 3 | 5444 |
 
-Never below 0.011 ETH (self-funding floor ≈ 0.009 ETH at ETH $2,687, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
+One price for everyone, 0.013 ETH (decided 26 Sep). Never below the self-funding floor (≈ 0.009 ETH at ETH $2,687, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
 
 - **Payout address = `NeonPayout`** (`payout` in the deployments file). Any other address is rejected on-chain.
-- SeaDrop's stage cap is a ceiling on the collection's total supply (team Faces included), and per-wallet limits count every Face a wallet minted through SeaDrop, across stages. Check how Studio labels both before publishing.
-- Studio publishes with one `multiConfigure` transaction from the sale manager. Allowlists can't be edited once a stage has started minting. The contract refuses stage fees above 10% or without restricted fee recipients.
+- SeaDrop reads the collection's supply cap from `maxSupply()` (5444 until the team mint, which comes after the sell-out), and the per-wallet limit counts every Face a wallet minted through SeaDrop. Check how Studio labels both before publishing.
+- Studio publishes with one `multiConfigure` transaction from the sale manager. The contract refuses stage fees above 10% or without restricted fee recipients.
 - Then check the live configuration: `ADMIN=<Treasury Safe> OPENSEA_FEE_RECIPIENT=<OpenSea's fee address> node tools/verify-drop.mjs 4663` must pass (after every change in Studio too). It also fails while the Safe hasn't accepted the admin role or the deploy key still holds a role: do not open the sale until it passes.
 
 Site:
@@ -144,7 +125,7 @@ Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers ne
 
 ## 8. Close and reveal
 
-1. Let the last stage end in Studio (or end it early), then the team mint (step 6).
+1. When the last public Face sells, the team mint (step 6).
 2. Start the watcher: `PK=<any funded key> node tools/reveal-watch.mjs 4663`.
 3. Safe: `node tools/safe-tx.mjs 4663 reveal-request`. This closes minting forever (SeaDrop then sees the final supply); the watcher calls `reveal()` within the 25-second window. If missed, repeat step 3 once the window has passed.
 4. The seed keeper buys and delivers the Stare top-ups on its own (or, with the inventory in the pool: `PK=<any funded key> node tools/upgrade-all.mjs 4663`).
@@ -177,10 +158,10 @@ Needs a person, on purpose (each is a decision or a key only the team should hol
 
 | Risk | What happens | Way around |
 |---|---|---|
-| The public stage never sells out | holders wait for a reveal that needs minting closed | the public stage ends 24 h after it opens (set in Studio), then team mint and reveal the same day; unsold Faces are never minted, sets and tiers stay proportional, the floor rule keeps every basket paid |
+| The public stage sells slowly | holders wait for a reveal that needs minting closed | the stage has no end time (decided 26 Sep): the reveal, the tiers, the Stare top-ups and the sets wait for the sell-out; minting closes only with the Safe's reveal request, so ending the sale early would be a separate decision, announced before it is taken. Base seeds are delivered all along |
 | The reveal window is missed | `reveal()` must land within ≈ 25 s of the target block | the watcher plus the keeper's safety net; if both miss, `reveal-request` again once the window has passed (every request is public) |
 | A Safe owner isn't at hand | team mint, reveal request, lock and surplus wait | both owners are on the computer (MetaMask and the personal wallet); prepare the Safe batches (`safe-tx.mjs`) in advance, sign accept-admin first on deploy day, keep both seed phrases on paper |
-| Weekend or stale feeds | the vault's buys wait (NeonTrader refuses prices older than 26 h) | close the sale and reveal Tuesday–Thursday; nothing is lost, deliveries resume on the next trading day |
+| Weekend or stale feeds | the vault's buys wait (NeonTrader refuses prices older than 26 h) | the sale opens on a Wednesday; if the sell-out falls on a weekend, reveal anyway: nothing is lost, the top-ups and pending seeds are delivered on the next trading day |
 | ETH falls between the sale and the top-up purchases | the vault's ETH buys fewer tokens | the reveal comes the day the sale ends and the set bonuses are bought during the sale; the vault keeps ≈ 24% above the baskets on a sell-out; the treasury can send ETH to the vault and anyone can send basket tokens to the seeder |
 | A basket token or its feed stops working | deliveries with that token revert, the Face shows Pending | before `lock-seeder`, swap the leg with `setBasket`; lock only when `covered()` is true, so after the lock nothing depends on buying anymore |
 | The keeper stops (key out of gas, GitHub switches the schedule off) | pending deliveries wait | every delivery is permissionless, buying included: the Face page makes the vault buy what is missing and deliver it in one transaction (`restockAndDeliver`; if a market is off its price the page says so before anything is signed), and `seed-keeper.mjs` runs with any funded key (without the role it restocks through the same door); a set's bonus comes with the transfer of its last piece, from a stock bought during the sale; the weekly keepalive job (an empty commit after 45 quiet days; if the default branch is protected, let github-actions push); if Actions ever shows the keeper disabled, press Enable; top up the keeper key |

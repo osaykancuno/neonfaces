@@ -20,7 +20,7 @@ import {MockStockToken} from "../test/mocks/MockStockToken.sol";
 ///   ADMIN              final admin (Safe multisig, 2 of 2 keys for a solo founder)
 ///   SALE_MANAGER       wallet that runs the drop in OpenSea Studio (optional; default: ADMIN)
 ///   ROYALTY_RECEIVER   5% royalty receiver (Safe)
-///   TREASURY, GROWTH   split payees (20 / 15); the 50% seed share goes to NeonSeedVault (deployed here)
+///   TREASURY, GROWTH   split payees (15 / 15); the 55% seed share goes to NeonSeedVault (deployed here)
 ///   KEEPER             hot key of tools/seed-keeper.mjs: may only make the vault buy basket tokens for the pool
 ///   TEAM_BENEFICIARY   receives the team 15% through a 6-month VestingWallet
 ///   SITE_URL           e.g. https://neonfaces.xyz/  (external_url prefix in the on-chain metadata)
@@ -33,7 +33,7 @@ import {MockStockToken} from "../test/mocks/MockStockToken.sol";
 /// The deployer keeps the admin role only until the Safe accepts it: every contract starts a
 /// 2-step admin transfer to ADMIN (`acceptDefaultAdminTransfer()` after the delay).
 ///
-/// The sale runs on OpenSea (SeaDrop). Mint proceeds can only be paid to NeonPayout (50/20/15/15).
+/// The sale runs on OpenSea (SeaDrop). Mint proceeds can only be paid to NeonPayout (55/15/15/15).
 contract Deploy is Script {
     address constant REGISTRY = 0x000000006551c19487814612e58FE06813775758;
     address constant SEADROP = 0x00005EA00Ac477B1030CE78506496e8C2dE24bf5;

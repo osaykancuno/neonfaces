@@ -60,7 +60,7 @@ Internal review, 2026-09-25: second pass after the move to OpenSea and the self-
 - **Supply**: 5555 total, 111 team, 5444 sale — constants in bytecode. Minting ends forever at the reveal request.
 - **Art**: sealed in `NeonArt` only if it matches the provenance committed before the first mint (enforced).
 - **Trading**: no transfer pause, no blocklist, no operator filter or transfer validator, no proxy. Royalty capped at 5% and optional.
-- **Mint money**: SeaDrop can pay the creator share only to `NeonPayout`, and a marketplace fee of at most 10% only to restricted recipients (enforced by `NeonFaces` for public, token-gated and signed stages; allowlist stages see I-09). `NeonPayout`'s payees and shares are immutable; anyone can trigger the split; its 50% can only become seed-pool inventory (bought by the keeper, or by anyone for what Faces are owed).
+- **Mint money**: SeaDrop can pay the creator share only to `NeonPayout`, and a marketplace fee of at most 10% only to restricted recipients (enforced by `NeonFaces` for public, token-gated and signed stages; allowlist stages see I-09). `NeonPayout`'s payees and shares are immutable; anyone can trigger the split; its 55% can only become seed-pool inventory (bought by the keeper, or by anyone for what Faces are owed).
 - **Face accounts**: immutable implementation; only the current holder controls it; agents are scoped and die on sale, including the sale of a Face they sit inside; a lock covers the pieces inside.
 - **New minters**: none can be added once the sale has started.
 

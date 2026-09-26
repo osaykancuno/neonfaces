@@ -25,9 +25,11 @@ Generated: `1-signal.mp4` … `5-soon.mp4` (8 s, 1280x720, audio). Originals fro
 Post the `x-*.mp4` files. The Higgsfield virality proxy (predictive, not a promise) scored `1-signal.mp4` overall 51, hook 39, sustain 85, with attention dipping between 2 and 5 s: the clip held people but opened on a near-black frame, and X autoplays muted. `python marketing/teasers/make_x_cuts.py` keeps length and audio and adds a 0.4 s cold open on the clip's strongest frame, a brighter first 2 s, and the voice line in the collection's pixel font while it is spoken. Re-measured on `x-1-signal.mp4`: the same scores (51 / 39 / 85, first-second peak 0.540 to 0.547), so the proxy does not reward these edits; they stay for muted autoplay, which the proxy (scored with sound) cannot see. Moving its hook score would take a new take with motion and voice in the first 3 s.
 
 ## 1. Signal
-Start frame: `1-signal-start.png`
+Start frame: `1-signal-hook-start.png` (the collection's set face, lit, so the clip opens on motion; the first take started from the dark `1-signal-start.png`)
 
-> A dark screen. The dim pixel-art face in the frame slowly lights up from the eyes outward as a neon sign powering on: a few pixels flicker acid yellow, then the whole face glows. Its eyes stay open and fixed on the viewer, never blinking. Very slow push-in. At the end, a calm, low, close-mic female voice whispers: "They don't blink." Sound: deep sub-bass drone, the electric buzz and click of a neon tube starting, a slow heartbeat pulse that stops on the last word.
+> From the very first frame there is movement: the bright pixel-art face glitches hard, its pixel rows jolting sideways and snapping back, while the camera makes a fast, punchy push-in toward the eyes. In the first second a calm, low, close-mic female voice says: "They don't blink." The eyes flare acid lime neon and lock onto the viewer, wide open, never closing. Then the neon flickers off and on twice like a failing sign, each flicker revealing the same face staring even harder, and the camera settles in an extreme close-up on the unblinking eyes. At the end the voice whispers again: "Look closer." Sound: a sharp electric zap and bass hit on the first frame, the buzz and click of neon tubes, a deep sub-bass pulse, silence on the last word.
+
+The model turned the face into a smoother, near-photographic one; the user preferred it. Virality proxy: 50 (hook 37, sustain 87) against 51 (39, 85) for the first take: the proxy does not separate them. Scores of the others: video 2 51 (hook 38, sustain 91).
 
 ## 2. Watching
 Start frame and end frame: `2-watching-start.png`

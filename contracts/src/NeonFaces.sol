@@ -52,7 +52,7 @@ interface INeonSeeder {
 /// Minting happens on OpenSea through SeaDrop (SeaDrop 1.0 token interface, implemented here without
 /// ERC721A). SeaDrop checks stage, price, allowlist proof and per-wallet limit, then calls `mintSeaDrop`;
 /// this contract mints and gives every Face its ERC-6551 account + base seed in the same transaction.
-/// Mint proceeds can only be paid to the immutable `payout` splitter (NeonPayout: 40 / 25 / 20 / 15).
+/// Mint proceeds can only be paid to the immutable `payout` splitter (NeonPayout: 55 / 15 / 15 / 15).
 ///
 /// Roles
 ///  - DEFAULT_ADMIN_ROLE (multisig, 2-step transfer with delay): royalties, roles, team mint, provenance,

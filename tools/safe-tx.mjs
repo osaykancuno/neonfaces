@@ -11,7 +11,7 @@
 //   reveal-request                       NeonFaces.requestReveal (then anyone calls reveal() after 5 blocks)
 //   lock-seeder                          NeonSeeder.lockConfig (baskets become immutable)
 //   freeze-metadata                      NeonFaces.freezeMetadata (renderer can never change again)
-//   release                              NeonPayout.releaseAll (push the 50/20/15/15 split; anyone can)
+//   release                              NeonPayout.releaseAll (push the 55/15/15/15 split; anyone can)
 //   vault-surplus <eth>                  NeonSeedVault.releaseSurplus: leftover seed ETH to the treasury (after lock-seeder)
 //   poll <days> "<question>" "<choice>"... NeonSetVotes.createPoll: ask the assembled sets (2 to 8 choices, opens now)
 //

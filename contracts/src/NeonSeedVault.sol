@@ -22,7 +22,7 @@ interface ISeedTrader {
 }
 
 /// @title NeonSeedVault — turns the seed share of the mint into the Faces' Stock Tokens
-/// @notice Receives 50% of the creator share of every mint (from NeonPayout). The ETH can only leave as
+/// @notice Receives 55% of the creator share of every mint (from NeonPayout). The ETH can only leave as
 /// basket tokens bought through NeonTrader (Uniswap v3, minimum output from Chainlink, ≤ 1% slippage) and
 /// delivered straight to the NeonSeeder pool. The keeper chooses which basket token to buy and when (and keeps a
 /// small stock ahead); anyone can `restock` what minted Faces are still owed, so no delivery depends on the

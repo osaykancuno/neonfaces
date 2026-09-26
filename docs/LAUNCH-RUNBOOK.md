@@ -22,10 +22,10 @@ Set up for a solo founder with no hardware wallet and two wallets: a MetaMask on
 
 | Who | What | Notes |
 |---|---|---|
-| **Safe 2/2** ("Treasury") | final admin of every contract, treasury (20%), royalty receiver | owners: the Safe signer 1 account of the computer MetaMask and the personal wallet, from **different seed phrases** (two accounts of the same MetaMask are one key, not two). One stolen key can't sign alone; losing a seed phrase locks the Safe for good, so both are written on paper, two copies each, kept in two places. A third owner can be added later from the Safe settings. Created 2026-09-26: `0x2388BB366bfEaF15d1D01C0e33660b6497FB0bE1`, Safe v1.5.0 (SafeL2), no modules, no guard |
+| **Safe 2/2** ("Treasury") | final admin of every contract, treasury (15%), royalty receiver | owners: the Safe signer 1 account of the computer MetaMask and the personal wallet, from **different seed phrases** (two accounts of the same MetaMask are one key, not two). One stolen key can't sign alone; losing a seed phrase locks the Safe for good, so both are written on paper, two copies each, kept in two places. A third owner can be added later from the Safe settings. Created 2026-09-26: `0x2388BB366bfEaF15d1D01C0e33660b6497FB0bE1`, Safe v1.5.0 (SafeL2), no modules, no guard |
 | Growth | growth (15%) | an account of the computer MetaMask (not the personal wallet, not the Safe signer account): money for collabs and growth, one signature is enough. It must differ from the Treasury address |
 | Team beneficiary | receives the vested 15% | your personal wallet; the payee is a `VestingWallet` deployed by the script |
-| `NeonSeedVault` | receives 50%, buys the basket tokens into the pool | deployed by the script, no address to prepare |
+| `NeonSeedVault` | receives 55%, buys the basket tokens into the pool | deployed by the script, no address to prepare |
 | Sale manager | runs the drop in OpenSea Studio (`owner()` of the collection while set) | an account of the computer MetaMask, used only in OpenSea Studio (never to sign on other sites). It can only configure SeaDrop stages: no minting, no art, no roles, proceeds always go to `NeonPayout`. Cleared after the sale |
 | Keeper | runs `tools/seed-keeper.mjs` | a hot key with a little ETH for gas; it can only make the vault buy basket tokens for the pool |
 | Deployer | deploys, uploads the art (≈ 258M gas: ≈ 0.008 ETH at 0.03 gwei, measured 2026-09-26; send 0.015 ETH for margin, the only money needed before the sale) | holds nothing after hand-over |
@@ -127,7 +127,7 @@ In OpenSea Studio, connected with the sale manager: create the drop from the exi
 | 2. Partners | `opensea/partners.csv` | 15:30 / 17:00 | 0.013 ETH | from CSV (2, or 1) | 4444 |
 | 3. Public | none | 17:00 / 17:00 the next day at most | 0.018 ETH | 3 | 5444 |
 
-Never below 0.011 ETH (self-funding floor ≈ 0.010 ETH at ETH $2,687, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
+Never below 0.011 ETH (self-funding floor ≈ 0.009 ETH at ETH $2,687, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
 
 - **Payout address = `NeonPayout`** (`payout` in the deployments file). Any other address is rejected on-chain.
 - SeaDrop's stage cap is a ceiling on the collection's total supply (team Faces included), and per-wallet limits count every Face a wallet minted through SeaDrop, across stages. Check how Studio labels both before publishing.

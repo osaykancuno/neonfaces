@@ -626,7 +626,7 @@ contract NeonFacesTest is Base {
     }
 
     // ------------------------------------------------------------------
-    // Proceeds split 50 / 20 / 15 / 15 + team vesting
+    // Proceeds split 55 / 15 / 15 / 15 + team vesting
     // ------------------------------------------------------------------
     function test_Split_ReleaseAll() public {
         _openPublic();
@@ -636,8 +636,8 @@ contract NeonFacesTest is Base {
 
         vm.prank(carol); // anyone can push
         payout.releaseAll();
-        assertEq(seedVault.balance, total * 50 / 100);
-        assertEq(treasury.balance, total * 20 / 100);
+        assertEq(seedVault.balance, total * 55 / 100);
+        assertEq(treasury.balance, total * 15 / 100);
         assertEq(address(teamVesting).balance, total * 15 / 100);
         assertEq(growth.balance, total * 15 / 100);
         assertEq(address(payout).balance, 0);
@@ -645,8 +645,8 @@ contract NeonFacesTest is Base {
         _mintPublic(carol, 1);
         uint256 net = uint256(PUBLIC_PRICE) * 9 / 10;
         payout.release(seedVault);
-        assertEq(seedVault.balance, (total + net) * 50 / 100);
-        assertEq(payout.releasable(treasury), net * 20 / 100);
+        assertEq(seedVault.balance, (total + net) * 55 / 100);
+        assertEq(payout.releasable(treasury), net * 15 / 100);
         assertEq(payout.releasable(alice), 0);
     }
 

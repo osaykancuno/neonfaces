@@ -18,9 +18,9 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "posts"))
 from make_posts import INK, PALE, draw_text, text_width  # noqa: E402
 
-# clip, strongest frame (s), [(caption, start, end)]
+# clip, strongest frame (s) or None, [(caption, start, end)]
 CUTS = [
-    ("1-signal", 7.0, [("THEY DON'T BLINK.", 0.0, 1.8)]),
+    ("1-signal", None, [("THEY DON'T BLINK.", 0.0, 1.8), ("LOOK CLOSER.", 6.1, 7.4)]),
     ("2-watching", 5.0, [("SOMEONE HAS TO KEEP WATCHING.", 2.9, 5.2)]),
     ("3-eyes", 4.0, [("THE MARKET NEVER CLOSES.", 3.7, 5.8)]),
     ("4-gaze", 5.5, [("THE STARE CAN WORK.", 0.0, 1.6)]),
@@ -43,12 +43,13 @@ def run(args):
 def cut(name, hook_at, captions, tmp):
     src = HERE / f"{name}.mp4"
     hook = tmp / f"{name}-hook.png"
-    run(["-ss", str(hook_at), "-i", str(src), "-frames:v", "1", str(hook)])
+    # a clip that already opens on motion (hook_at None) keeps its first frames
+    run(["-ss", str(hook_at or 0), "-i", str(src), "-frames:v", "1", str(hook)])
     inputs = ["-i", str(src), "-loop", "1", "-t", "0.4", "-framerate", "24", "-i", str(hook)]
     chain = [
         "[0:v]eq=brightness=0.06:contrast=1.12:enable='lt(t,2)'[b]",
         "[1:v]format=yuv420p[h]",
-        "[b][h]overlay=0:0:enable='lt(t,0.4)'[v0]",
+        f"[b][h]overlay=0:0:enable='lt(t,{0.4 if hook_at is not None else 0})'[v0]",
     ]
     last = "v0"
     for i, (text, start, end) in enumerate(captions):

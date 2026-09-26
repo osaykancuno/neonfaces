@@ -284,8 +284,8 @@ function renderTraits() {
 // =====================================================================================
 async function renderSplit() {
   const parts = [
-    { pct: 50, name: "Seed vault", desc: "A contract that can only buy the basket tokens for the Faces, at Chainlink-checked prices. The product promise." },
-    { pct: 20, name: "Treasury", desc: "Multisig: art, site, audit, market making." },
+    { pct: 55, name: "Seed vault", desc: "A contract that can only buy the basket tokens for the Faces, at Chainlink-checked prices. The product promise." },
+    { pct: 15, name: "Treasury", desc: "Multisig: art, site, audit, market making." },
     { pct: 15, name: "Team", desc: "Streams through a 6-month linear vesting contract. No floor dumps." },
     { pct: 15, name: "Growth", desc: "Collabs and growth." },
   ];

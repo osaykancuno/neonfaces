@@ -38,8 +38,8 @@ The chain's agents can be delegated to a Face's account. The holder stays the ow
 
 | Share | Destination | Enforced by |
 |---|---|---|
-| 50% | Seed vault: turns the Faces on (the content of their wallets) | `NeonPayout.SEED_BPS`, paid to `NeonSeedVault`, which can only buy basket tokens for the pool |
-| 20% | Treasury multisig: art, site, presence, liquidity | `NeonPayout.TREASURY_BPS` |
+| 55% | Seed vault: turns the Faces on (the content of their wallets) | `NeonPayout.SEED_BPS`, paid to `NeonSeedVault`, which can only buy basket tokens for the pool |
+| 15% | Treasury multisig: art, site, presence, liquidity | `NeonPayout.TREASURY_BPS` |
 | 15% | Team, with rules against dumping on the floor: 6-month linear vesting | OpenZeppelin `VestingWallet` as payee |
 | 15% | Growth and collaborations | `NeonPayout.GROWTH_BPS` |
 

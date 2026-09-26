@@ -65,7 +65,7 @@ contract SeedVaultTest is Base {
         // the seed share reaches the vault (anyone can push the split)
         vm.prank(carol);
         vaultPayout.release(payable(address(vault)));
-        uint256 seedShare = uint256(PUBLIC_PRICE) * 4 * 9 / 10 * 50 / 100;
+        uint256 seedShare = uint256(PUBLIC_PRICE) * 4 * 9 / 10 * 55 / 100;
         assertEq(address(vault).balance, seedShare);
 
         // the keeper turns it into basket tokens, straight into the pool

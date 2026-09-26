@@ -28,3 +28,5 @@ config/agent-presets.46630.json
 tools/.runner-state.json
 # teaser takes as delivered by the video model (finals are in marketing/teasers/)
 marketing/teasers/raw/
+# source portraits (the manifest is committed, the images are not)
+art/portraits/*.png

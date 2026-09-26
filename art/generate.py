@@ -40,6 +40,7 @@ from neonfaces.onchain import (  # noqa: E402
 from neonfaces.render import (  # noqa: E402
     FaceParams, Window, quantize, render_face, render_grid, render_set, sample_anatomy, split_set,
 )
+from neonfaces.photo import landmarks, load_portrait, render_photo_face, render_photo_set  # noqa: E402
 from neonfaces.traits import (  # noqa: E402
     BY_TIER, FACE, GLOBAL, PIECES, SET_TIERS, SET_TRAITS, SETS, SINGLE_TIERS, SUPPLY, TIERS, TRAIT_ORDER, deck,
 )
@@ -115,14 +116,43 @@ def _legible(idx, dominant=0.82, bright=0.12) -> bool:
     return tones.max() / idx.size < dominant and (idx.size - tones[5]) / idx.size > 0.10 and tones[3:].sum() / idx.size > bright
 
 
+_PORTRAITS: dict = {}
+
+
+def _portrait(pid: str, portraits_dir: str, demo: list[str]):
+    """(luminance, landmarks) of a source portrait, cached per worker. `demo` stands in for missing files
+    (rehearsals before every portrait exists)."""
+    if pid not in _PORTRAITS:
+        f = Path(portraits_dir) / f"{pid}.png"
+        if not f.exists() and demo:
+            f = Path(demo[int(hashlib.sha256(pid.encode()).hexdigest(), 16) % len(demo)])
+        lum = load_portrait(f)
+        _PORTRAITS[pid] = (lum, landmarks(lum))
+    return _PORTRAITS[pid]
+
+
 def work(job):
     """One single close-up, or one whole set (its 4 pieces). Returns [(artId, record hex, grid hash, seed, accessory)]."""
-    group, out_dir, seed, previews = job
+    group, out_dir, seed, previews, src = job
     first = group[0]
     attempt = 0
     while True:
         s = (seed * 1_000_003 + first["artId"] * 7919 + attempt) % (2**63)
-        if "set" not in first:
+        if src and "set" not in first:
+            cands = first["portraits"]
+            pid, side = cands[(attempt // 3) % len(cands)]
+            lum, lm = _portrait(pid, *src)
+            idx = render_photo_face(lum, lm, _params(first["traits"]), s, side)
+            if _legible(idx) or attempt >= 60:
+                grids, accs = [idx], [first["traits"]["Accessory"]]
+                break
+        elif src:
+            lum, lm = _portrait(f"set-{first['set']}", *src)
+            full, accs = render_photo_set(lum, lm, _params(first["traits"]), s)
+            grids = split_set(full)
+            if (_legible(full) and all(_legible(t, dominant=0.9, bright=0.06) for t in grids)) or attempt >= 60:
+                break
+        elif "set" not in first:
             _, idx = render_face(_params(first["traits"]), s, with_image=False)
             if _legible(idx):
                 grids, accs = [idx], [first["traits"]["Accessory"]]
@@ -140,7 +170,8 @@ def work(job):
         recs.append(rec)
         if previews:
             raster_preview(piece["artId"], rec).save(Path(out_dir) / "images" / f"{piece['artId']}.png", optimize=True)
-        out.append((piece["artId"], rec.hex(), hashlib.sha256(idx.tobytes()).hexdigest(), s, acc))
+        used = f"{pid}:{'L' if side < 0 else 'R'}" if src and "set" not in first else None
+        out.append((piece["artId"], rec.hex(), hashlib.sha256(idx.tobytes()).hexdigest(), s, acc, used))
     if previews and "set" in first:
         raster_set_preview(first["set"], recs).save(Path(out_dir) / "images" / f"set-{first['set']}.png", optimize=True)
     return out
@@ -194,6 +225,10 @@ def main():
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("--no-previews", action="store_true")
     ap.add_argument("--fixtures", default=str(ROOT.parent / "contracts" / "test" / "fixtures"))
+    ap.add_argument("--source", choices=["procedural", "photo"], default="photo",
+                    help="photo: faces made from portraits/ (see portraits.py); procedural: the original renderer")
+    ap.add_argument("--demo-portraits", nargs="*", default=[],
+                    help="rehearsal only: images that stand in for portraits not generated yet")
     args = ap.parse_args()
 
     out = Path(args.out)
@@ -203,8 +238,19 @@ def main():
     previews = not args.no_previews
     t0 = time.time()
 
+    src = None
+    if args.source == "photo":
+        import portraits
+        manifest = portraits.load()
+        missing = [e["id"] for e in manifest if not (portraits.DIR / f"{e['id']}.png").exists()]
+        if missing and not args.demo_portraits:
+            sys.exit(f"{len(missing)} portraits missing (python portraits.py status); use --demo-portraits for a rehearsal")
+        for aid, cands in portraits.assign_singles(pieces, manifest).items():
+            pieces[aid]["portraits"] = cands
+        src = (str(portraits.DIR), [str(Path(d)) for d in args.demo_portraits])
+
     results = {}
-    jobs = [(g, str(out), args.seed, previews) for g in groups(pieces)]
+    jobs = [(g, str(out), args.seed, previews, src) for g in groups(pieces)]
     with ProcessPoolExecutor(max_workers=args.workers) as ex:
         for k, rs in enumerate(ex.map(work, jobs, chunksize=8)):
             for r in rs:
@@ -218,7 +264,7 @@ def main():
         bump = 0
         while any(results[p["artId"]][2] in seen for p in g):
             bump += 1
-            for r in work((g, str(out), args.seed + bump * 104729, previews)):
+            for r in work((g, str(out), args.seed + bump * 104729, previews, src)):
                 results[r[0]] = r
         seen.update(results[p["artId"]][2] for p in g)
     for p in pieces:
@@ -234,6 +280,8 @@ def main():
     art = []
     for p, rec in zip(pieces, records):
         a = {"artId": p["artId"], "tier": p["tier"], "renderSeed": results[p["artId"]][3], "recordBytes": len(rec)}
+        if src:  # the source portrait (and side, for singles) the pixels were made from
+            a["portrait"] = f"set-{p['set']}" if "set" in p else results[p["artId"]][5]
         if "set" in p:
             a["set"], a["piece"] = p["set"], p["piece"]
         a["attributes"] = [{"trait_type": k, "value": p["traits"][k]} for k in TRAIT_ORDER if k in p["traits"]]

@@ -179,7 +179,7 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
         <li>
           <b>Paste your agent's address</b>
           <p class="fine">The app or AI service you want to use shows you this address. It will never get your keys, your Face, or anything you don't allow below. It can't sign for you.</p>
-          <input id="hp-agent" placeholder="0x…" autocomplete="off" spellcheck="false">
+          <input id="hp-agent" placeholder="0x…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
         </li>
         <li>
           <b>What can it do?</b>

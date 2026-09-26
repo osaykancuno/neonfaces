@@ -41,7 +41,7 @@ Requirements: Foundry, Node ≥ 20, Python ≥ 3.11 with `numpy pillow pycryptod
 # 1. art: generate the 5555 Faces (≈9 min) and the site assets
 cd art && python generate.py && python export_site.py && python export_brand.py && cd ..   # brand: icons, link preview, logo, banner
 
-# 2. contracts: build + test (102 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
+# 2. contracts: build + test (119 tests incl. invariant fuzzing, mints through OpenSea's real SeaDrop bytecode, anti-sniping,
 #    full-supply mapping, whole sets on any sale size, ownership cycles, byte-exact SVG, agents, lock)
 cd contracts && forge test && cd ..
 

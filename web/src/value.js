@@ -34,7 +34,7 @@ function feedOf(token) {
 }
 
 const weth = () => tokenList(state.dep).find((t) => t.symbol === "ETH")?.address;
-const priced = (t) => (t.symbol === "ETH" ? weth() : t.token);
+const priced = (r) => (r.sym === "ETH" ? weth() : r.token);
 
 /**
  * rows: [{ sym, token (address, or null for ETH), bal (bigint), dec }] → the same rows with `usd` (number or null)

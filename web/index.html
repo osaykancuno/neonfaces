@@ -152,7 +152,7 @@
           <div class="label">Faces</div>
           <h2>Distance zero.</h2>
           <p class="lead">Drawn from the same bytes that live on-chain. <span id="gallery-source" class="neon"></span></p>
-          <form id="faces-open" class="open-face"><label for="faces-open-id">Open a minted Face</label><input id="faces-open-id" type="number" min="1" max="5555" placeholder="#" inputmode="numeric" /><button class="btn btn-neon">Open</button></form>
+          <form id="faces-open" class="open-face"><label for="faces-open-id">Open a minted Face</label><input id="faces-open-id" type="number" min="1" max="5555" placeholder="#" inputmode="numeric" enterkeyhint="go" autocomplete="off" /><button class="btn btn-neon">Open</button></form>
           <div id="gallery-grid" class="gallery"></div>
         </section>
       </section>
@@ -164,7 +164,7 @@
           <div id="hunter" class="hunter">
             <h3>Set hunter</h3>
             <p class="fine">Hold a piece? See where the other three are, who holds them and for how long. Watch a set and the next visit tells you which of its pieces changed hands. Read from the chain; listings are on OpenSea, one click away.</p>
-            <form id="hunter-form" class="hunter-form"><label for="hunter-id">Any Face</label><input id="hunter-id" type="number" min="1" max="5555" placeholder="#" /><button class="btn btn-neon">Hunt</button><button type="button" class="btn btn-ghost" id="hunter-mine">My sets</button></form>
+            <form id="hunter-form" class="hunter-form"><label for="hunter-id">Any Face</label><input id="hunter-id" type="number" min="1" max="5555" placeholder="#" inputmode="numeric" enterkeyhint="go" autocomplete="off" /><button class="btn btn-neon">Hunt</button><button type="button" class="btn btn-ghost" id="hunter-mine">My sets</button></form>
             <div id="hunter-alerts"></div>
             <div id="hunter-list" class="hunts"></div>
           </div>
@@ -312,7 +312,7 @@
             </div>
           </div>
           <form id="face-search" class="face-search">
-            <input id="face-search-id" type="number" min="1" max="5555" placeholder="Face #" />
+            <input id="face-search-id" type="number" min="1" max="5555" placeholder="Face #" inputmode="numeric" enterkeyhint="go" autocomplete="off" />
             <button class="btn btn-ghost">Look</button>
           </form>
         </div>

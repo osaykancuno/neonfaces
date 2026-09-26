@@ -211,6 +211,27 @@
     .page, .view { gap: 44px; }
     .lede { font-size: 19px; }
   }
+  /* touch screens (iPhone and Android) */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  a, button, label, input { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  @media (hover: none) {
+    .menu-btn:hover { box-shadow: none; } /* a hover sticks after a tap: show a press instead */
+    .menu-btn:active, .cam-btn:active, .cam-seg button:active { transform: translate(2px, 2px); }
+    .tabbar a:active { background: #0b0e02; }
+  }
+  @media (max-width: 760px) {
+    .topbar .brand { padding: 13px 0; } /* 44 px tall to tap */
+    .menu-btn, .cam-seg button { min-height: 44px; min-width: 44px; }
+    .tabbar a { font-size: 11px; }
+    .tabbar { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+    body { padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
+  }
+  /* wide screens: the same app, in a tablet-sized frame */
+  @media (min-width: 1100px) {
+    html { background: #000 radial-gradient(rgba(204,255,0,.08) 1px, transparent 1.5px) 0 0 / 22px 22px; }
+    html body { box-sizing: border-box; max-width: 1024px; margin: 0 auto; min-height: 100vh; border-right: 2px solid var(--line); box-shadow: 0 0 90px rgba(204,255,0,.07); }
+    .tabbar { left: calc(50% - 512px); }
+  }
 </style>
 
 <style>html,body{margin:0}img{max-width:100%}</style>

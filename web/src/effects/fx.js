@@ -122,7 +122,8 @@ export function reveals() {
         io.unobserve(e.target);
       }
     },
-    { threshold: 0.12 },
+    // any height: a ratio threshold never fires on a section taller than ~8 screens (a long view on a phone held sideways)
+    { threshold: 0, rootMargin: "0px 0px -10% 0px" },
   );
   document.querySelectorAll(".reveal, .trait").forEach((el) => io.observe(el));
   return io;

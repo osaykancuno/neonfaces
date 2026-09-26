@@ -5,6 +5,9 @@ them by neonfaces/photo.py.
 
     python portraits.py plan            # write portraits/manifest.json: id, who, light, expression, prompt
     python portraits.py todo [n]        # the next n portraits without an image (prompts to generate)
+    python portraits.py generate [n] [--backend muapi|pollinations] [--ids set-1,pool-3]
+                                        # generate the missing portraits (or regenerate --ids) through an API;
+                                        # key in art/.env: MUAPI_API_KEY=... or POLLINATIONS_KEY=... (git-ignored)
     python portraits.py record r.json   # store generation results ([{"id", "job", "url"}]) in the manifest
     python portraits.py fetch           # download every portrait that has a url in the manifest (512 px, grayscale)
     python portraits.py check           # landmarks sanity + contact sheet of what is there
@@ -189,6 +192,102 @@ def save(manifest: list[dict]) -> None:
     MANIFEST.write_text(json.dumps(manifest, indent=1))
 
 
+# --------------------------------------------------------------------------
+# Generation through an API (the key comes from the environment or art/.env, never from the code)
+# --------------------------------------------------------------------------
+BACKENDS = {
+    "muapi": ("MUAPI_API_KEY", "z-image-turbo"),
+    "pollinations": ("POLLINATIONS_KEY", "tongyi-mai/z-image-turbo"),
+}
+
+
+def _key(name: str) -> str:
+    import os
+    if os.environ.get(name):
+        return os.environ[name]
+    env = ROOT / ".env"
+    if env.exists():
+        for line in env.read_text().splitlines():
+            k, _, v = line.partition("=")
+            if k.strip() == name and v.strip():
+                return v.strip().strip('"').strip("'")
+    sys.exit(f"{name} is not set: put {name}=... in art/.env (git-ignored) or in the environment")
+
+
+def _http(method: str, url: str, headers: dict, body: dict | None = None) -> dict:
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(url, data=data, method=method,
+                                 headers={**headers, "Content-Type": "application/json", "User-Agent": "neonfaces-art"})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        return json.loads(r.read())
+
+
+def _generate_one(backend: str, key: str, prompt_: str) -> tuple[str, str | None, bytes | None]:
+    """(job id, image url or None, image bytes or None)."""
+    import time
+    if backend == "muapi":
+        h = {"x-api-key": key}
+        job = _http("POST", "https://api.muapi.ai/api/v1/z-image-turbo", h, {"prompt": prompt_, "width": 1024, "height": 1024})
+        rid = job["request_id"]
+        for _ in range(180):
+            time.sleep(2)
+            res = _http("GET", f"https://api.muapi.ai/api/v1/predictions/{rid}/result", h)
+            if res.get("status") == "completed":
+                out = res["outputs"][0]
+                return rid, out if isinstance(out, str) else out.get("url"), None
+            if res.get("status") == "failed":
+                raise RuntimeError(f"muapi {rid} failed: {res.get('error')}")
+        raise TimeoutError(f"muapi {rid} still running")
+    if backend == "pollinations":
+        import base64
+        res = _http("POST", "https://gen.pollinations.ai/v1/images/generations", {"Authorization": f"Bearer {key}"},
+                    {"model": BACKENDS[backend][1], "prompt": prompt_, "size": "1024x1024"})
+        item = res["data"][0]
+        raw = base64.b64decode(item["b64_json"]) if item.get("b64_json") else None
+        return res.get("id", "pollinations"), item.get("url"), raw
+    raise ValueError(backend)
+
+
+def _store(e: dict, url: str | None, raw: bytes | None) -> None:
+    """Keep the portrait at the resolution the pipeline samples (512 px grayscale) + the hash of the original."""
+    import io
+    from PIL import Image
+    if raw is None:
+        raw = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "neonfaces-art"}), timeout=120).read()
+    e["sha256"] = hashlib.sha256(raw).hexdigest()
+    Image.open(io.BytesIO(raw)).convert("L").resize((512, 512), Image.LANCZOS).save(DIR / f"{e['id']}.png", optimize=True)
+
+
+def generate(ids: list[str] | None, limit: int, backend: str, workers: int = 4) -> None:
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    key = _key(BACKENDS[backend][0])
+    manifest = load()
+    todo = [e for e in manifest if (ids is None and not (DIR / f"{e['id']}.png").exists()) or (ids and e["id"] in ids)]
+    todo = todo[:limit]
+    lock = threading.Lock()
+    done, failed = 0, []
+
+    def one(e):
+        nonlocal done
+        try:
+            job, url, raw = _generate_one(backend, key, e["prompt"])
+            _store(e, url, raw)
+            with lock:
+                e.update({"job": job, "url": url, "model": BACKENDS[backend][1], "backend": backend})
+                save(manifest)
+                done += 1
+                print(f"  {e['id']}  ({done}/{len(todo)})", flush=True)
+        except Exception as err:  # keep going; failed ones are retried on the next run
+            with lock:
+                failed.append(e["id"])
+                print(f"  {e['id']} failed: {err}", flush=True)
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        list(ex.map(one, todo))
+    print(f"generated {done}, failed {len(failed)}: {failed[:20]}")
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     DIR.mkdir(exist_ok=True)
@@ -209,6 +308,12 @@ def main():
         n = int(sys.argv[2]) if len(sys.argv) > 2 else 12
         todo = [e for e in load() if "job" not in e][:n]
         print(json.dumps([{"id": e["id"], "prompt": e["prompt"]} for e in todo], indent=1))
+    elif cmd == "generate":  # portraits.py generate [n] [--backend muapi|pollinations] [--ids a,b]
+        args = sys.argv[2:]
+        backend = args[args.index("--backend") + 1] if "--backend" in args else "muapi"
+        ids = args[args.index("--ids") + 1].split(",") if "--ids" in args else None
+        n = next((int(x) for x in args if x.isdigit()), 10_000)
+        generate(ids, n, backend)
     elif cmd == "record":  # portraits.py record results.json  ([{"id", "job", "url"}] from the generation tool)
         manifest = load()
         by_id = {e["id"]: e for e in manifest}

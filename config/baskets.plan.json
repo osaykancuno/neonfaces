@@ -14,7 +14,6 @@
     "USDG": 1.0,
     "QQQ": 0,
     "SLV": 0,
-    "USO": 0,
     "GLD": 0,
     "CBBTC": 0,
     "SPCX": 0
@@ -83,11 +82,6 @@
       "address": "0x411eFb0E7f985935DAec3D4C3ebaEa0d0AD7D89f",
       "decimals": 18,
       "feed": "0x209b73908e92Ae021826eD79609845451Ecba2ce"
-    },
-    "USO": {
-      "address": "0xa30FA36Db767ad9eD3f7a60fC79526fB4d56D344",
-      "decimals": 18,
-      "feed": "0x75a9c76Ef439e2C7c2E5a34Ab105EcFe3766431c"
     },
     "GLD": {
       "address": "0xC9a981FEE1F9DEc688bb123ccDeCc63D0deBFC4e",
@@ -163,10 +157,9 @@
         "SPY": 15.0,
         "QQQ": 11.0,
         "NVDA": 7.0,
-        "GLD": 13.0,
+        "GLD": 18.0,
         "CBBTC": 12.0,
-        "SLV": 7.0,
-        "USO": 5.0
+        "SLV": 7.0
       }
     },
     {

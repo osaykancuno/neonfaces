@@ -33,6 +33,8 @@ interface INeonSeeder {
     function completesSet(uint256 anchorId, uint256 pieceId) external view returns (bool);
     function fusedAnchorOf(uint256 tokenId) external view returns (uint256);
     function claimSetBonus(uint256 anchorId) external;
+    function setOf(uint256 tokenId) external view returns (uint256 setId, uint256 piece, uint256[4] memory members);
+    function accountOf(uint256 tokenId) external view returns (address);
 }
 
 ///  ███╗   ██╗███████╗ ██████╗ ███╗   ██╗███████╗ █████╗  ██████╗███████╗███████╗
@@ -170,6 +172,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     error SetIsFused();
     error InvalidConfig();
     error FeeNotAllowed();
+    error NotYourPiece(uint256 tokenId);
 
     constructor(
         address admin,
@@ -396,6 +399,24 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
         renderer = newRenderer;
         emit RendererSet(newRenderer);
         emit BatchMetadataUpdate(1, MAX_SUPPLY);
+    }
+
+    /// @notice Assemble a set in one transaction: the holder of `anchorId` moves the other pieces of its set that
+    /// it holds into the anchor's account (pieces already there are skipped). Each move is an ordinary transfer
+    /// (same checks, same events), so the last one pays the set bonus. A piece held elsewhere (another wallet,
+    /// or inside another Face) must be brought over first.
+    function assembleSet(uint256 anchorId) external {
+        INeonSeeder s = INeonSeeder(seeder);
+        (uint256 setId,, uint256[4] memory members) = s.setOf(anchorId);
+        if (setId == 0 || _ownerOf(anchorId) != msg.sender) revert NotYourPiece(anchorId);
+        address account = s.accountOf(anchorId);
+        for (uint256 i; i < 4; ++i) {
+            uint256 m = members[i];
+            address holder = _ownerOf(m);
+            if (m == anchorId || holder == account) continue;
+            if (holder != msg.sender) revert NotYourPiece(m);
+            _transfer(msg.sender, account, m);
+        }
     }
 
     /// @notice Called by the seeder when a Face's contents or set change (a seed, a top-up or a set bonus

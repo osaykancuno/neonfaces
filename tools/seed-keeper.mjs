@@ -244,6 +244,13 @@ async function round() {
     const opts = (await read(dep.seeder, "tierBaskets", [4])).map(Number);
     if (opts.length === 1) await add(ahead, opts[0], Math.floor((supply * 555) / 5555));
     else log(`${opts.length} set bonus baskets: bonuses are stocked after the reveal, when each set's draw is known`);
+    // and the Watch / Heavy Stare top-ups the minted Faces should need (833 and 278 of the 5555 artworks, spread
+    // evenly over each tier's baskets): bought while the sale runs, so the reveal delivers from stock and doesn't
+    // depend on that day's markets; what the draw needs beyond this is bought after the reveal
+    for (const [tier, share] of [[2, 833], [3, 278]]) {
+      const tierOpts = (await read(dep.seeder, "tierBaskets", [tier])).map(Number);
+      for (const b of tierOpts) await add(ahead, b, Math.floor((supply * share) / 5555 / tierOpts.length));
+    }
   }
   else if (bonusOpts.length && unpaidSets?.size > bonusDue.size) {
     // the exact bonus basket of each set still to be assembled (same draw as NeonSeeder.claimSetBonus)
@@ -294,7 +301,8 @@ async function round() {
         ethLeft -= ethIn;
         log(`bought ${symOf[t]} for ${formatEther(ethIn)} ETH`, hash);
       } catch (e) {
-        log(`${symOf[t]}: buy failed (${e.shortMessage ?? e.message})`);
+        const m = e.shortMessage ?? e.message;
+        log(/Too little received|MarketOffPrice/.test(m) ? `${symOf[t]}: market more than 1% off its Chainlink price, the vault won't overpay: retry next round` : `${symOf[t]}: buy failed (${m})`);
       }
     }
   }

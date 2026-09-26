@@ -154,6 +154,40 @@ contract SetsTest is Base {
         seeder.claimSetBonus(m[3]);
     }
 
+    /// One signature assembles a set: the holder's other pieces move into the anchor, the bonus comes with them.
+    function test_Sets_AssembleInOneTransaction() public {
+        _mintAndReveal(120);
+        (uint256 setId, uint256[4] memory m) = _firstSet(120);
+        address acc = seeder.accountOf(m[2]);
+        vm.prank(alice);
+        faces.transferFrom(alice, acc, m[0]); // one piece already inside: skipped
+        vm.prank(bob);
+        vm.expectRevert(abi.encodeWithSelector(NeonFaces.NotYourPiece.selector, m[2]));
+        faces.assembleSet(m[2]); // not the anchor's holder
+        vm.prank(alice);
+        faces.transferFrom(alice, bob, m[3]);
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(NeonFaces.NotYourPiece.selector, m[3]));
+        faces.assembleSet(m[2]); // a piece held by someone else must be brought over first
+        vm.prank(bob);
+        faces.transferFrom(bob, alice, m[3]);
+        vm.prank(alice);
+        faces.assembleSet(m[2]);
+        assertTrue(seeder.isAssembled(m[2]));
+        (uint32 paidTo,) = seeder.setBonus(setId);
+        assertEq(paidTo, m[2], "the bonus came in the same transaction");
+        assertEq(usdg.balanceOf(acc), 3e6);
+        // a single close-up has no set
+        uint256 single;
+        for (uint256 id = 1; id <= 120 && single == 0; ++id) {
+            (uint256 sid,,) = seeder.setOf(id);
+            if (sid == 0) single = id;
+        }
+        vm.prank(faces.ownerOf(single));
+        vm.expectRevert(abi.encodeWithSelector(NeonFaces.NotYourPiece.selector, single));
+        faces.assembleSet(single);
+    }
+
     function test_Sets_ShortPoolNeverBlocksAssembly() public {
         _mintAndReveal(120);
         (uint256 setId, uint256[4] memory m) = _firstSet(120);

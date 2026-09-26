@@ -2,16 +2,16 @@
 
 ## Baskets (`config/baskets.plan.json`)
 
-Prices come from the Chainlink feeds on Robinhood Chain: `node tools/baskets.mjs --live` (USDG at face value). Current resolution (2026-09-25): TSLA $371.75, NVDA $224.44, AAPL $339.74, AMZN $249.94, MSFT $516.82, GOOGL $343.70, META $752.56, SPY $772.33, QQQ $745.36, GLD $392.87, SLV $58.28, USO $148.65, cbBTC $83,754, SPCX $147.89 → `contracts/config/baskets.4663.json`. **Re-run on a trading day right before deploying.**
+Prices come from the Chainlink feeds on Robinhood Chain: `node tools/baskets.mjs --live` (USDG at face value). Current resolution (2026-09-25): TSLA $371.75, NVDA $224.44, AAPL $339.74, AMZN $249.94, MSFT $516.82, GOOGL $343.70, META $752.56, SPY $772.33, QQQ $745.36, GLD $392.87, SLV $58.28, cbBTC $83,754, SPCX $147.89 → `contracts/config/baskets.4663.json`. **Re-run on a trading day right before deploying.**
 
 | Delivery | When | Faces | Baskets | Value |
 |---|---|---|---|---|
 | Base | at mint | every Face (5555) | $5 of one of TSLA / NVDA / AAPL / AMZN / MSFT, equal value so the draw can't be gamed | $5 |
 | Watch top-up | after reveal | 833 | $10 of NVDA / GOOGL / META + $4 USDG | +$14 (total $19) |
-| Heavy Stare top-up | after reveal | 278 | SPY $15, QQQ $11, NVDA $7, GLD (gold) $13, cbBTC (bitcoin) $12, SLV (silver) $7, USO (oil) $5 | +$70 (total $75) |
+| Heavy Stare top-up | after reveal | 278 | SPY $15, QQQ $11, NVDA $7, GLD (gold) $18, cbBTC (bitcoin) $12, SLV (silver) $7 | +$70 (total $75) |
 | Set bonus | first assembly of a set, once per set, in the transaction that moves the last piece in | ≤ 555 | SPCX, GOOGL, META, MSFT $3 each, into the anchor Face | $12 |
 
-Why these numbers: a base that is visible in the wallet without weighing on the mint price; tickers everyone recognises, all with deep Uniswap pools (so holders and agents can trade them, checked with `node tools/rwa-scan.mjs`); the rarest tier holds a small multi-asset basket instead of one more ticker: about 47% equities (weighted toward the indexes, since NVDA is already inside SPY and QQQ and in the lower tiers), 29% precious metals, 17% bitcoin and 7% oil (the smallest leg: USO holds futures and loses value when it rolls them, a cost that adds up in a Face kept for years); USDG in the Watch top-up so an agent has dry powder. cbBTC is bought straight from ETH (its liquidity is against WETH), everything else through USDG.
+Why these numbers: a base that is visible in the wallet without weighing on the mint price; tickers everyone recognises, all with deep Uniswap pools (so holders and agents can trade them, checked with `node tools/rwa-scan.mjs`); the rarest tier holds a small multi-asset basket instead of one more ticker: about 47% equities (weighted toward the indexes, since NVDA is already inside SPY and QQQ and in the lower tiers), 36% precious metals and 17% bitcoin (oil was dropped on 2026-09-26: its pool sat 1.6% above its Chainlink price, so the vault could not buy it at a fair price); USDG in the Watch top-up so an agent has dry powder. cbBTC is bought straight from ETH (its liquidity is against WETH), everything else through USDG.
 
 Full-supply pool ≈ **$65,557**: base ≈ $27,775 (delivered as Faces are minted), top-ups ≈ $31,122 (needed only at reveal, and only for Faces actually minted), set bonuses ≈ $6,660 (bought during the sale, one per 10 Faces minted; paid only for sets actually assembled; a partial sale deals proportionally fewer sets).
 

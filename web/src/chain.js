@@ -14,6 +14,8 @@ export const ABI = {
     "function heldSince(uint256 tokenId) view returns (uint64)",
     "function safeTransferFrom(address from, address to, uint256 tokenId)",
     "function transferFrom(address from, address to, uint256 tokenId)",
+    "function assembleSet(uint256 anchorId)",
+    "error NotYourPiece(uint256 tokenId)",
     "error OwnershipCycle()",
     "error FaceAccountLocked()",
     "error SetIsFused()",
@@ -30,9 +32,17 @@ export const ABI = {
   payout: parseAbi(["function payees() view returns (address[4] accounts, uint256[4] shares)"]),
   seedVault: parseAbi([
     "function restock(address[] path, uint24[] fees) returns (uint256)",
+    "function restockAndDeliver(uint8 action, uint256 tokenId, address[][] paths, uint24[][] fees)",
     "error NothingToRestock(address token)",
     "error VaultEmpty()",
+    "error MarketOffPrice(address token)",
     "error StalePrice(address token, uint256 updatedAt)",
+    // the seeder's, bubbling up through restockAndDeliver
+    "error InsufficientPool(address token, uint256 needed, uint256 available)",
+    "error NotUpgradeable(uint256 tokenId)",
+    "error AlreadyFunded()",
+    "error SetNotAssembled(uint256 anchorId)",
+    "error SetBonusAlreadyPaid(uint256 setId)",
   ]),
   seeder: parseAbi([
     "function seedOf(uint256) view returns ((address account, uint8 tier, uint32 basketId, uint32 upgradeBasketId, bool activated, bool funded, bool upgraded, (address token, uint256 amount)[] legs, (address token, uint256 amount)[] upgradeLegs))",

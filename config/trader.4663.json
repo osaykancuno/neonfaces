@@ -84,12 +84,6 @@
       "fee": 3000
     },
     {
-      "symbol": "USO",
-      "address": "0xa30FA36Db767ad9eD3f7a60fC79526fB4d56D344",
-      "feed": "0x75a9c76Ef439e2C7c2E5a34Ab105EcFe3766431c",
-      "fee": 3000
-    },
-    {
       "symbol": "GLD",
       "address": "0xC9a981FEE1F9DEc688bb123ccDeCc63D0deBFC4e",
       "feed": "0x470A51258068043bd43dC0a56245625C9fE86eB0",
@@ -109,5 +103,5 @@
       "fee": 500
     }
   ],
-  "_fee": "pool fee between a token and its hub: USDG by default, or \"hub\" (cbBTC trades against WETH, where its liquidity is). tools/route.mjs and web/src/actions.js route through the hubs. Added 2026-09-25 after tools/rwa-scan.mjs: QQQ 0.05% $1.35M, SLV 0.3% $442k, USO 0.3% $1.95M, GLD 0.3% $3.16M (feed derived from DEX state, see SECURITY.md I-24), cbBTC/WETH 0.3% $1.3M, SPCX 0.05% $2.5M."
+  "_fee": "pool fee between a token and its hub: USDG by default, or \"hub\" (cbBTC trades against WETH, where its liquidity is). tools/route.mjs and web/src/actions.js route through the hubs. Added 2026-09-25 after tools/rwa-scan.mjs: QQQ 0.05% $1.35M, SLV 0.3% $442k, GLD 0.3% $3.16M (feed derived from DEX state, see SECURITY.md I-24), cbBTC/WETH 0.3% $1.3M, SPCX 0.05% $2.5M. USO removed 2026-09-26: its pool sat 1.6% above its Chainlink feed, outside NeonTrader's bound."
 }

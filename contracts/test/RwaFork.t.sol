@@ -10,7 +10,7 @@ import {NeonTrader, ISwapRouter02} from "../src/NeonTrader.sol";
 import {IERC6551Registry} from "../src/interfaces/IERC6551Registry.sol";
 import {NeonSeedVault, ISeedTrader} from "../src/NeonSeedVault.sol";
 
-/// @notice The multi-asset baskets on Robinhood Chain mainnet: the seed vault buys QQQ, gold, silver, oil, bitcoin
+/// @notice The multi-asset baskets on Robinhood Chain mainnet: the seed vault buys QQQ, gold, silver, bitcoin
 /// and SpaceX through NeonTrader on the real Uniswap pools (bitcoin straight from ETH, the rest through USDG), and
 /// the seeder delivers them into a Face account.
 /// Run: ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com forge test --match-contract RwaForkTest -vv
@@ -27,13 +27,12 @@ contract RwaForkTest is Test {
         bool viaWeth; // hub is WETH (bitcoin), else USDG
     }
 
-    function _assets() internal pure returns (Asset[6] memory a) {
+    function _assets() internal pure returns (Asset[5] memory a) {
         a[0] = Asset(0xD5f3879160bc7c32ebb4dC785F8a4F505888de68, 0x80901d846d5D7B030F26B480776EE3b29374C2ae, 500, false); // QQQ
         a[1] = Asset(0xC9a981FEE1F9DEc688bb123ccDeCc63D0deBFC4e, 0x470A51258068043bd43dC0a56245625C9fE86eB0, 3000, false); // GLD
         a[2] = Asset(0x411eFb0E7f985935DAec3D4C3ebaEa0d0AD7D89f, 0x209b73908e92Ae021826eD79609845451Ecba2ce, 3000, false); // SLV
-        a[3] = Asset(0xa30FA36Db767ad9eD3f7a60fC79526fB4d56D344, 0x75a9c76Ef439e2C7c2E5a34Ab105EcFe3766431c, 3000, false); // USO
-        a[4] = Asset(0xCEC185eB182c47d1bA1EFc84e6959e18cd620Be4, 0x0009cD492adf8167f9eEBf1293556A673530a21a, 3000, true); // cbBTC
-        a[5] = Asset(0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa, 0xB265810950ba6c5C0Ff821c9963014a56fD8Bffb, 500, false); // SPCX
+        a[3] = Asset(0xCEC185eB182c47d1bA1EFc84e6959e18cd620Be4, 0x0009cD492adf8167f9eEBf1293556A673530a21a, 3000, true); // cbBTC
+        a[4] = Asset(0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa, 0xB265810950ba6c5C0Ff821c9963014a56fD8Bffb, 500, false); // SPCX
     }
 
     NeonSeeder seeder;
@@ -69,12 +68,12 @@ contract RwaForkTest is Test {
         if (bytes(rpc).length == 0) return;
         vm.createSelectFork(rpc);
 
-        Asset[6] memory a = _assets();
-        address[] memory tokens = new address[](8);
-        address[] memory feeds = new address[](8);
+        Asset[5] memory a = _assets();
+        address[] memory tokens = new address[](7);
+        address[] memory feeds = new address[](7);
         (tokens[0], feeds[0]) = (USDG, 0x61B7e5650328764B076A108EFF5fa7282a1B9aD2);
         (tokens[1], feeds[1]) = (WETH, 0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9);
-        for (uint256 i; i < 6; ++i) (tokens[i + 2], feeds[i + 2]) = (a[i].token, a[i].feed);
+        for (uint256 i; i < 5; ++i) (tokens[i + 2], feeds[i + 2]) = (a[i].token, a[i].feed);
         NeonTrader trader = new NeonTrader(ISwapRouter02(ROUTER), WETH, tokens, feeds);
 
         NeonFaceAccount impl = new NeonFaceAccount();
@@ -93,26 +92,26 @@ contract RwaForkTest is Test {
         vm.deal(address(vault), 1 ether);
 
         // what the keeper buys: ~$27 of each asset
-        uint256[6] memory bought;
+        uint256[5] memory bought;
         uint256 n;
-        for (uint256 i; i < 6; ++i) {
+        for (uint256 i; i < 5; ++i) {
             bought[i] = _buy(a[i], uint32(i + 1));
             assertEq(IERC20(a[i].token).balanceOf(address(seeder)), bought[i], "straight into the pool");
             if (bought[i] > 0) ++n;
             console2.log("bought", bought[i]);
         }
-        assertGe(n, 5, "at most one pool off its feed at a time");
+        assertGe(n, 4, "at most one pool off its feed at a time");
 
         // a multi-asset basket (half of what was bought, per leg) delivered into Face #1's account
         NeonSeeder.Leg[] memory legs = new NeonSeeder.Leg[](n);
         n = 0;
-        for (uint256 i; i < 6; ++i) {
+        for (uint256 i; i < 5; ++i) {
             if (bought[i] > 0) legs[n++] = NeonSeeder.Leg(a[i].token, bought[i] / 2);
         }
         vm.startPrank(admin);
-        seeder.setBasket(7, legs);
+        seeder.setBasket(6, legs);
         uint32[] memory base = new uint32[](1);
-        base[0] = 7;
+        base[0] = 6;
         seeder.setTierBaskets(1, base);
         vm.stopPrank();
         uint256 g = gasleft();
@@ -122,7 +121,7 @@ contract RwaForkTest is Test {
         // a set bonus has 4 legs and NeonFaces gives its in-transfer delivery 1M gas: keep a wide margin
         assertLt(used, 500_000, "real token deliveries fit the set bonus gas budget");
         address account = seeder.accountOf(1);
-        for (uint256 i; i < 6; ++i) {
+        for (uint256 i; i < 5; ++i) {
             assertEq(IERC20(a[i].token).balanceOf(account), bought[i] / 2, "every asset reaches the Face");
         }
     }

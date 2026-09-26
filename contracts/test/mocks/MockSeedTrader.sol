@@ -9,6 +9,11 @@ contract MockSeedTrader {
     uint256 public rate = 1;
     mapping(address => uint256) public dailyLimit;
     mapping(address => uint256) public usd8Of; // Chainlink stand-in (8 decimals); 0 = unknown token
+    mapping(address => bool) public offPrice; // the pool is more than 1% off its feed: Uniswap refuses the swap
+
+    function setOffPrice(address token, bool off) external {
+        offPrice[token] = off;
+    }
 
     function setRate(uint256 r) external {
         rate = r;
@@ -37,6 +42,7 @@ contract MockSeedTrader {
         returns (uint256 amountOut)
     {
         require(msg.value == amountIn && path[0] == weth, "pay with ETH");
+        require(!offPrice[path[path.length - 1]], "Too little received");
         amountOut = amountIn * rate;
         MockStockToken(path[path.length - 1]).mint(msg.sender, amountOut);
     }

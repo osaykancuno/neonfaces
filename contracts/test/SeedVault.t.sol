@@ -205,6 +205,54 @@ contract SeedVaultTest is Base {
         vault.restock(_path(address(nvda)), _fees());
     }
 
+    /// The site's one-click delivery: every short token bought, then the delivery, in a single transaction.
+    function test_RestockAndDeliverInOneTransaction() public {
+        _mintPublic(alice, 2); // empty pool: both seeds pending
+        vaultPayout.release(payable(address(vault)));
+        trader.setPrice(weth, 2_500e8);
+        trader.setPrice(address(tsla), 100e8);
+        trader.setPrice(address(nvda), 100e8);
+        trader.setRate(25);
+        address[][] memory paths = new address[][](2);
+        uint24[][] memory fees = new uint24[][](2);
+        (paths[0], paths[1], fees[0], fees[1]) = (_path(address(tsla)), _path(address(nvda)), _fees(), _fees());
+        uint8 seed = vault.DELIVER_SEED();
+        vm.prank(carol); // anyone
+        vault.restockAndDeliver(seed, 1, paths, fees);
+        assertTrue(seeder.seedOf(1).funded, "delivered in the same transaction");
+        // the pool now holds enough for #2 too: the restock is skipped, the delivery still happens
+        vm.prank(carol);
+        vault.restockAndDeliver(seed, 2, paths, fees);
+        assertTrue(seeder.seedOf(2).funded);
+        vm.expectRevert(abi.encodeWithSelector(NeonSeedVault.UnknownDelivery.selector, uint8(9)));
+        vault.restockAndDeliver(9, 1, paths, fees);
+    }
+
+    /// A market off its price refuses the buy with a clear reason, and nothing is bought or delivered.
+    function test_MarketOffPriceIsNamed() public {
+        _mintPublic(alice, 1);
+        vaultPayout.release(payable(address(vault)));
+        trader.setPrice(weth, 2_500e8);
+        trader.setPrice(address(tsla), 100e8);
+        trader.setPrice(address(nvda), 100e8);
+        trader.setRate(25);
+        trader.setOffPrice(address(nvda), true);
+        vm.expectRevert(abi.encodeWithSelector(NeonSeedVault.MarketOffPrice.selector, address(nvda)));
+        vault.restock(_path(address(nvda)), _fees());
+        address[][] memory paths = new address[][](2);
+        uint24[][] memory fees = new uint24[][](2);
+        (paths[0], paths[1], fees[0], fees[1]) = (_path(address(tsla)), _path(address(nvda)), _fees(), _fees());
+        uint8 seed = vault.DELIVER_SEED();
+        vm.expectRevert(abi.encodeWithSelector(NeonSeedVault.MarketOffPrice.selector, address(nvda)));
+        vault.restockAndDeliver(seed, 1, paths, fees);
+        assertEq(tsla.balanceOf(address(seeder)), 0, "all or nothing: the TSLA buy rolled back too");
+        assertFalse(seeder.seedOf(1).funded);
+        // the market comes back: the same call goes through
+        trader.setOffPrice(address(nvda), false);
+        vault.restockAndDeliver(seed, 1, paths, fees);
+        assertTrue(seeder.seedOf(1).funded);
+    }
+
     function test_WiringIsOnce() public {
         vm.startPrank(admin);
         vm.expectRevert(NeonSeedVault.AlreadySet.selector);

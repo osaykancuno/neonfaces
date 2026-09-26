@@ -57,6 +57,16 @@ contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
     error ZeroAddress();
     error NothingToRestock(address token);
     error VaultEmpty();
+    /// @notice The pool can't fill this token within NeonTrader's bound right now (its price is more than 1% away
+    /// from Chainlink, after pool fees): the vault never overpays, so the buy waits for the market to come back.
+    error MarketOffPrice(address token);
+    error UnknownDelivery(uint8 action);
+    error BadPaths();
+
+    /// @notice `restockAndDeliver` actions: what the seeder delivers once the pool holds it.
+    uint8 public constant DELIVER_SEED = 1; // NeonSeeder.fund (every Face is activated in its mint)
+    uint8 public constant DELIVER_TOP_UP = 2; // NeonSeeder.upgrade
+    uint8 public constant DELIVER_SET_BONUS = 3; // NeonSeeder.claimSetBonus
 
     constructor(address payable treasury_, address admin) AccessControlDefaultAdminRules(2 days, admin) {
         if (treasury_ == address(0)) revert ZeroAddress();
@@ -108,25 +118,63 @@ contract NeonSeedVault is AccessControlDefaultAdminRules, ReentrancyGuard {
     /// stays in the pool) and NeonTrader enforces the minimum output, so a caller chooses only the route, among
     /// listed pools whose fees NeonTrader caps. The keeper does this on its own; this is the door for anyone else.
     function restock(address[] calldata path, uint24[] calldata fees) external nonReentrant returns (uint256 amountOut) {
-        ISeedTrader t = trader;
+        amountOut = _restock(path, fees, false);
+    }
+
+    /// @notice Anyone, in one transaction: restock every token in `paths` the pool is short of (a token the pool
+    /// already holds enough of is skipped), then make the seeder deliver `tokenId`'s seed, top-up or set bonus
+    /// (`action`: DELIVER_SEED, DELIVER_TOP_UP, DELIVER_SET_BONUS). Same limits as `restock`. If a market is off
+    /// its price, the whole call reverts with `MarketOffPrice(token)` before anything is bought or delivered:
+    /// the site simulates first, so a holder never signs a transaction that would fail.
+    function restockAndDeliver(uint8 action, uint256 tokenId, address[][] calldata paths, uint24[][] calldata fees)
+        external
+        nonReentrant
+    {
+        if (paths.length != fees.length) revert BadPaths();
+        for (uint256 i; i < paths.length; ++i) {
+            _restock(paths[i], fees[i], true);
+        }
         NeonSeeder s = seeder;
-        if (address(t) == address(0) || address(s) == address(0)) revert NotSet();
-        address weth = t.weth();
-        if (path[0] != weth) revert MustPayWithEth();
-        IERC20 token = IERC20(path[path.length - 1]);
-        uint256 owed = s.owed(address(token));
-        uint256 held = token.balanceOf(address(s));
-        if (owed <= held) revert NothingToRestock(address(token));
-        uint256 usd8 = (owed - held) * t.price(address(token)) / 10 ** IERC20Metadata(address(token)).decimals();
+        if (action == DELIVER_SEED) s.fund(tokenId);
+        else if (action == DELIVER_TOP_UP) s.upgrade(tokenId);
+        else if (action == DELIVER_SET_BONUS) s.claimSetBonus(tokenId);
+        else revert UnknownDelivery(action);
+    }
+
+    function _restock(address[] calldata path, uint24[] calldata fees, bool skipIfHeld)
+        internal
+        returns (uint256 amountOut)
+    {
+        ISeedTrader t = trader;
+        if (address(t) == address(0) || address(seeder) == address(0)) revert NotSet();
+        if (path[0] != t.weth()) revert MustPayWithEth();
+        address token = path[path.length - 1];
+        uint256 ethIn = _restockEth(t, token);
+        if (ethIn == 0) {
+            if (skipIfHeld) return 0;
+            revert NothingToRestock(token);
+        }
+        // Uniswap's "Too little received" (and any pool-side require) means the market can't fill at a fair price
+        try t.swap{value: ethIn}(path, fees, ethIn, RESTOCK_SLIPPAGE_BPS) {}
+        catch Error(string memory) {
+            revert MarketOffPrice(token);
+        }
+        amountOut = IERC20(token).balanceOf(address(this)); // the vault holds no tokens between buys
+        IERC20(token).safeTransfer(address(seeder), amountOut);
+        emit Restocked(msg.sender, token, ethIn, amountOut);
+    }
+
+    /// @dev ETH to spend on `token`: what Faces are still owed minus what the pool holds, valued at Chainlink,
+    /// capped at MAX_RESTOCK_USD8, +3% for pool fees and slippage. 0 when nothing is owed.
+    function _restockEth(ISeedTrader t, address token) internal view returns (uint256 ethIn) {
+        uint256 owed = seeder.owed(token);
+        uint256 held = IERC20(token).balanceOf(address(seeder));
+        if (owed <= held) return 0;
+        uint256 usd8 = (owed - held) * t.price(token) / 10 ** IERC20Metadata(token).decimals();
         if (usd8 > MAX_RESTOCK_USD8) usd8 = MAX_RESTOCK_USD8;
-        uint256 ethIn = usd8 * 1e18 * 103 / (t.price(weth) * 100);
+        ethIn = usd8 * 1e18 * 103 / (t.price(t.weth()) * 100);
         if (address(this).balance == 0) revert VaultEmpty();
         if (ethIn > address(this).balance) ethIn = address(this).balance;
-        if (ethIn == 0) revert NothingToRestock(address(token));
-        t.swap{value: ethIn}(path, fees, ethIn, RESTOCK_SLIPPAGE_BPS);
-        amountOut = token.balanceOf(address(this)); // the vault holds no tokens between buys
-        token.safeTransfer(address(s), amountOut);
-        emit Restocked(msg.sender, address(token), ethIn, amountOut);
     }
 
     /// @notice After the baskets are locked, send leftover ETH to the treasury: once the pool holds everything it

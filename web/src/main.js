@@ -377,7 +377,10 @@ const FRIENDLY = {
   InvalidLock: "A lock can only be extended, up to 365 days.",
   InvalidAgentConfig: "Check the agent address, expiry and calls (the account itself can't be a target).",
   InsufficientPool: "The seed pool is short of a token: try again, the seed vault buys it first.",
+  MarketOffPrice: ([token]) =>
+    `${tokenOf(token)?.symbol ?? "This token"}'s market is more than 1% away from its reference price right now, so the seed vault won't buy it (it never overpays). Nothing was signed and nothing is lost: the keeper retries every 10 minutes, or try again later.`,
   NothingToRestock: "The pool already holds what this needs.",
+  NotYourPiece: ([id]) => `#${id} isn't in your wallet: bring it over first (from another wallet, or out of the Face that holds it).`,
   SetIsFused: "This piece is fused into its set for good: it only moves with the Face that holds it.",
   NotTheHolder: "Only the wallet that holds this Face can do that.",
   SetAlreadyFused: "This set is already fused.",
@@ -391,11 +394,15 @@ const FRIENDLY = {
   Unauthorized: "Only the holder can do this.",
 };
 
+const tokenOf = (address) => (state.dep?.tradeTokens ?? []).find((t) => t.address.toLowerCase() === String(address).toLowerCase());
+
 function errMsg(e) {
-  const name = e?.cause?.data?.errorName ?? e?.walk?.((x) => x?.data?.errorName)?.data?.errorName;
-  if (name && FRIENDLY[name]) return FRIENDLY[name];
+  const data = e?.cause?.data?.errorName ? e.cause.data : e?.walk?.((x) => x?.data?.errorName)?.data;
+  const f = data && FRIENDLY[data.errorName];
+  if (f) return typeof f === "function" ? f(data.args ?? []) : f;
   const m = e?.shortMessage || e?.details || e?.message || String(e);
   if (/User rejected|denied/i.test(m)) return "Transaction rejected.";
+  if (/Too little received/i.test(m)) return "This market is more than 1% away from its reference price right now, so NeonTrader won't trade at a worse price. Nothing was signed: try again later.";
   const custom = m.match(/reverted with the following reason:\s*(.*)|error (\w+)\(/);
   return custom ? custom[1] || custom[2] : m.slice(0, 180);
 }
@@ -657,13 +664,11 @@ async function setPanel(id, owner, account, lockedNow) {
   };
   const reload = () => showFace(id);
   const others = ids.filter((m) => m !== id);
-  if (mine && !assembledHere && others.every((m) => lc(owners[ids.indexOf(m)]) === me)) {
-    button("Assemble here (3 transfers)", async () => {
-      for (const m of others) {
-        toast(`Moving #${m} into #${id}…`);
-        if (!(await send(state.dep.faces, ABI.faces, "safeTransferFrom", [state.account, account, BigInt(m)]))) return reload();
-      }
-      // the last transfer delivers the bonus itself; claim only if the pool was short at that moment
+  if (mine && !assembledHere && others.every((m) => [me, lc(account)].includes(lc(owners[ids.indexOf(m)])))) {
+    button("Assemble here (one transaction)", async () => {
+      toast(`Moving the other pieces into #${id}…`);
+      if (!(await send(state.dep.faces, ABI.faces, "assembleSet", [BigInt(id)]))) return reload();
+      // the last move delivers the bonus itself; claim only if the pool was short at that moment
       if (await read("seeder", "setBonusDue", [BigInt(id)]).catch(() => false)) await deliver("claimSetBonus", id);
       reload();
     });
@@ -771,32 +776,50 @@ async function setTotal(el, accounts) {
 function keeperNote(el) {
   const p = document.createElement("p");
   p.className = "fine";
-  p.textContent = "The keeper delivers this within minutes. Still pending after an hour? Deliver it yourself here: if the pool is short, the seed vault buys what is missing first.";
+  p.textContent = "The keeper delivers this within minutes. Still pending after an hour? Deliver it yourself here, in one transaction: if the pool is short, the seed vault buys what is missing in the same transaction.";
   el.appendChild(p);
 }
 
-/** A permissionless delivery (fund / upgrade / claimSetBonus). If the pool is short of a token, first make the seed
- *  vault buy it (`restock`: anyone can, only what Faces are owed, at Chainlink-checked prices), then deliver: no
- *  delivery has to wait for the keeper. */
+/** A permissionless delivery (activate / fund / upgrade / claimSetBonus). When the pool holds the basket, the seeder
+ *  delivers it. When it is short, free simulations find every missing token, then one transaction makes the seed vault
+ *  buy them all (`restockAndDeliver`: anyone can, only what Faces are owed, at Chainlink-checked prices) and deliver:
+ *  one signature, and never a transaction that would fail. */
+const VIA_VAULT = { fund: 1, upgrade: 2, claimSetBonus: 3 };
 async function deliver(fn, id, done) {
-  for (let tries = 0; tries < 8; tries++) {
-    try {
-      if (!state.account) await doConnect();
-      await ensureChain();
-      await state.pub.simulateContract({ address: state.dep.seeder, abi: ABI.seeder, functionName: fn, args: [BigInt(id)], account: state.account });
-    } catch (e) {
-      const rev = e?.walk?.((x) => x.name === "ContractFunctionRevertedError");
-      if (rev?.data?.errorName !== "InsufficientPool") return toast(errMsg(e));
-      const token = rev.data.args[0];
-      const t = (state.dep.tradeTokens ?? []).find((x) => x.address.toLowerCase() === token.toLowerCase());
-      if (!t) return toast(errMsg(e));
-      toast(`The pool is short of ${t.symbol}: the seed vault buys it first…`);
-      const { path, fees } = tradeRoute(state.dep, { symbol: "ETH" }, t);
-      if (!(await send(state.dep.seedVault, ABI.seedVault, "restock", [path, fees]))) return;
-      continue;
-    }
-    return send(state.dep.seeder, ABI.seeder, fn, [BigInt(id)], done);
+  try {
+    if (!state.account) await doConnect();
+    await ensureChain();
+  } catch (e) {
+    return e?.message !== "cancelled" && toast(errMsg(e));
   }
+  const sim = (address, abi, functionName, args) => state.pub.simulateContract({ address, abi, functionName, args, account: state.account });
+  const revertOf = (e) => e?.walk?.((x) => x.name === "ContractFunctionRevertedError")?.data;
+  try {
+    await sim(state.dep.seeder, ABI.seeder, fn, [BigInt(id)]);
+    return send(state.dep.seeder, ABI.seeder, fn, [BigInt(id)], done);
+  } catch (e) {
+    if (revertOf(e)?.errorName !== "InsufficientPool" || !VIA_VAULT[fn] || !state.dep.seedVault) return toast(errMsg(e));
+  }
+  const paths = [];
+  const fees = [];
+  const names = [];
+  for (let tries = 0; tries < 9; tries++) {
+    const args = [VIA_VAULT[fn], BigInt(id), paths, fees];
+    try {
+      await sim(state.dep.seedVault, ABI.seedVault, "restockAndDeliver", args);
+      toast(`The pool is short of ${names.join(", ")}: one transaction buys ${names.length > 1 ? "them" : "it"} and delivers.`);
+      return send(state.dep.seedVault, ABI.seedVault, "restockAndDeliver", args, done);
+    } catch (e) {
+      const rev = revertOf(e);
+      const t = rev?.errorName === "InsufficientPool" && tokenOf(rev.args[0]);
+      if (!t || names.includes(t.symbol)) return toast(errMsg(e));
+      const r = tradeRoute(state.dep, { symbol: "ETH" }, t);
+      paths.push(r.path);
+      fees.push(r.fees);
+      names.push(t.symbol);
+    }
+  }
+  toast("The pool is short of too many tokens at once: the keeper is on it, try again in a few minutes.");
 }
 
 async function send(address, abi, functionName, args, done) {

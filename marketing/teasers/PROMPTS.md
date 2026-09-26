@@ -22,7 +22,7 @@ Generated: `1-signal.mp4` … `5-soon.mp4` (8 s, 1280x720, audio). Originals fro
 
 ## X cuts
 
-Post the `x-*.mp4` files. The Higgsfield virality proxy (predictive, not a promise) scored `1-signal.mp4` overall 51, hook 39, sustain 85, with attention dipping between 2 and 5 s: the clip held people but opened on a near-black frame, and X autoplays muted. `python marketing/teasers/make_x_cuts.py` keeps length and audio and adds a 0.4 s cold open on the clip's strongest frame, a brighter first 2 s, and the voice line in the collection's pixel font while it is spoken.
+Post the `x-*.mp4` files. The Higgsfield virality proxy (predictive, not a promise) scored `1-signal.mp4` overall 51, hook 39, sustain 85, with attention dipping between 2 and 5 s: the clip held people but opened on a near-black frame, and X autoplays muted. `python marketing/teasers/make_x_cuts.py` keeps length and audio and adds a 0.4 s cold open on the clip's strongest frame, a brighter first 2 s, and the voice line in the collection's pixel font while it is spoken. Re-measured on `x-1-signal.mp4`: the same scores (51 / 39 / 85, first-second peak 0.540 to 0.547), so the proxy does not reward these edits; they stay for muted autoplay, which the proxy (scored with sound) cannot see. Moving its hook score would take a new take with motion and voice in the first 3 s.
 
 ## 1. Signal
 Start frame: `1-signal-start.png`

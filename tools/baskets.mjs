@@ -32,6 +32,33 @@ if (live) {
   }
   plan.pricesAsOf = `${new Date(oldest * 1000).toISOString()} (Chainlink, oldest feed update)`;
   console.log("live prices:", Object.entries(plan.prices).map(([k, v]) => `${k} $${v}`).join("  "));
+
+  // Can the vault buy every leg now? NeonTrader wants at least the Chainlink value minus pool fees minus 1%:
+  // quote a $50 buy from ETH on the real pools (QuoterV2) and compare. A leg that fails here would stay
+  // pending until its pool comes back in line with the feed: swap it before deploying.
+  const trader = JSON.parse(readFileSync(resolve(here, `../config/trader.${plan.chainId}.json`), "utf8"));
+  const { route } = await import("./route.mjs");
+  const quoterAbi = parseAbi(["function quoteExactInput(bytes path, uint256 amountIn) returns (uint256 amountOut, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)"]);
+  const feedPrice = async (feed) => Number((await client.readContract({ address: feed, abi: feedAbi, functionName: "latestRoundData" }))[1]) / 1e8;
+  const weth = trader.tokens.find((t) => t.symbol === "WETH");
+  const ethUsd = await feedPrice(weth.feed);
+  const ethIn = parseUnits((50 / ethUsd).toFixed(18), 18);
+  const blocked = [];
+  for (const sym of new Set(plan.baskets.flatMap((b) => Object.keys(b.legs)))) {
+    const to = trader.tokens.find((t) => t.address.toLowerCase() === plan.tokens[sym].address.toLowerCase());
+    if (!to) { blocked.push(`${sym} (not in NeonTrader)`); continue; }
+    const { path, fees } = route(trader.tokens, weth, to);
+    let packed = "0x";
+    path.forEach((a, i) => { packed += a.slice(2).toLowerCase() + (i < fees.length ? fees[i].toString(16).padStart(6, "0") : ""); });
+    const { result } = await client.simulateContract({ address: getAddress(trader.uniswap.quoterV2), abi: quoterAbi, functionName: "quoteExactInput", args: [packed, ethIn] });
+    const feeBps = fees.reduce((s, f) => s + Math.floor(f / 100), 0);
+    const outPrice = plan.tokens[sym].stable ? await feedPrice(plan.tokens[sym].feed) : plan.prices[sym];
+    const fair = (50 / outPrice) * 10 ** plan.tokens[sym].decimals;
+    const margin = (Number(result[0]) / (fair * (10_000 - feeBps - 100) / 10_000) - 1) * 100;
+    console.log(`  ${sym.padEnd(6)} buy margin ${margin.toFixed(2)}%${margin < 0 ? "  BLOCKED: the pool is more than 1% above Chainlink" : margin < 0.3 ? "  thin" : ""}`);
+    if (margin < 0) blocked.push(sym);
+  }
+  if (blocked.length) console.warn(`\nThe vault can't buy ${blocked.join(", ")} right now. Re-check on a trading day; if it persists, replace the leg.\n`);
 }
 
 const missing = Object.entries(plan.prices).filter(([, p]) => !(p > 0)).map(([t]) => t);

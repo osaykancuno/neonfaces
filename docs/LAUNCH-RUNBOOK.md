@@ -8,9 +8,9 @@ The Safe accepts the admin role 2 days after the deploy, and `verify-drop.mjs` f
 
 | When | What |
 |---|---|
-| by Sun 4 Oct | addresses ready (step 0); public GitHub repo |
-| week of 5 Oct | testnet rehearsal with the real Safe (sign every Safe batch once); check that OpenSea Studio imports the testnet contract |
-| Fri 9 Oct | `node tools/baskets.mjs --live` (Friday's closing prices are the last fresh ones before the weekend); re-check the floor in [ECONOMICS.md](ECONOMICS.md) against the ETH price |
+| by Sun 4 Oct | addresses ready (step 0); public GitHub repo (both done 26 Sep, Safe tested with two signatures) |
+| week of 5 Oct | testnet rehearsal (the deployer stands in for the Safe, which lives on mainnet only); check that OpenSea Studio imports the testnet contract |
+| Fri 9 Oct | `node tools/baskets.mjs --live` during US market hours (Friday's prices are the last fresh ones before the weekend). It also quotes a $50 buy of every leg on the real pools: a leg marked BLOCKED (its pool more than 1% above Chainlink, so the vault would refuse to buy it) is replaced before the deploy (USO was blocked on Sat 26 Sep: its pool was 1.6% above the feed); re-check the floor in [ECONOMICS.md](ECONOMICS.md) against the ETH price |
 | Sat 10 Oct | deploy, upload the art, verify, keeper on; create the drop in OpenSea Studio |
 | Sun 11 Oct | announce the snapshot time (Monday 18:00 UTC), the stage times and the rules (NFTs held in vaults, pools or loan contracts don't count: withdraw them before the snapshot) |
 | Mon 12 Oct | 18:00 UTC: snapshots (stage 1 list first, then partners, ≈ 1 h 30), `allowlist.mjs`, upload both lists to Studio; the Safe accepts admin; `verify-drop.mjs` passes |

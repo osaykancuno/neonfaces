@@ -5,7 +5,7 @@
 list-in:  the mosaic of Faces lights up tile by tile, the eye of the logo opens, a neon flash, YOU'RE IN / ON THE LIST
 list-out: the same mosaic stays dark olive, the eye half opens, looks away and closes, NOT ON THE LIST, no neon
 600 x 600, 24 fps, 4 s, silent H.264 (plays inline and muted on iPhone and Android), plus the last frame as a poster
-for people who turn motion off. Written to landing/img/ and web/public/img/.
+for people who turn motion off. Written to landing/img/ (the preview).
 """
 import json
 import random
@@ -31,7 +31,7 @@ OLIVE, OLIVE_DARK, OLIVE_TEXT = (103, 121, 32), (65, 77, 18), (170, 184, 120)
 PANEL = (48, 118, 552, 494)  # x0, y0, x1, y1
 EYE = (48, 24, 9)  # cols, rows, cell -> 432 x 216
 EYE_XY = (84, 136)
-OUTS = [ROOT / "landing" / "img", ROOT / "web" / "public" / "img"]
+OUTS = [ROOT / "landing" / "img"]  # the wallet check lives only on the preview
 
 
 def ease(t):

@@ -12,7 +12,7 @@ The Safe accepts the admin role 2 days after the deploy, and `verify-drop.mjs` f
 | by Fri 2 Oct | the founder funds the mainnet wallets: deployer 0.015 ETH, keeper 0.01 ETH, sale manager 0.003 ETH |
 | Fri 2 Oct | `node tools/baskets.mjs --live` during US market hours (Friday's prices are the last fresh ones before the weekend). It also quotes a $50 buy of every leg on the real pools: a leg marked BLOCKED (its pool more than 1% above Chainlink, so the vault would refuse to buy it) is replaced before the deploy (USO was blocked on Sat 26 Sep: its pool was 1.6% above the feed); re-check the floor in [ECONOMICS.md](ECONOMICS.md) against the ETH price |
 | Sat 3 Oct | deploy, upload the art, verify, keeper on; import the contract in OpenSea Studio with the sale-manager account and build the drop as a **Draft** (the list stage and the public stage, the list's CSV, payout), check the preview, publish only when `verify-drop.mjs` passes |
-| Sun 4 Oct | announce the sale: Wednesday 7 October 14:00 UTC on OpenSea, 24 hours reserved to the list (0.013 ETH, 3 per wallet; wallets check themselves on the site), then the public from Thursday 8 October 14:00 UTC (0.018 ETH, 5 per wallet in total) until the last Face sells; team Faces and reveal after the sell-out |
+| Sun 4 Oct | announce the sale: Wednesday 7 October 14:00 UTC on OpenSea, 24 hours reserved to the list (0.013 ETH, 3 per wallet; wallets check themselves on the preview, neonfaces.xyz), then the public from Thursday 8 October 14:00 UTC (0.018 ETH, 5 per wallet in total) until the last Face sells; team Faces and reveal after the sell-out |
 | Mon 5 Oct | the Safe accepts the admin role (2 days after the deploy); check the Studio draft |
 | Tue 6 Oct | the list's CSV is in the presale stage (rebuilt with the extra wallets if any, see section 7), `verify-drop.mjs` passes, then publish the drop in Studio (it opens by itself at the start time) |
 | Wed 7 Oct | 14:00 UTC the list stage opens for 24 hours; Thursday 8 October 14:00 UTC the public stage, until the last Face sells; after the sell-out: team mint and reveal the same day (a sell-out on a weekend only delays the Stare top-ups to Monday's prices) |
@@ -105,9 +105,11 @@ The list (decided 26 Sep): wallets holding at least one NFT of the listed collec
 node tools/snapshot.mjs config/allowlists/list.json --rules-only           # -> config/allowlists/list.csv (27,902 wallets)
 node tools/allowlist.mjs config/allowlists/list.csv config/allowlists/extra.csv --limit 3
 # -> config/allowlists/opensea/list.csv for Studio (fails above 30,000 wallets: OpenSea's limit per presale stage)
-# -> landing/list/ and web/public/list/: the site's check (hashes only); re-drop landing/ on Netlify
+# -> landing/list/: the preview's check (hashes only); re-drop landing/ on Netlify
 ```
-The check's clips come from `python marketing/list/make_list_clips.py` (landing/img/ and web/public/img/list-in|out.mp4).
+The wallet check lives only on the preview (neonfaces.xyz until launch), not in the web app; its clips come from `python marketing/list/make_list_clips.py` (landing/img/list-in|out.mp4).
+
+The preview has the web app's look: `landing/app.css` and `landing/app.js` are built from `web/src` (stylesheet, eye, mosaic, tape, boot, cursor, sound) by `npm --prefix web run build:preview`, which also copies the gallery the hero mosaic draws from (`landing/data/gallery.json`). Run it after any change to `web/src/style.css` or `web/src/effects/`, then re-drop `landing/` on Netlify.
 
 In OpenSea Studio, connected with the sale manager: create the drop from the existing contract (Robinhood Chain, `faces` in `contracts/deployments/4663.json`), then set:
 

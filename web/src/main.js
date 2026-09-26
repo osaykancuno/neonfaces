@@ -9,7 +9,6 @@ import { route as tradeRoute } from "./actions.js";
 import { liveValue, valueHistory, sparkline } from "./value.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
-import { initList } from "./list.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -29,7 +28,6 @@ const faceURI = (f) => svgDataURI(f.artId, f.record);
 boot();
 cursor();
 soundToggle($("#sound-btn"));
-initList();
 tape($("#tape"));
 pixelEye($("#eye"));
 pixelEye($("#nav-eye"), { cols: 24, rows: 12, fade: false });

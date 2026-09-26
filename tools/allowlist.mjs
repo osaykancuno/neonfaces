@@ -12,7 +12,7 @@
 //     (OpenSea's format: address, optional per-wallet limit, optional per-wallet price). Upload it to the presale
 //     stage in OpenSea Studio; Studio builds the SeaDrop Merkle root, and the allowlist can't be edited once that
 //     stage has started minting.
-//   ../landing/list/<0-f>.txt and ../web/public/list/<0-f>.txt, the site's check: the first 20 hex digits of
+//   ../landing/list/<0-f>.txt, the preview's check (the wallet check lives only on the preview): the first 20 hex digits of
 //     SHA-256(lowercase address), one per line, in 16 files by the hash's first digit. The page hashes the address
 //     typed in, downloads one small file and looks it up: the address never leaves the browser, and the files
 //     don't publish the list itself.
@@ -77,7 +77,7 @@ for (const addr of rows.keys()) {
   const h = createHash("sha256").update(addr.toLowerCase()).digest("hex").slice(0, 20);
   shards[parseInt(h[0], 16)].push(h);
 }
-for (const dir of ["../landing/list", "../web/public/list"]) {
+for (const dir of ["../landing/list"]) {
   const d = resolve(here, dir);
   rmSync(d, { recursive: true, force: true });
   mkdirSync(d, { recursive: true });
@@ -88,4 +88,4 @@ const total = [...rows.values()].reduce((s, n) => s + n, 0);
 const limits = [...new Set(rows.values())].sort((a, b) => a - b);
 console.log(`${name}: ${rows.size} wallets (room for ${OPENSEA_MAX_PER_STAGE - rows.size} more), ${total} Faces max (per-wallet limits: ${limits.join(", ")})`);
 console.log(`wrote ${outPath}`);
-console.log("wrote the site's check files: landing/list/ and web/public/list/ (re-drop landing/ on Netlify)");
+console.log("wrote the preview's check files: landing/list/ (re-drop landing/ on Netlify)");

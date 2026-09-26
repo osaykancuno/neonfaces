@@ -108,20 +108,6 @@
             <a href="/guide#guide-details" data-link>Stare tiers</a><a href="/guide#guide-details" data-link>The Gaze</a><a href="/guide#guide-details" data-link>Lock before you list</a><a href="/guide#guide-traits" data-link>Traits</a><a href="/guide#guide-onchain" data-link>What the contracts enforce</a><a href="/guide#guide-funds" data-link>Where the mint goes</a>
           </nav>
         </section>
-        <section id="list" class="block reveal">
-          <div class="label">The list</div>
-          <h2>Is your wallet on the list?</h2>
-          <p class="lead">Wallets on the list mint first: 24 hours reserved to them, up to 3 Faces each. Then the sale opens to everyone.</p>
-          <form id="al-form" class="al-form" novalidate>
-            <label for="al-addr">Wallet address</label>
-            <div class="al-row">
-              <input id="al-addr" type="text" placeholder="0x…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="42" />
-              <button class="btn btn-neon" type="submit" id="al-go">Check</button>
-            </div>
-            <p id="al-msg" class="al-msg" role="status" aria-live="polite"></p>
-          </form>
-          <p class="fine">The list comes from a snapshot of NFT holders, one entry per wallet, and is final when the sale is announced. The check runs in your browser: your address is never sent anywhere.</p>
-        </section>
         <section id="mint" class="block reveal">
           <div class="label">Mint</div>
           <div class="mint">
@@ -349,15 +335,6 @@
       <a href="/mine" data-link data-tab="mine" aria-label="Mine"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Mine</span></a>
       <a href="/guide" data-link data-tab="guide" aria-label="Guide"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Guide</span></a>
     </nav>
-    <div id="al-banner" class="al-banner" hidden>
-      <div class="al-box" role="dialog" aria-modal="true" aria-labelledby="al-title">
-        <video id="al-video" muted playsinline preload="none" aria-hidden="true"></video>
-        <h3 id="al-title" class="al-title"></h3>
-        <p id="al-text"></p>
-        <p class="al-who" id="al-who"></p>
-        <button class="btn btn-neon btn-wide" type="button" id="al-close">Close</button>
-      </div>
-    </div>
     <div id="toast" class="toast" role="status"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

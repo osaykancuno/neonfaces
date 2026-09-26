@@ -28,7 +28,7 @@ Set up for a solo founder with no hardware wallet and two wallets: a MetaMask on
 | `NeonSeedVault` | receives 50%, buys the basket tokens into the pool | deployed by the script, no address to prepare |
 | Sale manager | runs the drop in OpenSea Studio (`owner()` of the collection while set) | an account of the computer MetaMask, used only in OpenSea Studio (never to sign on other sites). It can only configure SeaDrop stages: no minting, no art, no roles, proceeds always go to `NeonPayout`. Cleared after the sale |
 | Keeper | runs `tools/seed-keeper.mjs` | a hot key with a little ETH for gas; it can only make the vault buy basket tokens for the pool |
-| Deployer | deploys, uploads the art (≈ 0.03 ETH total gas, the only money needed before the sale) | holds nothing after hand-over |
+| Deployer | deploys, uploads the art (≈ 258M gas: ≈ 0.008 ETH at 0.03 gwei, measured 2026-09-26; send 0.015 ETH for margin, the only money needed before the sale) | holds nothing after hand-over |
 
 ## 1. Freeze the art (before anything is public)
 

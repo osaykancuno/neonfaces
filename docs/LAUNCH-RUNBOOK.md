@@ -9,7 +9,7 @@ The Safe accepts the admin role 2 days after the deploy, and `verify-drop.mjs` f
 | When | What |
 |---|---|
 | done 26 Sep | addresses ready (step 0); public GitHub repo; Safe tested with two signatures; the testnet rehearsal with the final art passed (deploy, art sealed with provenance `0x6525337e…` and verified byte for byte, SeaDrop stage, 20 mints, reveal, top-ups, split paid, a set assembled in one transaction with its bonus, a set vote, the set fused, a withdrawal and a lock from a Face account; ≈ 0.0033 test ETH; addresses in `contracts/deployments/46630.json`). The same day a local launch-day run at the real price covered the rest: six wallets buying, keeper, team mint, reveal by a stranger, `restockAndDeliver` with an empty pool, a NeonTrader trade from a Face account, a resale under lock, vesting, a stand-in Safe accepting admin after 2 days, `lockConfig`, `releaseSurplus`. OpenSea no longer supports testnets, so Studio is checked on mainnet in Draft mode on deploy day |
-| by Fri 2 Oct | the founder funds the mainnet wallets: deployer 0.015 ETH, keeper 0.01 ETH, sale manager 0.003 ETH |
+| by Fri 2 Oct | the founder funds the mainnet wallets: deployer 0.015 ETH, keeper 0.01 ETH, sale manager 0.003 ETH, Safe signer 1 +0.002 ETH (it executes the Safe batches: accept-admin, the 111 team Faces ≈ 21M gas, the reveal request; it held 0.0008 ETH on 26 Sep). The deploy was simulated on mainnet on 26 Sep: ≈ 32M gas for Deploy.s.sol, ≈ 258M for the art, at a base fee of 0.028 gwei |
 | Fri 2 Oct | `node tools/baskets.mjs --live` during US market hours (Friday's prices are the last fresh ones before the weekend). It also quotes a $50 buy of every leg on the real pools: a leg marked BLOCKED (its pool more than 1% above Chainlink, so the vault would refuse to buy it) is replaced before the deploy (USO was blocked on Sat 26 Sep: its pool was 1.6% above the feed); re-check the floor in [ECONOMICS.md](ECONOMICS.md) against the ETH price |
 | Sat 3 Oct | deploy, upload the art, verify, keeper on; import the contract in OpenSea Studio with the sale-manager account and build the drop as a **Draft** (the list stage and the public stage, the list's CSV, payout), check the preview, publish only when `verify-drop.mjs` passes |
 | Sun 4 Oct | announce the sale: Wednesday 7 October 14:00 UTC on OpenSea, 24 hours reserved to the list (0.013 ETH, 3 per wallet; wallets check themselves on the preview, neonfaces.xyz), then the public from Thursday 8 October 14:00 UTC (0.018 ETH, 5 per wallet in total) until the last Face sells; team Faces and reveal after the sell-out |
@@ -52,11 +52,12 @@ source .env
 forge script script/Deploy.s.sol --rpc-url robinhood --private-key $DEPLOYER_PK --broadcast --slow
 forge script script/UploadArt.s.sol --rpc-url robinhood --private-key $DEPLOYER_PK --broadcast --slow   # resumable, seals at the end
 ```
-Verify every contract on Blockscout:
+Verify every contract, first on Sourcify (no key, reachable from scripts; Blockscout reads it), then on Blockscout:
 ```bash
+forge verify-contract <address> src/NeonFaces.sol:NeonFaces --chain 4663 --verifier sourcify --watch
 forge verify-contract <address> src/NeonFaces.sol:NeonFaces --chain 4663 --verifier blockscout --verifier-url https://robinhoodchain.blockscout.com/api/ --watch
 ```
-(repeat for NeonPayout, NeonSeedVault, NeonSeeder, NeonFaceAccount, NeonArt, NeonRenderer, VestingWallet; constructor args are in `broadcast/`.) OpenSea shows verified source and reads it to recognise the SeaDrop interface.
+(repeat for NeonPayout, NeonSeedVault, NeonSeeder, NeonFaceAccount, NeonArt, NeonRenderer, NeonSetVotes, NeonTrader, VestingWallet; constructor args are in `broadcast/`.) OpenSea shows verified source and reads it to recognise the SeaDrop interface. On 26 Sep the mainnet Blockscout API answered 403 (a Cloudflare bot check) to forge and curl while the testnet one answered: if it still does, verify on Blockscout from its web page (Contract > Verify & publish > Solidity, Standard JSON input, from `forge verify-contract <address> <path:Name> --chain 4663 --show-standard-json-input > <Name>.json`), and Etherscan also covers the chain (robin.etherscan.io, `--verifier etherscan` with a free Etherscan API key).
 
 Agent trading (NeonTrader, no owner), also wired into `NeonSeedVault` for the seed purchases: run it right after `Deploy.s.sol`, while the deployer is still admin:
 ```bash
@@ -124,7 +125,7 @@ Never below the self-funding floor (≈ 0.009 ETH at ETH $2,687, see [ECONOMICS.
 - **Payout address = `NeonPayout`** (`payout` in the deployments file). Any other address is rejected on-chain.
 - SeaDrop reads the collection's supply cap from `maxSupply()` (5444 until the team mint, which comes after the sell-out), and the per-wallet limit counts every Face a wallet minted through SeaDrop. Check how Studio labels both before publishing.
 - Studio publishes with one `multiConfigure` transaction from the sale manager. The allowlist can't be edited once its stage has started minting. The contract refuses stage fees above 10% or without restricted fee recipients.
-- Then check the live configuration: `ADMIN=<Treasury Safe> OPENSEA_FEE_RECIPIENT=<OpenSea's fee address> node tools/verify-drop.mjs 4663` must pass (after every change in Studio too). It also fails while the Safe hasn't accepted the admin role or the deploy key still holds a role: do not open the sale until it passes.
+- Then check the live configuration: `ADMIN=0x2388BB366bfEaF15d1D01C0e33660b6497FB0bE1 KEEPER=<keeper address> OPENSEA_FEE_RECIPIENT=0x0000a26b00c1F0DF003000390027140000fAa719 node tools/verify-drop.mjs 4663` must pass (after every change in Studio too). The fee address is the one OpenSea's own drops on Robinhood Chain allow, at 10% (read on-chain 26 Sep). Besides the stages it reads back the whole deploy (seeder, renderer, trader, payout payees, vesting, royalty, provenance, sealed art, the Safe's roles, the keeper's role). It also fails while the Safe hasn't accepted the admin role or the deploy key still holds a role: do not open the sale until it passes.
 
 Site:
 ```bash
@@ -137,7 +138,7 @@ Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers ne
 ## 8. Close and reveal
 
 1. When the last public Face sells, the team mint (step 6).
-2. Start the watcher: `PK=<any funded key> node tools/reveal-watch.mjs 4663`.
+2. Start the watcher: `PK=<any funded key> node tools/reveal-watch.mjs 4663`. Use the deploy key (its leftover ETH, no role left), never the keeper key while the keeper runs: two processes sending from one key collide on the nonce.
 3. Safe: `node tools/safe-tx.mjs 4663 reveal-request`. This closes minting forever (SeaDrop then sees the final supply); the watcher calls `reveal()` within the 25-second window. If missed, repeat step 3 once the window has passed.
 4. The seed keeper buys and delivers the Stare top-ups on its own (or, with the inventory in the pool: `PK=<any funded key> node tools/upgrade-all.mjs 4663`).
 5. `node tools/verify-onchain.mjs 4663` → art and tiers visible in `tokenURI`.

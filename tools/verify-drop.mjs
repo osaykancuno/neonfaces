@@ -41,6 +41,7 @@ const ROLES = {
   seedVault: ["DEFAULT_ADMIN", "KEEPER_ROLE"],
   art: ["DEFAULT_ADMIN", "ARTIST_ROLE"],
 };
+const PUBLIC_START = Date.UTC(2026, 9, 8, 14) / 1000; // Thursday 8 October 2026 14:00 UTC
 const roleId = (r) => (r === "DEFAULT_ADMIN" ? "0x" + "00".repeat(32) : keccak256(toHex(r)));
 const sd = (functionName) => pub.readContract({ address: dep.seaDrop, abi, functionName, args: [dep.faces] });
 const nf = (functionName) => pub.readContract({ address: dep.faces, abi, functionName });
@@ -61,8 +62,12 @@ const [drop, payout, root, fees, signers, payers, gated, owner, manager, admin, 
 ok(getAddress(payout) === getAddress(dep.payout), `creator payout is NeonPayout (${payout})`);
 ok(drop.feeBps <= 1000 && drop.restrictFeeRecipients, `public stage fee ${drop.feeBps / 100}% with restricted recipients`);
 info(`public stage: ${formatEther(drop.mintPrice)} ETH, ${drop.maxTotalMintableByWallet}/wallet, ${new Date(Number(drop.startTime) * 1000).toISOString()} -> ${new Date(Number(drop.endTime) * 1000).toISOString()}`);
-ok(drop.mintPrice === 0n || drop.mintPrice === 18_000_000_000_000_000n, "public price is 0.018 ETH (the list stage, 0.013 ETH, lives in the allowlist leaves: check it in Studio)");
-ok(drop.mintPrice === 0n || drop.maxTotalMintableByWallet === 5, `public: 5 Faces per wallet in total (${drop.maxTotalMintableByWallet})`);
+// a public stage with a start time and price 0 would be a free mint for everyone: the stage must be set, at 0.018
+ok(drop.startTime !== 0, "the public stage is configured");
+ok(drop.mintPrice === 18_000_000_000_000_000n, "public price is 0.018 ETH (the list stage, 0.013 ETH, lives in the allowlist leaves: check it in Studio)");
+ok(drop.maxTotalMintableByWallet === 5, `public: 5 Faces per wallet in total (${drop.maxTotalMintableByWallet})`);
+ok(drop.startTime === PUBLIC_START, `public opens Thursday 8 October 14:00 UTC (${new Date(drop.startTime * 1000).toISOString()})`);
+ok(drop.endTime >= drop.startTime + 90 * 86400, "public stage ends at least 90 days after it opens (minting really closes with the reveal request)");
 ok(fees.length === 1, `exactly one allowed fee recipient: ${fees.join(", ") || "none"}`);
 if (process.env.OPENSEA_FEE_RECIPIENT) {
   ok(fees.every((f) => getAddress(f) === getAddress(process.env.OPENSEA_FEE_RECIPIENT)), "fee recipient is OpenSea's");
@@ -88,6 +93,52 @@ for (const [name, roles] of Object.entries(ROLES)) {
     ok(held.length === 0, `${name}: the deploy key holds no role${held.length ? ` (still: ${held.join(", ")})` : ""}`);
   }
 }
+
+// ---- wiring: what Deploy.s.sol and DeployTrader.s.sol set up, read back from the chain ----
+const wire = parseAbi([
+  "function seeder() view returns (address)",
+  "function renderer() view returns (address)",
+  "function payout() view returns (address)",
+  "function provenanceHash() view returns (bytes32)",
+  "function royaltyInfo(uint256, uint256) view returns (address, uint256)",
+  "function trader() view returns (address)",
+  "function faces() view returns (address)",
+  "function seedVault() view returns (address)",
+  "function treasury() view returns (address)",
+  "function team() view returns (address)",
+  "function growth() view returns (address)",
+  "function pollster() view returns (address)",
+  "function owner() view returns (address)",
+  "function duration() view returns (uint256)",
+  "function isSealed() view returns (bool)",
+]);
+const w = (address, functionName, args = []) => pub.readContract({ address, abi: wire, functionName, args });
+const same = (a, b) => getAddress(a) === getAddress(b);
+ok(same(await w(dep.faces, "seeder"), dep.seeder), "NeonFaces: seeder wired");
+ok(same(await w(dep.faces, "renderer"), dep.renderer), "NeonFaces: on-chain renderer set");
+ok(same(await w(dep.faces, "payout"), dep.payout), "NeonFaces: payout is NeonPayout");
+const prov = JSON.parse(readFileSync(resolve(here, "../art/output/provenance.json"), "utf8")).provenanceHash;
+ok((await w(dep.faces, "provenanceHash")) === prov, `NeonFaces: provenance ${prov.slice(0, 10)}…`);
+ok(await w(dep.art, "isSealed"), "NeonArt: art uploaded and sealed");
+const [royaltyTo, royalty] = await w(dep.faces, "royaltyInfo", [1n, 10_000n]);
+ok(royalty === 500n && (!process.env.ADMIN || same(royaltyTo, process.env.ADMIN)), `royalty ${Number(royalty) / 100}% to ${royaltyTo}`);
+ok(same(await w(dep.seedVault, "seeder"), dep.seeder), "NeonSeedVault: seeder wired");
+ok(!!dep.trader && same(await w(dep.seedVault, "trader"), dep.trader), "NeonSeedVault: NeonTrader wired (DeployTrader.s.sol)");
+ok(same(await w(dep.payout, "seedVault"), dep.seedVault), "NeonPayout: 55% to NeonSeedVault");
+ok(same(await w(dep.payout, "team"), dep.teamVesting), "NeonPayout: 15% to the team VestingWallet");
+const treasury = await w(dep.payout, "treasury");
+const growth = await w(dep.payout, "growth");
+ok(!same(treasury, growth), `NeonPayout: treasury ${treasury}, growth ${growth}`);
+if (process.env.ADMIN) ok(same(treasury, process.env.ADMIN), "NeonPayout: treasury is the Safe");
+info(`team vesting: beneficiary ${await w(dep.teamVesting, "owner")}, ${Number(await w(dep.teamVesting, "duration")) / 86400} days`);
+ok(Number(await w(dep.teamVesting, "duration")) === 180 * 86400, "team vesting lasts 180 days");
+if (dep.setVotes && process.env.ADMIN) ok(same(await w(dep.setVotes, "pollster"), process.env.ADMIN), "NeonSetVotes: the Safe asks");
+if (process.env.ADMIN) {
+  for (const [name, role] of [["faces", "PAUSER_ROLE"], ["faces", "METADATA_ROLE"], ["seeder", "CONFIG_ROLE"]]) {
+    ok(await read(dep[name], "hasRole", [roleId(role), process.env.ADMIN]), `${name}: the Safe holds ${role}`);
+  }
+}
+if (process.env.KEEPER) ok(await read(dep.seedVault, "hasRole", [roleId("KEEPER_ROLE"), process.env.KEEPER]), "NeonSeedVault: the keeper key holds KEEPER_ROLE");
 
 console.log(failed ? `\n${failed} check(s) failed` : "\nall checks passed");
 process.exit(failed ? 1 : 0);

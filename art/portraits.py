@@ -8,6 +8,7 @@ them by neonfaces/photo.py.
     python portraits.py record r.json   # store generation results ([{"id", "job", "url"}]) in the manifest
     python portraits.py fetch           # download every portrait that has a url in the manifest (512 px, grayscale)
     python portraits.py check           # landmarks sanity + contact sheet of what is there
+    python portraits.py similar [0.90]  # pairs of faces that look too much alike (aligned on the eyes)
 
 portraits/manifest.json is committed (prompts, generation job ids, sha256 of every image); the images
 (portraits/<id>.png) are not: the on-chain records are the art.
@@ -34,6 +35,22 @@ LOOKS = [
     "Middle Eastern", "Latin American", "mixed-heritage",
 ]
 AGES = {"twenties": 30, "thirties": 35, "forties": 25, "fifties": 10}
+AGE_SPAN = {"twenties": (21, 29), "thirties": (30, 39), "forties": (40, 49), "fifties": (50, 59)}
+# individual features, dealt from shuffled decks so no two portraits get the same description
+FACE_SHAPE = ["an oval face", "a round face", "a square face", "a heart-shaped face", "a long face", "a diamond-shaped face"]
+HAIR = {
+    "Woman": ["long straight hair", "long wavy hair", "shoulder-length curly hair", "a short pixie cut", "a chin-length bob",
+              "hair tied back", "long braids", "a natural afro", "short curly hair", "a side-swept fringe",
+              "a high bun", "cropped hair shaved at the sides"],
+    "Man": ["short cropped hair", "a buzz cut", "curly hair on top", "wavy medium-length hair", "hair combed back",
+            "a shaved head", "a short afro", "a receding hairline", "shoulder-length hair tied back", "a side part",
+            "short twists", "thick messy hair"],
+}
+FACIAL_HAIR = ["clean-shaven", "clean-shaven", "light stubble", "a short beard", "a moustache", "a full trimmed beard"]
+BROWS = ["thick eyebrows", "thin eyebrows", "arched eyebrows", "straight eyebrows", "bushy eyebrows", "soft eyebrows"]
+FEATURE = ["freckles", "dimples", "high cheekbones", "a strong jawline", "a soft jawline", "a broad nose", "a narrow nose",
+           "full lips", "thin lips", "deep-set eyes", "hooded eyelids", "wide-set eyes", "a slightly crooked nose",
+           "a cleft chin", "prominent ears", "laugh lines", "almond eyes", "a rounded nose tip"]
 EXPRESSION = {
     "Flat": "a calm, neutral expression",
     "Squint": "eyes slightly narrowed in a relaxed way",
@@ -49,7 +66,7 @@ LIGHT = {
 
 def prompt(who: str, light: str, expression: str) -> str:
     return (
-        f"Black and white photographic close-up portrait of {who}, ordinary and good-looking, "
+        f"Black and white photographic close-up portrait of {who}, an ordinary, good-looking, one-of-a-kind person, "
         f"{EXPRESSION[expression]}, looking straight into the camera, frontal, head centred and filling the frame, "
         f"eyes a little above the middle of the frame, {LIGHT[light]}, plain dark background, natural skin, "
         f"no glasses, no jewellery, sharp focus"
@@ -68,15 +85,39 @@ def _deck(weights: dict, n: int, rng: random.Random) -> list:
     return cards
 
 
-def _who(gender: str, look: str, age: str) -> str:
-    noun, pron = ("woman", "her") if gender == "Woman" else ("man", "his")
-    art = "an" if look[0].lower() in "aeiou" else "a"
-    return f"{art} {look} {noun} in {pron} {age}"
+class _Looks:
+    """Deals individual features from shuffled decks, so every description differs from every other."""
+
+    def __init__(self, rng: random.Random):
+        self.rng, self.decks, self.seen = rng, {}, set()
+
+    def _card(self, name: str, values: list) -> str:
+        d = self.decks.setdefault(name, [])
+        if not d:
+            d += values
+            self.rng.shuffle(d)
+        return d.pop()
+
+    def who(self, gender: str, look: str, age: str) -> str:
+        noun = "woman" if gender == "Woman" else "man"
+        for _ in range(50):
+            years = self.rng.randint(*AGE_SPAN[age])
+            art = "an" if str(years).startswith("8") or years in (11, 18) else "a"
+            parts = [self._card("shape", FACE_SHAPE), self._card("hair" + gender, HAIR[gender]),
+                     self._card("brows", BROWS), self._card("feature", FEATURE)]
+            if gender == "Man":
+                parts.insert(2, self._card("beard", FACIAL_HAIR))
+            text = f"{art} {years}-year-old {look} {noun} with {', '.join(parts[:-1])} and {parts[-1]}"
+            if text not in self.seen:
+                self.seen.add(text)
+                return text
+        raise RuntimeError("could not find a new description")
 
 
 def build(pieces: list[dict], seed: int) -> list[dict]:
     """Manifest entries for a planned collection (generate.plan output)."""
     rng = random.Random(seed ^ 0x9E3779B9)
+    looks_ = _Looks(random.Random(seed ^ 0x51ED))
     out = []
     sets = [p for p in pieces if "set" in p and p["piece"] == 0]
     # sets: one portrait each, looks and ages dealt evenly inside each gender
@@ -87,7 +128,7 @@ def build(pieces: list[dict], seed: int) -> list[dict]:
         for p, look, age in zip(mine, looks, ages):
             t = p["traits"]
             light = "top" if t["Light"] == "Top" else "side"
-            who = _who(gender, look, age)
+            who = looks_.who(gender, look, age)
             out.append({"id": f"set-{p['set']}", "set": p["set"], "gender": gender, "look": look, "age": age,
                         "light": light, "expression": t["Expression"], "prompt": prompt(who, light, t["Expression"])})
     # singles: a pool per (light, expression), about CROPS_PER_PORTRAIT crops per portrait
@@ -102,7 +143,7 @@ def build(pieces: list[dict], seed: int) -> list[dict]:
         looks = _deck({x: 1 for x in LOOKS}, m, rng)
         ages = _deck(AGES, m, rng)
         for i in range(m):
-            who = _who(genders[i], looks[i], ages[i])
+            who = looks_.who(genders[i], looks[i], ages[i])
             out.append({"id": f"pool-{k}", "light": light, "expression": expression, "gender": genders[i],
                         "look": looks[i], "age": ages[i], "prompt": prompt(who, light, expression)})
             k += 1
@@ -190,6 +231,44 @@ def main():
         save(manifest)
         have = sum(1 for e in manifest if (DIR / f"{e['id']}.png").exists())
         print(f"{have}/{len(manifest)} portraits on disk")
+    elif cmd == "similar":  # portraits.py similar [threshold]: pairs of faces that look too much alike
+        sys.path.insert(0, str(ROOT))
+        import numpy as np
+        from PIL import Image
+        from neonfaces.photo import _bilinear, landmarks, load_portrait
+        thr = float(sys.argv[2]) if len(sys.argv) > 2 else 0.90
+        ids, vecs = [], []
+        t = np.linspace(-0.8, 0.8, 32)
+        gx, gy = np.meshgrid(t * 0.9, t + 0.45)  # eyes to chin, aligned on the eye line
+        for e in load():
+            f = DIR / f"{e['id']}.png"
+            if not f.exists():
+                continue
+            lum = load_portrait(f)
+            lm = landmarks(lum)
+            v = _bilinear(lum, lm["cx"] + gx * lm["unit"], lm["eye_y"] + gy * lm["unit"])
+            # keep the features, drop the broad lighting: subtract a 7x7 box blur
+            k = np.ones(7) / 7
+            blur = np.apply_along_axis(lambda r: np.convolve(r, k, mode="same"), 0, v)
+            blur = np.apply_along_axis(lambda r: np.convolve(r, k, mode="same"), 1, blur)
+            v = (v - blur).ravel()
+            v = v - v.mean()
+            ids.append(e["id"])
+            vecs.append(v / (np.linalg.norm(v) + 1e-9))
+        m = np.array(vecs) @ np.array(vecs).T
+        np.fill_diagonal(m, -1)
+        pairs = sorted(((m[i, j], ids[i], ids[j]) for i in range(len(ids)) for j in range(i + 1, len(ids)) if m[i, j] >= thr),
+                       reverse=True)
+        for sc, a, b in pairs[:40]:
+            print(f"{sc:.3f}  {a}  {b}")
+        print(f"{len(pairs)} pairs at or above {thr} among {len(ids)} portraits (regenerate one of each)")
+        if pairs:
+            tsz = 128
+            sheet = Image.new("L", (2 * tsz, min(len(pairs), 20) * tsz))
+            for k, (_, a, b) in enumerate(pairs[:20]):
+                for c, pid in enumerate((a, b)):
+                    sheet.paste(Image.open(DIR / f"{pid}.png").convert("L").resize((tsz, tsz)), (c * tsz, k * tsz))
+            sheet.save(DIR / "similar.png")
     elif cmd == "check":
         sys.path.insert(0, str(ROOT))
         from PIL import Image

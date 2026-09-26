@@ -53,7 +53,7 @@ const rand = (artId, i) => BigInt(keccak256(encodeAbiParameters([{ type: "uint25
 const dec2 = (v) => `${v / 100n}.${(v % 100n).toString().padStart(2, "0")}`;
 
 // Gaze: the neon blooms after 30 / 90 / 365 days with the same holder (NeonRenderer.gazeOf); a sale resets it.
-export const GAZE = ["", "Steady", "Fixed", "Burning"];
+export const GAZE = ["", "Steady", "Fixed", "Piercing"];
 const BLOOM = [null, ["0.6", ".35"], ["0.9", ".55"], ["1.2", ".8"]];
 
 /** Exactly the SVG the contract returns for (artId, record, gaze). */

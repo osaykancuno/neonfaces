@@ -109,7 +109,7 @@ contract NeonRenderer {
         return _image(tokenId, revealed ? artId : PLACEHOLDER_ART_ID, rec, set_.assembled ? set_.setId : 0, set_.fused);
     }
 
-    /// @notice Gaze level: 0, then 1 "Steady" / 2 "Fixed" / 3 "Burning" after 30 / 90 / 365 days with the same holder.
+    /// @notice Gaze level: 0, then 1 "Steady" / 2 "Fixed" / 3 "Piercing" after 30 / 90 / 365 days with the same holder.
     function gazeOf(uint256 tokenId) public view returns (uint8) {
         uint256 since = faces.heldSince(tokenId);
         if (since == 0) return 0;
@@ -460,7 +460,7 @@ contract NeonRenderer {
             '},{"trait_type":"Eyes Open Since","display_type":"date","value":',
             since.toString(),
             "}",
-            gaze == 0 ? bytes("") : _attr("Gaze", ["Steady", "Fixed", "Burning"][gaze - 1], true)
+            gaze == 0 ? bytes("") : _attr("Gaze", ["Steady", "Fixed", "Piercing"][gaze - 1], true)
         );
     }
 

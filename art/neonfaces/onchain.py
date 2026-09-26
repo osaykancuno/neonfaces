@@ -125,7 +125,7 @@ def _rand(art_id: int, i: int) -> int:
 # Gaze: the neon blooms the longer a Face stays with its holder (Unblinking >= 30 / 90 / 365 days).
 # level -> (blur radius in blocks, glow strength); a sale resets it.
 GAZE = {1: ("0.6", ".35"), 2: ("0.9", ".55"), 3: ("1.2", ".8")}
-GAZE_NAMES = {1: "Steady", 2: "Fixed", 3: "Burning"}
+GAZE_NAMES = {1: "Steady", 2: "Fixed", 3: "Piercing"}
 GAZE_DAYS = (30, 90, 365)
 
 

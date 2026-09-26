@@ -193,4 +193,7 @@ Needs a person, on purpose (each is a decision or a key only the team should hol
 anvil --chain-id 46630 &                                  # local, free
 RPC=http://127.0.0.1:8545 PK=<anvil key> ./contracts/script/rehearsal.sh
 RPC=https://rpc.testnet.chain.robinhood.com PK=<testnet key> ./contracts/script/rehearsal.sh   # real testnet
+anvil --chain-id 46630 --port 8548 &                      # a fresh node for the next line
+./contracts/script/launch-day.sh                          # every on-chain process of launch day, PASS/FAIL per check
 ```
+`rehearsal.sh` overwrites the tracked testnet addresses in `contracts/deployments/46630.json` when run locally: `git checkout` that file afterwards (`launch-day.sh` does it by itself). Use a fresh anvil for each run: several art uploads on one node raise its base fee until transactions fail.

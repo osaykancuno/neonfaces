@@ -133,7 +133,7 @@ Rule: shrink a Face to 48 px. If you can't tell it's a NEONFACE, the trait is to
 | Locked Until | date, while the holder has locked the account |
 | Unblinking Days | days since the Face last changed hands |
 | Eyes Open Since | date of the last transfer |
-| Gaze | Steady / Fixed / Burning after 30 / 90 / 365 days with the same holder; the neon blooms in the image |
+| Gaze | Steady / Fixed / Piercing after 30 / 90 / 365 days with the same holder; the neon blooms in the image |
 | Art ID | art piece assigned at reveal |
 
 Numbers on marketplaces: Set, Holds, Unblinking and Art ID are number traits (dates are date traits). OpenSea shows them as stats and leaves them out of trait filters and rarity scores: live balances would otherwise add a new filter value with every trade, and a Set value shared by only four Faces would rank every set piece above the rarest single. Rarity then comes from the art traits and the Stare tier. To find the other pieces of a set, the set hunter on the site lists them with their holders and an OpenSea link for each.

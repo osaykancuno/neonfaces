@@ -118,8 +118,8 @@ async function ownersByCall(client, address, functionName, snap, first, last, st
         found++;
       }
     });
-    // ids run out: an empty batch once we have seen the reported supply, or 5000 empty ids in a row (burned or
-    // never-minted ids leave gaps, and some contracts count burned tokens in totalSupply)
+    // ids run out: an empty batch once we have seen the reported supply, or 5000 empty ids in a row (retired or
+    // never-minted ids leave gaps, and some contracts count retired tokens in totalSupply)
     empty = found === 0 ? empty + 1 : 0;
     if (stopWhenEmpty && start > first && ((found === 0 && BigInt(owner.size) >= supply) || empty >= 10)) break;
   }

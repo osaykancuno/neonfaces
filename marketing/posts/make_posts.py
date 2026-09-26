@@ -147,7 +147,7 @@ def patience():
     draw_text(img, "PATIENCE SHOWS IN THE PICTURE.", 800, 96, 7, NEON, "center")
     size, gap = 336, 32
     x = 800 - (4 * size + 3 * gap) // 2
-    for level, label in enumerate(["DAY ONE", "STEADY", "FIXED", "BURNING"]):
+    for level, label in enumerate(["DAY ONE", "STEADY", "FIXED", "PIERCING"]):
         img.paste(gaze(level, size), (x + level * (size + gap), 220))
         draw_text(img, label, x + level * (size + gap) + size // 2, 588, 4, DIM if level < 3 else NEON, "center")
     draw_text(img, "A SALE RESETS IT. THE STARE BELONGS TO WHOEVER KEEPS IT.", 800, 690, 3, PALE, "center")

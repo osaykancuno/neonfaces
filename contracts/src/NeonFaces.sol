@@ -88,7 +88,7 @@ contract NeonFaces is ERC721, ERC2981, AccessControlDefaultAdminRules, IERC4906 
     // ---------------------------------------------------------------------
     // Storage
     // ---------------------------------------------------------------------
-    uint256 public totalSupply; // tokens minted (ids 1..totalSupply), there is no burn
+    uint256 public totalSupply; // tokens minted (ids 1..totalSupply); every Face exists for good
     uint256 public publicMinted;
     uint256 public teamMinted;
     bool public mintPaused;

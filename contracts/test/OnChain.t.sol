@@ -279,7 +279,7 @@ contract OnChainTest is Base {
         assertFalse(LibString.contains(_json(faces.tokenURI(1)), '"Gaze"'));
         assertFalse(LibString.contains(renderer.svgOf(1), 'filter="url(#b)"'));
 
-        string[3] memory names = ["Steady", "Fixed", "Burning"];
+        string[3] memory names = ["Steady", "Fixed", "Piercing"];
         uint256[3] memory days_ = [uint256(30), 90, 365];
         uint256 start = block.timestamp;
         for (uint256 i; i < 3; ++i) {

@@ -405,7 +405,7 @@ contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     /// @dev (seed, n, slot, a⁻¹); seed 0 while unrevealed or for nonexistent tokens.
     function _slot(uint256 tokenId) internal view returns (uint256 seed, uint256 n, uint256 p, uint256 inv) {
         seed = faces.revealSeed();
-        n = faces.totalSupply(); // ids 1..n, no burn, minting closed before the reveal seed exists
+        n = faces.totalSupply(); // ids 1..n, all still exist, minting closed before the reveal seed exists
         if (seed == 0 || tokenId == 0 || tokenId > n) return (0, 0, 0, 0);
         uint256 a;
         uint256 b;

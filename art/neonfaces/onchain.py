@@ -30,17 +30,17 @@ ONCHAIN_TRAITS = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expressi
 HEADER = 1 + len(ONCHAIN_TRAITS)
 ART_COUNT = 5555
 TRAIT_VALUES = {
-    "Crop": ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge",
-             "Left eye", "Right eye", "Left mouth", "Right mouth"],
+    "Crop": ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile Edge",
+             "Left Eye", "Right Eye", "Left Mouth", "Right Mouth"],
     "Density": ["Sparse", "Mid", "Heavy"],
     "Neon": ["Standard", "Deep", "Hot"],
-    "Edge": ["Stair-step", "Hard cut", "Bleed dither"],
-    "Grain": ["Clean print", "Dusty", "Heavy scan"],
+    "Edge": ["Stair Step", "Hard Cut", "Bleed Dither"],
+    "Grain": ["Clean Print", "Dusty", "Heavy Scan"],
     "Light": ["Left", "Right", "Top"],
     "Expression": ["Flat", "Squint", "Glare", "Wide", "Tense"],
     "Accessory": ["None", "Mole", "Scar", "Stud", "Tape", "Visor"],
     "Block": ["Standard", "Fine", "Coarse"],
-    "Anomaly": ["None", "Dead pixel", "Inverted blocks", "Extra-wide crop", "Double-eye fragment"],
+    "Anomaly": ["None", "Dead Pixel", "Inverted Blocks", "Extra-Wide Crop", "Double-Eye Fragment"],
     "Face": ["None", "Woman", "Man"],
 }
 NEON_ORDER = TRAIT_VALUES["Neon"]
@@ -185,7 +185,7 @@ def _svg(art_id: int, recs: list[bytes], side: int, gaze: int = 0) -> str:
             (dark if (r >> 96) % 10 < 7 else light).append(seg)
         s.append(f'<path fill="#000" fill-opacity=".35" d="{"".join(dark)}"/>')
         s.append(f'<path fill="#fff" fill-opacity=".22" d="{"".join(light)}"/>')
-    elif grain == "Heavy scan":
+    elif grain == "Heavy Scan":
         r = _rand(art_id, 1000)
         sx = r % (g * 100 - 100)
         sw = 20 + (r >> 32) % 80
@@ -245,7 +245,7 @@ def raster_preview(art_id: int, rec: bytes, size: int = 1200, idx=None):
                 img[y:y + sz, x:x + sz] *= 0.65
             else:
                 img[y:y + sz, x:x + sz] = img[y:y + sz, x:x + sz] * 0.78 + 255 * 0.22
-    elif grain == "Heavy scan":
+    elif grain == "Heavy Scan":
         half = scale // 2
         for y0 in range(0, size, half):
             img[y0:y0 + max(1, int(half * 0.3))] *= 0.72

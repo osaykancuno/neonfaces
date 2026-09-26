@@ -141,8 +141,8 @@ contract NeonRenderer {
     }
 
     /// @dev Set attributes: "Set" n (a number, so marketplaces keep it out of rarity scores: every set is shared
-    /// by only four Faces, which would rank any set piece above the rarest single), "Set status" (Assembled /
-    /// Inside another piece: two values, the ids go in the description) and the one-time "Set bonus" (with its
+    /// by only four Faces, which would rank any set piece above the rarest single), "Set Status" (Assembled /
+    /// Inside Another Piece: two values, the ids go in the description) and the one-time "Set Bonus" (with its
     /// legs when this Face received it, so "Holds" lists them). `note` is the sentence added to the description.
     struct SetInfo {
         uint256 setId;
@@ -164,9 +164,9 @@ contract NeonRenderer {
         if (info.assembled) {
             (uint32 fusedInto, uint64 fusedAt) = seeder.fusedSet(setId);
             info.fused = fusedInto != 0;
-            info.attrs = abi.encodePacked(info.attrs, _attr("Set status", info.fused ? "Fused" : "Assembled", true));
+            info.attrs = abi.encodePacked(info.attrs, _attr("Set Status", info.fused ? "Fused" : "Assembled", true));
             if (info.fused) {
-                info.attrs = abi.encodePacked(info.attrs, ',{"trait_type":"Fused since","display_type":"date","value":', uint256(fusedAt).toString(), "}");
+                info.attrs = abi.encodePacked(info.attrs, ',{"trait_type":"Fused Since","display_type":"date","value":', uint256(fusedAt).toString(), "}");
             }
             bytes memory note = abi.encodePacked(" It holds the other three pieces of set ", setId.toString(), " (");
             uint256 listed;
@@ -184,7 +184,7 @@ contract NeonRenderer {
             address owner = faces.ownerOf(tokenId);
             for (uint256 q; q < 4; ++q) {
                 if (members[q] != tokenId && owner == seeder.accountOf(members[q])) {
-                    info.attrs = abi.encodePacked(info.attrs, _attr("Set status", "Inside another piece", true));
+                    info.attrs = abi.encodePacked(info.attrs, _attr("Set Status", "Inside Another Piece", true));
                     info.note = abi.encodePacked(" It sits inside Face #", members[q].toString(), ", a piece of the same set.");
                 }
             }
@@ -192,7 +192,7 @@ contract NeonRenderer {
         (uint32 anchorId, uint32 basketId) = seeder.setBonus(setId);
         if (anchorId == tokenId) {
             info.bonus = seeder.basket(basketId);
-            info.attrs = abi.encodePacked(info.attrs, _attr("Set bonus", _basketLabel(info.bonus), true));
+            info.attrs = abi.encodePacked(info.attrs, _attr("Set Bonus", _basketLabel(info.bonus), true));
         }
     }
 
@@ -363,18 +363,18 @@ contract NeonRenderer {
     function _traits(bytes memory rec) internal pure returns (string[11] memory n, string[11] memory v) {
         n = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expression", "Accessory", "Block", "Anomaly", "Face"];
         v[0] = [
-            "Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge", "Left eye", "Right eye", "Left mouth",
-            "Right mouth"
+            "Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile Edge", "Left Eye", "Right Eye", "Left Mouth",
+            "Right Mouth"
         ][uint8(rec[1])];
         v[1] = ["Sparse", "Mid", "Heavy"][uint8(rec[2])];
         v[2] = ["Standard", "Deep", "Hot"][uint8(rec[3])];
-        v[3] = ["Stair-step", "Hard cut", "Bleed dither"][uint8(rec[4])];
-        v[4] = ["Clean print", "Dusty", "Heavy scan"][uint8(rec[5])];
+        v[3] = ["Stair Step", "Hard Cut", "Bleed Dither"][uint8(rec[4])];
+        v[4] = ["Clean Print", "Dusty", "Heavy Scan"][uint8(rec[5])];
         v[5] = ["Left", "Right", "Top"][uint8(rec[6])];
         v[6] = ["Flat", "Squint", "Glare", "Wide", "Tense"][uint8(rec[7])];
         v[7] = ["None", "Mole", "Scar", "Stud", "Tape", "Visor"][uint8(rec[8])];
         v[8] = ["Standard", "Fine", "Coarse"][uint8(rec[9])];
-        v[9] = ["None", "Dead pixel", "Inverted blocks", "Extra-wide crop", "Double-eye fragment"][uint8(rec[10])];
+        v[9] = ["None", "Dead Pixel", "Inverted Blocks", "Extra-Wide Crop", "Double-Eye Fragment"][uint8(rec[10])];
         v[10] = ["", "Woman", "Man"][uint8(rec[11])];
     }
 
@@ -438,7 +438,7 @@ contract NeonRenderer {
         return n + 1;
     }
 
-    /// @dev "Locked until" (date) while the Face account is locked, by its own lock or the lock of a Face it sits
+    /// @dev "Locked Until" (date) while the Face account is locked, by its own lock or the lock of a Face it sits
     /// inside: a buyer's guarantee the contents stay put.
     function _lock(address account) internal view returns (bytes memory) {
         if (account.code.length == 0) return "";
@@ -446,7 +446,7 @@ contract NeonRenderer {
         if (!ok || r.length < 32) return "";
         uint256 until = abi.decode(r, (uint256));
         if (until <= block.timestamp) return "";
-        return abi.encodePacked(',{"trait_type":"Locked until","display_type":"date","value":', until.toString(), "}");
+        return abi.encodePacked(',{"trait_type":"Locked Until","display_type":"date","value":', until.toString(), "}");
     }
 
     /// @dev "Unblinking": days the current holder has kept the Face + the date its eyes opened + the Gaze it earned.
@@ -455,9 +455,9 @@ contract NeonRenderer {
         if (since == 0) return "";
         uint8 gaze = gazeOf(tokenId);
         return abi.encodePacked(
-            ',{"trait_type":"Unblinking (days)","display_type":"number","value":',
+            ',{"trait_type":"Unblinking Days","display_type":"number","value":',
             ((block.timestamp - since) / 1 days).toString(),
-            '},{"trait_type":"Eyes open since","display_type":"date","value":',
+            '},{"trait_type":"Eyes Open Since","display_type":"date","value":',
             since.toString(),
             "}",
             gaze == 0 ? bytes("") : _attr("Gaze", ["Steady", "Fixed", "Burning"][gaze - 1], true)

@@ -48,7 +48,7 @@ def main():
         for k, a in enumerate(rng.sample(pool, 2), 1):
             raster_preview(a["artId"], record(a["artId"]), 960).resize((320, 320)).save(IMG / f"face-{stare.lower().replace(' ', '-')}-{k}.png", optimize=True)
 
-    heads = [a for a in art if a.get("piece") == 0 and trait(a, "Grain") != "Heavy scan"]
+    heads = [a for a in art if a.get("piece") == 0 and trait(a, "Grain") != "Heavy Scan"]
     picks = [rng.choice([a for a in heads if trait(a, "Face") == "Woman" and trait(a, "Stare") == "Watch"]),
              rng.choice([a for a in heads if trait(a, "Face") == "Man" and trait(a, "Stare") == "Glance"])]
     for a in picks:
@@ -58,7 +58,7 @@ def main():
         raster_set_preview(a["set"], recs, 960).resize((480, 480)).save(IMG / f"set-{a['set']}.png", optimize=True)
 
     # the Gaze reads best on a dark face: neon bleeding into black
-    a = rng.choice([h for h in heads if trait(h, "Density") == "Heavy" and trait(h, "Grain") == "Clean print" and trait(h, "Edge") == "Stair-step"])
+    a = rng.choice([h for h in heads if trait(h, "Density") == "Heavy" and trait(h, "Grain") == "Clean Print" and trait(h, "Edge") == "Stair Step"])
     recs = [record(a["artId"] + q) for q in range(4)]
     for g in range(4):
         (IMG / f"gaze-{g}.svg").write_text(render_set_svg(a["set"], recs, g))

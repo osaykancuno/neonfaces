@@ -34,7 +34,7 @@ SINGLE_TIERS = {1: 2668, 2: 501, 3: 166}
 SET_TIERS = {1: 444, 2: 83, 3: 28}
 for _t, (_, _c) in TIERS.items():
     assert SINGLE_TIERS[_t] + 4 * SET_TIERS[_t] == _c
-PIECES = ["Left eye", "Right eye", "Left mouth", "Right mouth"]
+PIECES = ["Left Eye", "Right Eye", "Left Mouth", "Right Mouth"]
 # every set is a woman or a man, half and half inside each tier
 FACE = {"Woman": 50, "Man": 50}
 
@@ -42,17 +42,17 @@ FACE = {"Woman": 50, "Man": 50}
 GLOBAL = {
     "Crop": {
         "Eye": 20, "Nose": 18, "Brow": 14, "Cheek": 14,
-        "Temple": 12, "Mouth": 12, "Profile-edge": 10,
+        "Temple": 12, "Mouth": 12, "Profile Edge": 10,
     },
-    "Grain": {"Clean print": 45, "Dusty": 38, "Heavy scan": 17},
-    "Edge": {"Stair-step": 50, "Hard cut": 30, "Bleed dither": 20},
+    "Grain": {"Clean Print": 45, "Dusty": 38, "Heavy Scan": 17},
+    "Edge": {"Stair Step": 50, "Hard Cut": 30, "Bleed Dither": 20},
     "Light": {"Left": 42, "Right": 42, "Top": 16},
     "Expression": {"Flat": 34, "Squint": 22, "Glare": 18, "Wide": 14, "Tense": 12},
     "Accessory": {"None": 64, "Mole": 10, "Scar": 8, "Stud": 7, "Tape": 6, "Visor": 5},
     "Block": {"Standard": 53, "Fine": 25, "Coarse": 22},
     "Anomaly": {
-        "None": 90.5, "Dead pixel": 4.0, "Inverted blocks": 2.5,
-        "Extra-wide crop": 2.0, "Double-eye fragment": 1.0,
+        "None": 90.5, "Dead Pixel": 4.0, "Inverted Blocks": 2.5,
+        "Extra-Wide Crop": 2.0, "Double-Eye Fragment": 1.0,
     },
 }
 

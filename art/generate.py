@@ -179,14 +179,14 @@ def work(job):
 
 def placeholder_record() -> bytes:
     """Pre-reveal art: an inverted, hard-cut open eye (neon lines on black)."""
-    p = FaceParams(crop="Eye", edge="Hard cut", light="Top", density="Mid", expression="Wide", grain="Heavy scan")
+    p = FaceParams(crop="Eye", edge="Hard Cut", light="Top", density="Mid", expression="Wide", grain="Heavy Scan")
     rng = np.random.default_rng(4663)
     sample_anatomy(p, rng)
     p.extra["bg"] = 0.03
     win = Window(0.40, -0.02, 0.7, 0.0, False)
-    idx = quantize(render_grid(p, win, 24, rng), "Hard cut")
+    idx = quantize(render_grid(p, win, 24, rng), "Hard Cut")
     idx = (5 - idx).astype(np.uint8)
-    traits = {"Crop": "Eye", "Density": "Mid", "Neon": "Standard", "Edge": "Hard cut", "Grain": "Heavy scan",
+    traits = {"Crop": "Eye", "Density": "Mid", "Neon": "Standard", "Edge": "Hard Cut", "Grain": "Heavy Scan",
               "Light": "Top", "Expression": "Wide", "Accessory": "None", "Block": "Standard", "Anomaly": "None"}
     return encode_record(idx, traits)
 
@@ -319,12 +319,12 @@ def main():
 
     # byte-exact fixtures for the Solidity renderer tests: one of each grain + the placeholder
     fixtures = []
-    for grain in ("Clean print", "Dusty", "Heavy scan"):
+    for grain in ("Clean Print", "Dusty", "Heavy Scan"):
         a = next(x for x in art if next(t["value"] for t in x["attributes"] if t["trait_type"] == "Grain") == grain)
         rec = records[a["artId"]]
         fixtures.append({"artId": a["artId"], "record": "0x" + rec.hex(), "svg": render_svg(a["artId"], rec)})
     fixtures.append({"artId": 5555, "record": "0x" + ph.hex(), "svg": render_svg(5555, ph)})
-    first = next(x for x in art if "set" in x and next(t["value"] for t in x["attributes"] if t["trait_type"] == "Grain") != "Clean print")
+    first = next(x for x in art if "set" in x and next(t["value"] for t in x["attributes"] if t["trait_type"] == "Grain") != "Clean Print")
     set_recs = records[first["artId"]:first["artId"] + 4]
     set_fixture = {"set": first["set"], "artId": first["artId"], "records": ["0x" + r.hex() for r in set_recs],
                    "svg": render_set_svg(first["set"], set_recs)}

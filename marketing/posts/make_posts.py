@@ -156,8 +156,15 @@ def patience():
 
 
 def on_chain_wall():
-    wall = Image.open(ROOT / "marketing" / "teasers" / "2-watching-start.png").convert("RGB")
-    img = wall.resize((1600, 900), Image.NEAREST).point(lambda v: int(v * 0.35))
+    # a wall of the collection's close-ups (art/output/images, written by art/generate.py)
+    import json, random
+    arts = json.loads((ROOT / "art" / "output" / "art.json").read_text())
+    ids = random.Random(4).sample([a["artId"] for a in arts if "set" not in a], 16 * 9)
+    img = Image.new("RGB", (1600, 900), INK)
+    for k, aid in enumerate(ids):
+        tile = Image.open(ROOT / "art" / "output" / "images" / f"{aid}.png").convert("RGB").resize((100, 100), Image.NEAREST)
+        img.paste(tile, ((k % 16) * 100, (k // 16) * 100))
+    img = img.point(lambda v: int(v * 0.35))
     band_h = 230
     img.paste(INK, (0, 450 - band_h // 2, 1600, 450 + band_h // 2))
     img.paste(NEON, (0, 450 - band_h // 2, 1600, 450 - band_h // 2 + 4))

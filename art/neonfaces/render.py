@@ -65,8 +65,8 @@ class FaceParams:
     # traits
     crop: str = "Nose"
     density: str = "Mid"
-    grain: str = "Clean print"
-    edge: str = "Stair-step"
+    grain: str = "Clean Print"
+    edge: str = "Stair Step"
     neon: str = "Standard"
     light: str = "Left"
     expression: str = "Flat"
@@ -107,7 +107,7 @@ CROPS = {
     "Mouth": (0.10, 0.80, 0.86),
     "Temple": (0.72, -0.26, 0.86),
     "Cheek": (0.50, 0.30, 0.88),
-    "Profile-edge": (0.92, 0.18, 1.05),
+    "Profile Edge": (0.92, 0.18, 1.05),
 }
 
 
@@ -441,18 +441,18 @@ BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
 
 def quantize(lum: np.ndarray, edge: str) -> np.ndarray:
     """block luminance -> palette index (0..5)."""
-    if edge == "Hard cut":
+    if edge == "Hard Cut":
         # three hard tones: black / olive / neon
         idx = np.where(lum < 0.30, 0, np.where(lum < 0.58, 2, 5))
         return idx.astype(np.uint8)
-    if edge == "Bleed dither":
+    if edge == "Bleed Dither":
         h, w = lum.shape
         bayer = np.tile(BAYER4, (h // 4 + 1, w // 4 + 1))[:h, :w]
         levels = np.array([0, 1, 3, 5])
         v = np.clip(lum * 1.05, 0, 1) * (len(levels) - 1) + bayer * 0.95
         k = np.clip(np.round(v), 0, len(levels) - 1).astype(int)
         return levels[k].astype(np.uint8)
-    # Stair-step: full 6-tone ramp
+    # Stair Step: full 6-tone ramp
     v = np.clip(lum, 0, 1) ** 1.05
     thresholds = np.array([0.20, 0.34, 0.47, 0.60, 0.72])
     return np.searchsorted(thresholds, v).astype(np.uint8)
@@ -523,7 +523,7 @@ def apply_accessory(idx, p, win, grid, rng):
 def apply_anomaly(idx, p, grid, rng, extra_idx=None):
     a = p.anomaly
     g = grid
-    if a == "Inverted blocks":
+    if a == "Inverted Blocks":
         h = int(rng.integers(g // 4, g // 2))
         w = int(rng.integers(g // 4, g // 2))
         r0 = int(rng.integers(0, g - h))
@@ -531,7 +531,7 @@ def apply_anomaly(idx, p, grid, rng, extra_idx=None):
         sub = idx[r0:r0 + h, c0:c0 + w]
         base = sub < N_TONES
         sub[base] = (N_TONES - 1) - sub[base]
-    elif a == "Dead pixel":
+    elif a == "Dead Pixel":
         cells = _bright_cells(idx, lo=0, margin=1)
         r, c = cells[rng.integers(len(cells))]
         n = int(rng.integers(3, 7))
@@ -539,7 +539,7 @@ def apply_anomaly(idx, p, grid, rng, extra_idx=None):
             idx[r, c] = IDX_DEAD
             r = int(np.clip(r + rng.integers(-1, 2), 0, g - 1))
             c = int(np.clip(c + rng.integers(-1, 2), 0, g - 1))
-    elif a == "Double-eye fragment" and extra_idx is not None:
+    elif a == "Double-Eye Fragment" and extra_idx is not None:
         h = max(4, int(g * rng.uniform(0.28, 0.36)))
         w = max(6, int(g * rng.uniform(0.45, 0.6)))
         r0 = int(rng.integers(0, g - h))
@@ -579,7 +579,7 @@ def to_image(idx, palette, grain, rng) -> Image.Image:
             ys = (y0 + np.cumsum(rng.integers(-1, 2, ln))).clip(0, OUT_SIZE - 3)
             for i in range(ln):
                 img[ys[i]:ys[i] + 3, x0 + i] *= 0.65
-    elif grain == "Heavy scan":
+    elif grain == "Heavy Scan":
         # scanlines
         img[::6] *= 0.80
         img[1::6] *= 0.90
@@ -616,12 +616,12 @@ def render_face(p: FaceParams, seed: int, with_image: bool = True) -> tuple[Imag
     else:
         p.extra["bg"] = 0.03 if rng.random() < 0.6 else 0.97
 
-    block = "Micro" if p.anomaly == "Extra-wide crop" else p.block
+    block = "Micro" if p.anomaly == "Extra-Wide Crop" else p.block
     grid = BLOCK_GRID[block]
     cx, cy, size = CROPS[p.crop]
     side = -1.0 if rng.random() < 0.5 else 1.0
     size *= rng.uniform(0.9, 1.1)
-    if p.anomaly == "Extra-wide crop":
+    if p.anomaly == "Extra-Wide Crop":
         size *= 1.55
         cx *= 0.75
     win = Window(
@@ -636,7 +636,7 @@ def render_face(p: FaceParams, seed: int, with_image: bool = True) -> tuple[Imag
     idx = quantize(lum, p.edge)
 
     extra_idx = None
-    if p.anomaly == "Double-eye fragment":
+    if p.anomaly == "Double-Eye Fragment":
         ew = Window(cx=-win.cx if abs(win.cx) > 0.2 else p.eye_dx, cy=p.eye_y, size=0.55, rot=win.rot * 0.5, flip=False)
         extra_idx = quantize(render_grid(p, ew, grid, rng), p.edge)
 
@@ -654,7 +654,7 @@ def render_face(p: FaceParams, seed: int, with_image: bool = True) -> tuple[Imag
 # --------------------------------------------------------------------------
 # Sets: one full face at 2G x 2G, split into 4 seamless G x G pieces
 # --------------------------------------------------------------------------
-PIECES = ["Left eye", "Right eye", "Left mouth", "Right mouth"]  # as seen: top-left, top-right, bottom-left, bottom-right
+PIECES = ["Left Eye", "Right Eye", "Left Mouth", "Right Mouth"]  # as seen: top-left, top-right, bottom-left, bottom-right
 
 
 def render_set(p: FaceParams, seed: int) -> tuple[np.ndarray, list[str]]:

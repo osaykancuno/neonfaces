@@ -199,12 +199,12 @@ def render_photo_face(lum, lm, p: FaceParams, seed: int, side: float):
     """A single close-up: the Crop window of the portrait, on one side of the face (`side` = -1 / +1)."""
     rng = np.random.default_rng(seed)
     _params_from(lm, p, rng)
-    block = "Micro" if p.anomaly == "Extra-wide crop" else p.block
+    block = "Micro" if p.anomaly == "Extra-Wide Crop" else p.block
     grid = BLOCK_GRID[block]
     cx, cy, size = CROPS[p.crop]
     # every single is framed its own way: tighter or looser, off-centre, slightly turned
     size *= rng.uniform(0.78, 1.28)
-    if p.anomaly == "Extra-wide crop":
+    if p.anomaly == "Extra-Wide Crop":
         size *= 1.55
         cx *= 0.75
     win = Window(
@@ -217,7 +217,7 @@ def render_photo_face(lum, lm, p: FaceParams, seed: int, side: float):
     mirror = p.light == "Right" or (p.light == "Top" and rng.random() < 0.5)
     idx = quantize(photo_grid(lum, lm, p, win, grid, mirror), p.edge)
     extra_idx = None
-    if p.anomaly == "Double-eye fragment":
+    if p.anomaly == "Double-Eye Fragment":
         ew = Window(cx=-win.cx if abs(win.cx) > 0.2 else lm["eye_dx"], cy=0.0, size=0.55, rot=win.rot * 0.5, flip=False)
         extra_idx = quantize(photo_grid(lum, lm, p, ew, grid, mirror), p.edge)
     idx = apply_accessory(idx, p, win, grid, rng)

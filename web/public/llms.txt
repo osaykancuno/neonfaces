@@ -13,7 +13,7 @@ Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, loc
 ## Read a Face directly
 
 - Addresses: https://neonfaces.xyz/deployment.json (`faces`, `seeder`, `trader`, `strategyAgent`, `tradeTokens`, `chain.rpcUrl`).
-- `NeonFaces.tokenURI(id)`: on-chain JSON (image, traits, "account", "Holds <TICKER>", Set, Gaze, Unblinking, Locked until).
+- `NeonFaces.tokenURI(id)`: on-chain JSON (image, traits, "account", "Holds <TICKER>", Set, Gaze, Unblinking, Locked Until).
 - `NeonSeeder.accountOf(id)`: the Face's wallet. `NeonSeeder.setOf(id)`: set id, piece, the four token ids. `isAssembled(id)`, `fusedSet(setId)` (anchor and date of a set fused for good), `setBonusDue(id)`.
 - `NeonSetVotes.pollCount()`, `poll(id)` (question, choices, window, results): the assembled sets' advisory say (`deployment.json` field `setVotes`).
 - `NeonTrader.price(token)`: Chainlink USD price (8 decimals); reverts when stale (stock feeds pause at weekends).

@@ -271,8 +271,9 @@
   <section id="art" class="col">
     <span class="label">Art</span>
     <h2>The art lives on the chain</h2>
-    <p>Most collections keep their images on a server or on IPFS, and the NFT only points at them. NEONFACES stores the pixels themselves on Robinhood Chain: every Face is a grid of 20 to 40 blocks, about 168 bytes, and the contract draws the image and writes its description every time someone asks. No server, no link that can break.</p>
-    <p>The full set was sealed against a fingerprint published before the first mint, so nobody can swap the art later. There are twelve traits (crop, light, grain, expression, accessories and more) with exact counts over the 5555 artworks, published before the mint.</p>
+    <p>Most collections keep their images on a server or on IPFS, and the NFT only points at them. NEONFACES stores the pixels themselves on Robinhood Chain: every Face is a grid of 20 to 40 blocks, about 190 bytes, and the contract draws the image and writes its description every time someone asks. No server, no link that can break.</p>
+    <p>Every face starts from a black-and-white portrait of a person who doesn't exist, generated for the collection: 555 different people for the sets, others for the close-ups. Only the pixels made from them are stored, and they are the art.</p>
+      <p>The full set was sealed against a fingerprint published before the first mint, so nobody can swap the art later. There are twelve traits (crop, light, grain, expression, accessories and more) with exact counts over the 5555 artworks, published before the mint.</p>
   </section>
 
   <section id="tiers">
@@ -334,13 +335,13 @@
     </div>
     <div class="sets">
       <div class="set">
-        <div class="quad"><img src="img/set-518-0.png" width="240" height="240" alt="Left eye"><img src="img/set-518-1.png" width="240" height="240" alt="Right eye"><img src="img/set-518-2.png" width="240" height="240" alt="Left mouth"><img src="img/set-518-3.png" width="240" height="240" alt="Right mouth"></div>
+        <div class="quad"><img src="img/set-518-0.png" width="240" height="240" alt="Left Eye"><img src="img/set-518-1.png" width="240" height="240" alt="Right Eye"><img src="img/set-518-2.png" width="240" height="240" alt="Left Mouth"><img src="img/set-518-3.png" width="240" height="240" alt="Right Mouth"></div>
         <span class="arrow" aria-hidden="true">&gt;</span>
         <img src="img/set-518.png" width="480" height="480" alt="Set 518 assembled: a woman's whole face">
         <p>Set #518 · Woman · Watch</p>
       </div>
       <div class="set">
-        <div class="quad"><img src="img/set-337-0.png" width="240" height="240" alt="Left eye"><img src="img/set-337-1.png" width="240" height="240" alt="Right eye"><img src="img/set-337-2.png" width="240" height="240" alt="Left mouth"><img src="img/set-337-3.png" width="240" height="240" alt="Right mouth"></div>
+        <div class="quad"><img src="img/set-337-0.png" width="240" height="240" alt="Left Eye"><img src="img/set-337-1.png" width="240" height="240" alt="Right Eye"><img src="img/set-337-2.png" width="240" height="240" alt="Left Mouth"><img src="img/set-337-3.png" width="240" height="240" alt="Right Mouth"></div>
         <span class="arrow" aria-hidden="true">&gt;</span>
         <img src="img/set-337.png" width="480" height="480" alt="Set 337 assembled: a man's whole face">
         <p>Set #337 · Man · Glance</p>
@@ -401,7 +402,7 @@
   <section id="lock" class="col">
     <span class="label">Buying and selling safely</span>
     <h2>Lock before you list</h2>
-    <p>A seller could empty a Face's wallet right before a sale goes through. NEONFACES prevents that: the holder can <strong>lock</strong> the wallet until a date. Until then nothing can leave it, not by the holder, not by an agent, not by a signature, not even from the set pieces sitting inside it, and the lock stays in place after the sale. Buyers see "Locked until" in the traits, and the Face page lists any token approval left open.</p>
+    <p>A seller could empty a Face's wallet right before a sale goes through. NEONFACES prevents that: the holder can <strong>lock</strong> the wallet until a date. Until then nothing can leave it, not by the holder, not by an agent, not by a signature, not even from the set pieces sitting inside it, and the lock stays in place after the sale. Buyers see "Locked Until" in the traits, and the Face page lists any token approval left open.</p>
   </section>
 
   <section id="journal" class="col">
@@ -435,7 +436,7 @@
       </div>
       <div class="cam-seg" data-opt="cells"><span>Cells</span><button type="button" data-v="24" aria-pressed="true">24</button><button type="button" data-v="32" aria-pressed="false">32</button><button type="button" data-v="48" aria-pressed="false">48</button></div>
       <div class="cam-seg" data-opt="neon"><span>Neon</span><button type="button" data-v="0" aria-pressed="true">Standard</button><button type="button" data-v="1" aria-pressed="false">Deep</button><button type="button" data-v="2" aria-pressed="false">Hot</button></div>
-      <div class="cam-seg" data-opt="grain"><span>Grain</span><button type="button" data-v="0" aria-pressed="true">Clean print</button><button type="button" data-v="1" aria-pressed="false">Dusty</button><button type="button" data-v="2" aria-pressed="false">Heavy scan</button></div>
+      <div class="cam-seg" data-opt="grain"><span>Grain</span><button type="button" data-v="0" aria-pressed="true">Clean Print</button><button type="button" data-v="1" aria-pressed="false">Dusty</button><button type="button" data-v="2" aria-pressed="false">Heavy Scan</button></div>
       <div class="cam-seg" data-opt="gaze"><span>Gaze</span><button type="button" data-v="0" aria-pressed="true">None</button><button type="button" data-v="1" aria-pressed="false">Steady</button><button type="button" data-v="2" aria-pressed="false">Fixed</button><button type="button" data-v="3" aria-pressed="false">Burning</button></div>
     </div>
   </section>
@@ -587,7 +588,7 @@
           g.fillStyle = rnd() < 0.7 ? "rgba(0,0,0,.35)" : "rgba(255,255,255,.22)";
           g.fillRect(x, y, w, w);
         }
-      } else if (opt.grain === 2) { // Heavy scan: a line every half cell, a light band, noise
+      } else if (opt.grain === 2) { // Heavy Scan: a line every half cell, a light band, noise
         g.fillStyle = "rgba(0,0,0,.28)";
         for (let y = 0; y < size; y += cell / 2) g.fillRect(0, y, size, cell * 0.15);
         g.fillStyle = "rgba(255,255,255,.08)";

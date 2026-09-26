@@ -2,7 +2,7 @@
 
 5555 close-up faces on **Robinhood Chain** (chain id 4663). Every Face is an account.
 
-- **Fully on-chain pixel art.** Each Face is a 20–40 block grid (~168 bytes, RLE) stored in contract bytecode (SSTORE2). `tokenURI` draws the SVG and writes the JSON on-chain. No IPFS, no server.
+- **Fully on-chain pixel art.** Each Face is a 20–40 block grid (~190 bytes, RLE) stored in contract bytecode (SSTORE2), made from a portrait of a person who doesn't exist. `tokenURI` draws the SVG and writes the JSON on-chain. No IPFS, no server.
 - **Minted on OpenSea.** The drop runs on OpenSea through SeaDrop; the token itself creates each Face's account and seed during that mint. The site presents the project and is where holders manage their Faces.
 - **Every Face is a wallet.** An ERC-6551 Token Bound Account is created through the canonical registry in the mint transaction and filled with a base basket of Stock Tokens from the seed pool.
 - **The mint funds itself.** 55% of the split goes to `NeonSeedVault`, which can only buy basket tokens (Uniswap v3, Chainlink-checked prices) straight into the pool; `tools/seed-keeper.mjs` runs it during the sale. No inventory is needed before the first mint.

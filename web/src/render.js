@@ -5,16 +5,16 @@ import { keccak256, encodeAbiParameters, hexToBytes } from "viem";
 
 export const TRAITS = ["Crop", "Density", "Neon", "Edge", "Grain", "Light", "Expression", "Accessory", "Block", "Anomaly", "Face"];
 export const VALUES = [
-  ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile-edge", "Left eye", "Right eye", "Left mouth", "Right mouth"],
+  ["Eye", "Nose", "Brow", "Cheek", "Temple", "Mouth", "Profile Edge", "Left Eye", "Right Eye", "Left Mouth", "Right Mouth"],
   ["Sparse", "Mid", "Heavy"],
   ["Standard", "Deep", "Hot"],
-  ["Stair-step", "Hard cut", "Bleed dither"],
-  ["Clean print", "Dusty", "Heavy scan"],
+  ["Stair Step", "Hard Cut", "Bleed Dither"],
+  ["Clean Print", "Dusty", "Heavy Scan"],
   ["Left", "Right", "Top"],
   ["Flat", "Squint", "Glare", "Wide", "Tense"],
   ["None", "Mole", "Scar", "Stud", "Tape", "Visor"],
   ["Standard", "Fine", "Coarse"],
-  ["None", "Dead pixel", "Inverted blocks", "Extra-wide crop", "Double-eye fragment"],
+  ["None", "Dead Pixel", "Inverted Blocks", "Extra-Wide Crop", "Double-Eye Fragment"],
   ["", "Woman", "Man"],
 ];
 export const PALETTES = [
@@ -26,7 +26,7 @@ const BG = 5;
 const HEADER = 12;
 export const ART_COUNT = 5555;
 export const SINGLES = 3335; // set k (1..555) = art ids SINGLES + 4(k-1) .. +3
-export const PIECES = ["Left eye", "Right eye", "Left mouth", "Right mouth"];
+export const PIECES = ["Left Eye", "Right Eye", "Left Mouth", "Right Mouth"];
 
 const bytesOf = (rec) => (typeof rec === "string" ? hexToBytes(rec) : rec);
 

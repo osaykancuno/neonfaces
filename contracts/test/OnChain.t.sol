@@ -202,7 +202,7 @@ contract OnChainTest is Base {
         string memory a = _json(faces.tokenURI(m[0]));
         _checkJson(a);
         assertTrue(LibString.contains(a, string.concat('"trait_type":"Set","display_type":"number","value":', vm.toString(setId), "}")));
-        assertTrue(LibString.contains(a, '"trait_type":"Set status","value":"Assembled"'));
+        assertTrue(LibString.contains(a, '"trait_type":"Set Status","value":"Assembled"'));
         assertTrue(LibString.contains(a, string.concat("It holds the other three pieces of set ", vm.toString(setId), " (#", vm.toString(m[1]), ", #", vm.toString(m[2]), ", #", vm.toString(m[3]), ")")));
         assertTrue(LibString.contains(a, '","display_type":"number","value":'));
         assertFalse(LibString.contains(a, '"trait_type":"Holds SPY","value":"'), "balances are not strings");
@@ -210,7 +210,7 @@ contract OnChainTest is Base {
 
         string memory p = _json(faces.tokenURI(m[1]));
         _checkJson(p);
-        assertTrue(LibString.contains(p, '"trait_type":"Set status","value":"Inside another piece"'));
+        assertTrue(LibString.contains(p, '"trait_type":"Set Status","value":"Inside Another Piece"'));
         assertTrue(LibString.contains(p, string.concat("It sits inside Face #", vm.toString(m[0]), ", a piece of the same set.")));
         assertFalse(LibString.contains(p, "Inside #"), "ids stay out of the trait values");
 
@@ -219,8 +219,8 @@ contract OnChainTest is Base {
         seeder.fuse(m[0]);
         string memory f = _json(faces.tokenURI(m[0]));
         _checkJson(f);
-        assertTrue(LibString.contains(f, '"trait_type":"Set status","value":"Fused"'));
-        assertTrue(LibString.contains(f, '"trait_type":"Fused since","display_type":"date"'));
+        assertTrue(LibString.contains(f, '"trait_type":"Set Status","value":"Fused"'));
+        assertTrue(LibString.contains(f, '"trait_type":"Fused Since","display_type":"date"'));
         assertTrue(LibString.contains(f, "Fused for good"));
         string memory svg = renderer.svgOf(m[0]);
         assertTrue(LibString.contains(svg, 'fill="none" stroke="#CCFF00"/></svg>'));
@@ -259,8 +259,8 @@ contract OnChainTest is Base {
         _mintPublic(alice, 1);
         vm.warp(block.timestamp + 10 days);
         string memory j = _json(faces.tokenURI(1));
-        assertTrue(LibString.contains(j, '"trait_type":"Unblinking (days)","display_type":"number","value":10}'));
-        assertTrue(LibString.contains(j, '"trait_type":"Eyes open since","display_type":"date"'));
+        assertTrue(LibString.contains(j, '"trait_type":"Unblinking Days","display_type":"number","value":10}'));
+        assertTrue(LibString.contains(j, '"trait_type":"Eyes Open Since","display_type":"date"'));
         assertTrue(LibString.contains(j, '"trait_type":"Holds '));
         assertEq(faces.unblinkingFor(1), 10 days);
 
@@ -269,7 +269,7 @@ contract OnChainTest is Base {
         faces.transferFrom(alice, bob, 1);
         assertEq(faces.unblinkingFor(1), 0);
         j = _json(faces.tokenURI(1));
-        assertTrue(LibString.contains(j, '"trait_type":"Unblinking (days)","display_type":"number","value":0}'));
+        assertTrue(LibString.contains(j, '"trait_type":"Unblinking Days","display_type":"number","value":0}'));
     }
 
     function test_Metadata_GazeBloomsWithTimeAndResetsOnSale() public {
@@ -343,7 +343,7 @@ contract OnChainTest is Base {
         acc.lock(uint64(block.timestamp + 2 days));
         j = _json(faces.tokenURI(id));
         assertFalse(LibString.contains(j, '"Stare Upgrade","value":"Pending"'));
-        assertTrue(LibString.contains(j, '"trait_type":"Locked until","display_type":"date"'));
+        assertTrue(LibString.contains(j, '"trait_type":"Locked Until","display_type":"date"'));
         assertTrue(LibString.contains(j, seeder.tierOf(id) == 2 ? '"value":"Watch"' : '"value":"Heavy Stare"'));
     }
 

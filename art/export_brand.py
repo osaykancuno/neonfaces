@@ -5,8 +5,9 @@ Brand assets for NEONFACES, drawn from the same pixel records that live on-chain
 
 -> ../web/public/  favicon.svg, favicon.ico (16/32/48), apple-touch-icon.png, icon-192.png, icon-512.png,
                    og.png (1200x630 link preview)
--> ../brand/       logo.gif (512x512, the eye that never blinks), banner.gif (1500x500), banner.png (its first
-                   frame, for headers that don't animate, e.g. X)
+-> ../brand/       logo.gif + logo.png (512x512, the eye that never blinks), banner.gif (1500x500, faces of the
+                   collection around the eye) + banner.png (its first frame, for headers that don't animate, e.g. X);
+                   the banners are copied to ../landing/img for the preview page
 
 Faces come from web/public/data/gallery.json (written by export_site.py), so no generated images are needed.
 """
@@ -34,26 +35,27 @@ DIM = (138, 154, 90)
 EYE_PAL = [(0, 0, 0), (31, 37, 4), (65, 77, 18), (103, 121, 32), (148, 178, 29), (204, 255, 0), (242, 255, 200)]
 BAYER = np.array([0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]).reshape(4, 4) / 16 - 0.47
 
-# 16x16 mark: an open eye on neon. K black, N neon, I ice glint, D dark olive
+# 16x16 mark: the logo's eye (neon almond, olive shading, black pupil, ice glint) on black, simplified to read
+# at favicon size. B black, N neon, O olive, D dark olive, K pupil, I glint
 MARK = [
-    "NNNNNNNNNNNNNNNN",
-    "NNNNNNNNNNNNNNNN",
-    "NNNNNNNNNNNNNNNN",
-    "NNNNNKKKKKKNNNNN",
-    "NNNKKNNNNNNKKNNN",
-    "NNKNNNDKKDNNNKNN",
-    "NKNNNKKKKKKNNNKN",
-    "KNNNDKIIKKKDNNNK",
-    "KNNNDKIKKKKDNNNK",
-    "NKNNNKKKKKKNNNKN",
-    "NNKNNNDKKDNNNKNN",
-    "NNNKKNNNNNNKKNNN",
-    "NNNNNKKKKKKNNNNN",
-    "NNNNNNNNNNNNNNNN",
-    "NNNNNNNNNNNNNNNN",
-    "NNNNNNNNNNNNNNNN",
+    "BBBBBBBBBBBBBBBB",
+    "BBBBBBBBBBBBBBBB",
+    "BBBBBBBBBBBBBBBB",
+    "BBBBBNNNNNNBBBBB",
+    "BBBNNOOOOOONNBBB",
+    "BBNOOODKKDOOONBB",
+    "BNOOODKKKKDOOONB",
+    "NOOODKIIKKKDOOON",
+    "NOOODKIKKKKDOOON",
+    "BNOOODKKKKDOOONB",
+    "BBNOOODKKDOOONBB",
+    "BBBNNOOOOOONNBBB",
+    "BBBBBNNNNNNBBBBB",
+    "BBBBBBBBBBBBBBBB",
+    "BBBBBBBBBBBBBBBB",
+    "BBBBBBBBBBBBBBBB",
 ]
-MARK_COLORS = {"N": NEON, "K": BLACK, "I": ICE, "D": (65, 77, 18)}
+MARK_COLORS = {"B": BLACK, "N": NEON, "O": (148, 178, 29), "D": (65, 77, 18), "K": BLACK, "I": ICE}
 
 
 # ----------------------------------------------------------------------------
@@ -61,18 +63,18 @@ MARK_COLORS = {"N": NEON, "K": BLACK, "I": ICE, "D": (65, 77, 18)}
 # ----------------------------------------------------------------------------
 def mark_image(scale: int, pad: int = 0) -> Image.Image:
     n = 16 * scale + 2 * pad
-    im = Image.new("RGB", (n, n), NEON)
+    im = Image.new("RGB", (n, n), BLACK)
     d = ImageDraw.Draw(im)
     for y, row in enumerate(MARK):
         for x, ch in enumerate(row):
-            if ch != "N":
+            if ch != "B":
                 d.rectangle([pad + x * scale, pad + y * scale, pad + (x + 1) * scale - 1, pad + (y + 1) * scale - 1], fill=MARK_COLORS[ch])
     return im
 
 
 def mark_svg() -> str:
     hexes = {k: "#%02x%02x%02x" % v for k, v in MARK_COLORS.items()}
-    paths = {k: [] for k in "KID"}
+    paths = {k: [] for k in "NODKI"}
     for y, row in enumerate(MARK):
         x = 0
         while x < 16:
@@ -80,13 +82,13 @@ def mark_svg() -> str:
             n = 1
             while x + n < 16 and row[x + n] == ch:
                 n += 1
-            if ch != "N":
+            if ch != "B":
                 paths[ch].append(f"M{x} {y}h{n}v1h-{n}z")
             x += n
     body = "".join(f'<path fill="{hexes[k]}" d="{"".join(p)}"/>' for k, p in paths.items() if p)
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">'
-        f'<rect width="16" height="16" fill="{hexes["N"]}"/>{body}</svg>\n'
+        f'<rect width="16" height="16" fill="{hexes["B"]}"/>{body}</svg>\n'
     )
 
 
@@ -183,6 +185,9 @@ def icons() -> None:
     old = WEB / "favicon.png"
     if old.exists():
         old.unlink()
+    landing = ROOT.parent / "landing"  # the preview uses the same icons
+    for name in ("favicon.svg", "favicon.ico", "apple-touch-icon.png", "icon-192.png", "icon-512.png"):
+        (landing / name).write_bytes((WEB / name).read_bytes())
 
 
 def og_card(faces: list[str]) -> None:
@@ -199,6 +204,7 @@ def og_card(faces: list[str]) -> None:
     draw_centered(d, "THEY DON'T BLINK.", 600, 339, 3, ICE)
     draw_centered(d, "5555 FACES. EVERY ONE IS AN ACCOUNT.", 600, 373, 2, DIM)
     og.save(WEB / "og.png", optimize=True)
+    (ROOT.parent / "landing" / "og.png").write_bytes((WEB / "og.png").read_bytes())
 
 
 def logo_gif() -> None:
@@ -211,6 +217,7 @@ def logo_gif() -> None:
         draw_centered(d, "NEONFACES", S // 2, 352, 6, NEON)
         draw_centered(d, "THEY DON'T BLINK.", S // 2, 414, 2, ICE)
         frames.append(im)
+    frames[0].save(BRAND / "logo.png", optimize=True)
     save_gif(frames, BRAND / "logo.gif", 70)
 
 
@@ -253,6 +260,10 @@ def banner_gif(faces: list[str]) -> None:
         frames.append(im)
     frames[0].save(BRAND / "banner.png", optimize=True)
     save_gif(frames, BRAND / "banner.gif", 110)
+    # the preview page shows the same banner
+    landing = ROOT.parent / "landing" / "img"
+    for name in ("banner.png", "banner.gif"):
+        (landing / name).write_bytes((BRAND / name).read_bytes())
 
 
 def main() -> None:

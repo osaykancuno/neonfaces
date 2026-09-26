@@ -30,3 +30,9 @@ tools/.runner-state.json
 marketing/teasers/raw/
 # source portraits (the manifest is committed, the images are not)
 art/portraits/*.png
+# face detection / identity models (opencv_zoo), fetched by art/portraits.py models
+art/models/
+art/portraits/*.log
+art/portraits/identity.npy
+art/portraits/replaced/
+art/portraits/manifest.tmp

@@ -11,7 +11,9 @@ them by neonfaces/photo.py.
     python portraits.py record r.json   # store generation results ([{"id", "job", "url"}]) in the manifest
     python portraits.py fetch           # download every portrait that has a url in the manifest (512 px, grayscale)
     python portraits.py check           # landmarks sanity + contact sheet of what is there
-    python portraits.py similar [0.90]  # pairs of faces that look too much alike (aligned on the eyes)
+    python portraits.py similar [0.65]  # pairs of faces that look like the same person (SFace identity)
+    python portraits.py diversify --sets [0.75]    # set faces: no two that look like the same person (or siblings)
+    python portraits.py diversify [0.85]           # everything: no duplicates; one of each pair gets a new person
 
 portraits/manifest.json is committed (prompts, generation job ids, sha256 of every image); the images
 (portraits/<id>.png) are not: the on-chain records are the art.
@@ -30,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 DIR = ROOT / "portraits"
 MANIFEST = DIR / "manifest.json"
-CROPS_PER_PORTRAIT = 8
+CROPS_PER_PORTRAIT = 1  # every single close-up gets its own person
 MODEL = "z_image"
 
 LOOKS = [
@@ -49,6 +51,11 @@ HAIR = {
             "a shaved head", "a short afro", "a receding hairline", "shoulder-length hair tied back", "a side part",
             "short twists", "thick messy hair"],
 }
+HAIR_TONE = ["black", "dark brown", "brown", "light brown", "greying", "silver", "dark blond", "blond", "auburn", "jet-black"]
+EYES = ["large eyes", "small eyes", "narrow eyes", "round eyes", "downturned eyes", "upturned eyes", "close-set eyes",
+        "heavy-lidded eyes"]
+NOSE = ["a small nose", "a long nose", "a wide nose", "a straight nose", "an aquiline nose", "a button nose",
+        "a flat nose bridge", "a high nose bridge"]
 FACIAL_HAIR = ["clean-shaven", "clean-shaven", "light stubble", "a short beard", "a moustache", "a full trimmed beard"]
 BROWS = ["thick eyebrows", "thin eyebrows", "arched eyebrows", "straight eyebrows", "bushy eyebrows", "soft eyebrows"]
 FEATURE = ["freckles", "dimples", "high cheekbones", "a strong jawline", "a soft jawline", "a broad nose", "a narrow nose",
@@ -91,8 +98,8 @@ def _deck(weights: dict, n: int, rng: random.Random) -> list:
 class _Looks:
     """Deals individual features from shuffled decks, so every description differs from every other."""
 
-    def __init__(self, rng: random.Random):
-        self.rng, self.decks, self.seen = rng, {}, set()
+    def __init__(self, rng: random.Random, seen: set | None = None):
+        self.rng, self.decks, self.seen = rng, {}, set(seen or ())
 
     def _card(self, name: str, values: list) -> str:
         d = self.decks.setdefault(name, [])
@@ -106,8 +113,11 @@ class _Looks:
         for _ in range(50):
             years = self.rng.randint(*AGE_SPAN[age])
             art = "an" if str(years).startswith("8") or years in (11, 18) else "a"
-            parts = [self._card("shape", FACE_SHAPE), self._card("hair" + gender, HAIR[gender]),
-                     self._card("brows", BROWS), self._card("feature", FEATURE)]
+            style = self._card("hair" + gender, HAIR[gender])
+            if style != "a shaved head":
+                style = f"{style} ({self._card('tone', HAIR_TONE)})"
+            parts = [self._card("shape", FACE_SHAPE), style, self._card("brows", BROWS), self._card("eyes", EYES),
+                     self._card("nose", NOSE), self._card("feature", FEATURE)]
             if gender == "Man":
                 parts.insert(2, self._card("beard", FACIAL_HAIR))
             text = f"{art} {years}-year-old {look} {noun} with {', '.join(parts[:-1])} and {parts[-1]}"
@@ -189,7 +199,17 @@ def load() -> list[dict]:
 
 
 def save(manifest: list[dict]) -> None:
-    MANIFEST.write_text(json.dumps(manifest, indent=1))
+    """Write through a temporary file and retry: Windows can hold the file for a moment (indexer, antivirus)."""
+    import time
+    tmp = MANIFEST.with_suffix(".tmp")
+    tmp.write_text(json.dumps(manifest, indent=1))
+    for attempt in range(20):
+        try:
+            tmp.replace(MANIFEST)
+            return
+        except OSError:
+            time.sleep(0.25 * (attempt + 1))
+    raise OSError(f"could not write {MANIFEST}")
 
 
 # --------------------------------------------------------------------------
@@ -288,6 +308,93 @@ def generate(ids: list[str] | None, limit: int, backend: str, workers: int = 4) 
     print(f"generated {done}, failed {len(failed)}: {failed[:20]}")
 
 
+# --------------------------------------------------------------------------
+# Different people: SFace identity check + new descriptions for look-alikes
+# --------------------------------------------------------------------------
+def identities(ids: list[str] | None = None) -> tuple[list[str], "np.ndarray"]:
+    """Identity embeddings of the portraits on disk, cached by image hash in portraits/identity.npy."""
+    import numpy as np
+    sys.path.insert(0, str(ROOT))
+    from neonfaces.photo import detect, identity, load_portrait
+    cache_f = DIR / "identity.npy"
+    cache = dict(np.load(cache_f, allow_pickle=True).item()) if cache_f.exists() else {}
+    out_ids, vecs = [], []
+    for e in load():
+        f = DIR / f"{e['id']}.png"
+        if not f.exists() or (ids and e["id"] not in ids):
+            continue
+        h = hashlib.sha256(f.read_bytes()).hexdigest()
+        if h not in cache:
+            lum = load_portrait(f)
+            cache[h] = identity(lum, detect(lum))
+        if cache[h] is None:
+            print(f"  no face found in {e['id']}")
+            continue
+        out_ids.append(e["id"])
+        vecs.append(cache[h])
+    np.save(cache_f, cache, allow_pickle=True)
+    return out_ids, np.array(vecs)
+
+
+def lookalikes(thr: float, only: str | None = None) -> list[tuple[float, str, str]]:
+    """Pairs at or above `thr`; `only="set"` compares the set faces among themselves."""
+    import numpy as np
+    ids, E = identities()
+    if only:
+        keep = [i for i, x in enumerate(ids) if x.startswith(only)]
+        ids, E = [ids[i] for i in keep], E[keep]
+    m = E @ E.T
+    np.fill_diagonal(m, -1)
+    iu = np.argwhere(np.triu(m >= thr, 1))
+    return sorted(((float(m[i, j]), ids[i], ids[j]) for i, j in iu), reverse=True)
+
+
+def redescribe(e: dict, taken: set, round_: int) -> None:
+    """A new person for the same slot: same gender, background, age band, light and expression."""
+    rng = random.Random(f"{e['id']}/{round_}")
+    who = _Looks(rng, taken).who(e["gender"], e["look"], e["age"])
+    e["prompt"] = prompt(who, e["light"], e["expression"])
+    e["replaced"] = e.get("replaced", 0) + 1
+    for k in ("job", "url", "sha256"):
+        e.pop(k, None)
+    f = DIR / f"{e['id']}.png"
+    if f.exists():
+        (DIR / "replaced").mkdir(exist_ok=True)
+        f.replace(DIR / "replaced" / f"{e['id']}-{e['replaced']}.png")
+
+
+def diversify(thr: float, rounds: int, backend: str, only: str | None = None) -> None:
+    """Until no two portraits look like the same person: give a new description to one face of each look-alike
+    pair and generate it again. Faces that resemble many others go first (one new face can clear several pairs);
+    otherwise the later id changes."""
+    for r in range(1, rounds + 1):
+        pairs = lookalikes(thr, only)
+        print(f"round {r}: {len(pairs)} look-alike pairs at or above {thr}{' among ' + only + ' faces' if only else ''}")
+        if not pairs:
+            return
+        order = {e["id"]: i for i, e in enumerate(load())}
+        degree = defaultdict(int)
+        for _, a, b in pairs:
+            degree[a] += 1
+            degree[b] += 1
+        redo, cleared = [], set()
+        for _, a, b in pairs:  # greedy cover: the face in more pairs, else the later one
+            if (a, b) in cleared or a in redo or b in redo:
+                continue
+            pick = max((a, b), key=lambda x: (degree[x], order[x]))
+            redo.append(pick)
+        redo.sort(key=order.get)
+        manifest = load()
+        taken = {e["prompt"] for e in manifest}
+        by_id = {e["id"]: e for e in manifest}
+        for pid in redo:
+            redescribe(by_id[pid], taken, r)
+            taken.add(by_id[pid]["prompt"])
+        save(manifest)
+        generate(redo, len(redo), backend)
+    print("stopped after the last round: check `python portraits.py similar` by eye")
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     DIR.mkdir(exist_ok=True)
@@ -300,7 +407,10 @@ def main():
         for e in manifest:  # keep generation records of portraits whose prompt did not change
             o = old.get(e["id"])
             if o and o["prompt"] == e["prompt"]:
-                e.update({k: o[k] for k in ("job", "url", "sha256") if k in o})
+                e.update({k: o[k] for k in ("job", "url", "sha256", "model", "backend") if k in o})
+            elif (DIR / f"{e['id']}.png").exists():  # made from an older prompt: set aside, generate again
+                (DIR / "replaced").mkdir(exist_ok=True)
+                (DIR / f"{e['id']}.png").replace(DIR / "replaced" / f"{e['id']}.png")
         save(manifest)
         sets = sum(1 for e in manifest if "set" in e)
         print(f"{len(manifest)} portraits: {sets} sets + {len(manifest) - sets} pool")
@@ -312,8 +422,11 @@ def main():
         args = sys.argv[2:]
         backend = args[args.index("--backend") + 1] if "--backend" in args else "muapi"
         ids = args[args.index("--ids") + 1].split(",") if "--ids" in args else None
+        workers = int(args[args.index("--workers") + 1]) if "--workers" in args else 4
+        if "--workers" in args:
+            args = [x for i, x in enumerate(args) if i != args.index("--workers") + 1]
         n = next((int(x) for x in args if x.isdigit()), 10_000)
-        generate(ids, n, backend)
+        generate(ids, n, backend, workers)
     elif cmd == "record":  # portraits.py record results.json  ([{"id", "job", "url"}] from the generation tool)
         manifest = load()
         by_id = {e["id"]: e for e in manifest}
@@ -336,12 +449,20 @@ def main():
         save(manifest)
         have = sum(1 for e in manifest if (DIR / f"{e['id']}.png").exists())
         print(f"{have}/{len(manifest)} portraits on disk")
+    elif cmd == "diversify":  # portraits.py diversify [threshold] [rounds] [--sets] [--backend muapi|pollinations]
+        args = sys.argv[2:]
+        backend = args[args.index("--backend") + 1] if "--backend" in args else "muapi"
+        nums = [x for x in args if x.replace(".", "", 1).isdigit()]
+        only = "set" if "--sets" in args else None
+        diversify(float(nums[0]) if nums else (0.75 if only else 0.85), int(nums[1]) if len(nums) > 1 else 6, backend, only)
     elif cmd == "similar":  # portraits.py similar [threshold]: pairs of faces that look too much alike
         sys.path.insert(0, str(ROOT))
         import numpy as np
         from PIL import Image
-        from neonfaces.photo import _bilinear, landmarks, load_portrait
-        thr = float(sys.argv[2]) if len(sys.argv) > 2 else 0.90
+        from neonfaces.photo import SFACE, _bilinear, detect, identity, landmarks, load_portrait
+        # with SFace: identity embeddings (same person scores high whatever the light); without: aligned pixels
+        use_id = SFACE.exists()
+        thr = float(sys.argv[2]) if len(sys.argv) > 2 else (0.65 if use_id else 0.90)
         ids, vecs = [], []
         t = np.linspace(-0.8, 0.8, 32)
         gx, gy = np.meshgrid(t * 0.9, t + 0.45)  # eyes to chin, aligned on the eye line
@@ -350,6 +471,14 @@ def main():
             if not f.exists():
                 continue
             lum = load_portrait(f)
+            if use_id:
+                v = identity(lum, detect(lum))
+                if v is not None:
+                    ids.append(e["id"])
+                    vecs.append(v)
+                    continue
+                print(f"  no face found in {e['id']}: regenerate it")
+                continue
             lm = landmarks(lum)
             v = _bilinear(lum, lm["cx"] + gx * lm["unit"], lm["eye_y"] + gy * lm["unit"])
             # keep the features, drop the broad lighting: subtract a 7x7 box blur

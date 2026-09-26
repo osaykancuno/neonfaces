@@ -37,7 +37,63 @@ def _smooth(v: np.ndarray, k: int) -> np.ndarray:
     return np.convolve(v, np.ones(k) / k, mode="same")
 
 
+MODELS = __import__("pathlib").Path(__file__).resolve().parents[1] / "models"
+YUNET = MODELS / "face_detection_yunet_2023mar.onnx"   # opencv_zoo, sha256 8f2383e4…2552fa4
+SFACE = MODELS / "face_recognition_sface_2021dec.onnx"  # opencv_zoo, sha256 0ba9fbfa…87c34e79
+_cv: dict = {}
+
+
+def _bgr(lum: np.ndarray) -> np.ndarray:
+    g = (np.clip(lum, 0, 1) * 255).astype(np.uint8)
+    return np.dstack([g, g, g])
+
+
+def detect(lum: np.ndarray):
+    """The most confident face found by YuNet (OpenCV): [x, y, w, h, eye, eye, nose, mouth corner, mouth corner,
+    score] in pixels, or None."""
+    if not YUNET.exists():
+        return None
+    import cv2
+    h, w = lum.shape
+    if "yunet" not in _cv:
+        _cv["yunet"] = cv2.FaceDetectorYN.create(str(YUNET), "", (w, h), 0.7, 0.3, 5000)
+    det = _cv["yunet"]
+    det.setInputSize((w, h))
+    _, faces = det.detect(_bgr(lum))
+    if faces is None or len(faces) == 0:
+        return None
+    return max(faces, key=lambda f: f[-1] * f[2] * f[3])
+
+
+def identity(lum: np.ndarray, face) -> np.ndarray | None:
+    """SFace identity embedding (unit length) of a detected face, for the "different people" check."""
+    if face is None or not SFACE.exists():
+        return None
+    import cv2
+    if "sface" not in _cv:
+        _cv["sface"] = cv2.FaceRecognizerSF.create(str(SFACE), "")
+    rec = _cv["sface"]
+    f = rec.feature(rec.alignCrop(_bgr(lum), face)).ravel()
+    return f / (np.linalg.norm(f) + 1e-9)
+
+
 def landmarks(lum: np.ndarray) -> dict:
+    """Eye line, face centre and scale (the face unit in pixels) of a frontal portrait: from YuNet's five points
+    when a face is found, from dark bands otherwise."""
+    face = detect(lum)
+    if face is not None:
+        e1, e2 = face[4:6], face[6:8]
+        m1, m2 = face[10:12], face[12:14]
+        lx, rx = sorted([e1[0], e2[0]])
+        eye_y = (e1[1] + e2[1]) / 2
+        mouth_y = (m1[1] + m2[1]) / 2
+        unit = float(np.mean([(mouth_y - eye_y) / MOUTH_Y, (rx - lx) / 0.80]))
+        return {"eye_y": float(eye_y), "cx": float((lx + rx) / 2), "unit": unit,
+                "eye_dx": float((rx - lx) / 2 / unit), "fallback": False, "detector": "yunet"}
+    return _landmarks_bands(lum)
+
+
+def _landmarks_bands(lum: np.ndarray) -> dict:
     """Eye line, eye centres and mouth line from dark bands (portraits are frontal and centred).
     Returns pixel coordinates and the face unit in pixels."""
     h, w = lum.shape
@@ -50,17 +106,34 @@ def landmarks(lum: np.ndarray) -> dict:
     below = slice(eye_y + int(0.04 * h), min(h, eye_y + int(0.12 * h)))
     if below.stop > below.start and band[below].min() < band[eye_y] + 0.06:
         eye_y = below.start + int(np.argmin(band[below]))
+    # face extent at the cheeks (a little under the eyes): skin is lighter than the background
+    cheek = _smooth(lum[min(h - 1, eye_y + int(0.06 * h)):min(h, eye_y + int(0.10 * h))].mean(axis=0), 15)
+    bg = np.median(np.concatenate([cheek[: int(0.06 * w)], cheek[-int(0.06 * w):]]))
+    skin = cheek > bg + 0.35 * (np.percentile(cheek, 90) - bg)
+    c = w // 2
+    left_edge, right_edge = c, c
+    while left_edge > 0 and skin[left_edge - 1]:
+        left_edge -= 1
+    while right_edge < w - 1 and skin[right_edge + 1]:
+        right_edge += 1
+    cx = (left_edge + right_edge) / 2 if right_edge - left_edge > 0.25 * w else w / 2
+    # eye centres: darkest columns of the eye strip, each side of the face centre
     strip = lum[max(0, eye_y - 6):eye_y + 7]
     cols = _smooth(strip.mean(axis=0), 11)
-    lx = int(0.18 * w) + int(np.argmin(cols[int(0.18 * w):int(0.48 * w)]))
-    rx = int(0.52 * w) + int(np.argmin(cols[int(0.52 * w):int(0.82 * w)]))
-    cx = (lx + rx) / 2
-    # mouth: the darkest row band in the middle third, 20-45% of the height below the eyes
-    mid = lum[:, int(cx - 0.12 * w):int(cx + 0.12 * w)]
+    a0, a1 = int(cx - 0.26 * w), int(cx - 0.06 * w)
+    b0, b1 = int(cx + 0.06 * w), int(cx + 0.26 * w)
+    lx = a0 + int(np.argmin(cols[a0:a1]))
+    rx = b0 + int(np.argmin(cols[b0:b1]))
+    # mouth: the darkest row band under the nose, 16-34% of the height below the eyes (not the chin shadow)
+    mid = lum[:, int(cx - 0.10 * w):int(cx + 0.10 * w)]
     mband = _smooth(mid.mean(axis=1), 7)
-    m0, m1 = eye_y + int(0.20 * h), min(h - 1, eye_y + int(0.45 * h))
+    m0, m1 = eye_y + int(0.16 * h), min(h - 1, eye_y + int(0.34 * h))
     mouth_y = m0 + int(np.argmin(mband[m0:m1]))
-    unit = (mouth_y - eye_y) / MOUTH_Y
+    # three independent scales, the median wins: eye to mouth, eye to eye, cheek to cheek
+    scales = [(mouth_y - eye_y) / MOUTH_Y, (rx - lx) / 0.80]
+    if right_edge - left_edge > 0.25 * w:
+        scales.append((right_edge - left_edge) / 2 / 0.92)
+    unit = float(np.median(scales))
     # sanity: fall back to the framing the prompts ask for
     fallback = not (0.25 * h < unit < 0.55 * h) or abs(cx - w / 2) > 0.12 * w
     if fallback:
@@ -129,15 +202,16 @@ def render_photo_face(lum, lm, p: FaceParams, seed: int, side: float):
     block = "Micro" if p.anomaly == "Extra-wide crop" else p.block
     grid = BLOCK_GRID[block]
     cx, cy, size = CROPS[p.crop]
-    size *= rng.uniform(0.9, 1.1)
+    # every single is framed its own way: tighter or looser, off-centre, slightly turned
+    size *= rng.uniform(0.78, 1.28)
     if p.anomaly == "Extra-wide crop":
         size *= 1.55
         cx *= 0.75
     win = Window(
-        cx=side * cx + rng.uniform(-0.05, 0.05),
-        cy=cy + rng.uniform(-0.05, 0.05),
+        cx=side * cx + rng.uniform(-0.12, 0.12),
+        cy=cy + rng.uniform(-0.10, 0.10),
         size=size,
-        rot=math.radians(rng.uniform(-9, 9)),
+        rot=math.radians(rng.uniform(-14, 14)),
         flip=False,
     )
     mirror = p.light == "Right" or (p.light == "Top" and rng.random() < 0.5)

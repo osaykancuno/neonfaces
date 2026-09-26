@@ -17,7 +17,7 @@ import {MockStockToken} from "../test/mocks/MockStockToken.sol";
 /// @notice Deploys the full, fully on-chain NEONFACES system.
 ///
 /// Environment (see contracts/.env.example):
-///   ADMIN              final admin (Safe multisig, 2 of 3 keys for a solo founder)
+///   ADMIN              final admin (Safe multisig, 2 of 2 keys for a solo founder)
 ///   SALE_MANAGER       wallet that runs the drop in OpenSea Studio (optional; default: ADMIN)
 ///   ROYALTY_RECEIVER   5% royalty receiver (Safe)
 ///   TREASURY, GROWTH   split payees (20 / 15); the 50% seed share goes to NeonSeedVault (deployed here)

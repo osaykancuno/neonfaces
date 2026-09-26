@@ -18,15 +18,15 @@ The Safe accepts the admin role 2 days after the deploy, and `verify-drop.mjs` f
 
 ## 0. Accounts
 
-Set up for a solo founder with no hardware wallet: one Safe whose three keys live on different devices (two of them sign), and MetaMask accounts for everything that only needs one signature.
+Set up for a solo founder with no hardware wallet and two wallets: a MetaMask on the computer (Safe signer 1, Growth, Sale manager) and the personal wallet. The Safe needs both of them; everything else needs one signature.
 
 | Who | What | Notes |
 |---|---|---|
-| **Safe 2/3** ("Treasury") | final admin of every contract, treasury (20%), royalty receiver | signers: MetaMask on the computer, a wallet app on the phone, an offline backup key (written on paper, never typed into a connected device until needed). Each signer must come from a **different seed phrase**: two accounts of the same MetaMask are one key, not two. Losing one key loses nothing; one stolen key can't sign alone. Safe v1.4.1 is deployed on Robinhood Chain |
-| Growth | growth (15%) | a dedicated MetaMask account (not the personal one, not a Safe signer): money for collabs and growth, one signature is enough. It must differ from the Treasury address |
+| **Safe 2/2** ("Treasury") | final admin of every contract, treasury (20%), royalty receiver | owners: the Safe signer 1 account of the computer MetaMask and the personal wallet, from **different seed phrases** (two accounts of the same MetaMask are one key, not two). One stolen key can't sign alone; losing a seed phrase locks the Safe for good, so both are written on paper, two copies each, kept in two places. A third owner can be added later from the Safe settings. Safe v1.4.1 is deployed on Robinhood Chain |
+| Growth | growth (15%) | an account of the computer MetaMask (not the personal wallet, not the Safe signer account): money for collabs and growth, one signature is enough. It must differ from the Treasury address |
 | Team beneficiary | receives the vested 15% | your personal wallet; the payee is a `VestingWallet` deployed by the script |
 | `NeonSeedVault` | receives 50%, buys the basket tokens into the pool | deployed by the script, no address to prepare |
-| Sale manager | runs the drop in OpenSea Studio (`owner()` of the collection while set) | a dedicated MetaMask account, used only in OpenSea Studio (never to sign on other sites). It can only configure SeaDrop stages: no minting, no art, no roles, proceeds always go to `NeonPayout`. Cleared after the sale |
+| Sale manager | runs the drop in OpenSea Studio (`owner()` of the collection while set) | an account of the computer MetaMask, used only in OpenSea Studio (never to sign on other sites). It can only configure SeaDrop stages: no minting, no art, no roles, proceeds always go to `NeonPayout`. Cleared after the sale |
 | Keeper | runs `tools/seed-keeper.mjs` | a hot key with a little ETH for gas; it can only make the vault buy basket tokens for the pool |
 | Deployer | deploys, uploads the art (≈ 0.03 ETH total gas, the only money needed before the sale) | holds nothing after hand-over |
 
@@ -179,7 +179,7 @@ Needs a person, on purpose (each is a decision or a key only the team should hol
 |---|---|---|
 | The public stage never sells out | holders wait for a reveal that needs minting closed | the public stage ends 24 h after it opens (set in Studio), then team mint and reveal the same day; unsold Faces are never minted, sets and tiers stay proportional, the floor rule keeps every basket paid |
 | The reveal window is missed | `reveal()` must land within ≈ 25 s of the target block | the watcher plus the keeper's safety net; if both miss, `reveal-request` again once the window has passed (every request is public) |
-| Two Safe signers aren't at hand | team mint, reveal request, lock and surplus wait | prepare the Safe batches (`safe-tx.mjs`) in advance and sign them on testnet once; 2 of 3 keys are enough |
+| A Safe owner isn't at hand | team mint, reveal request, lock and surplus wait | both owners are on the computer (MetaMask and the personal wallet); prepare the Safe batches (`safe-tx.mjs`) in advance, sign accept-admin first on deploy day, keep both seed phrases on paper |
 | Weekend or stale feeds | the vault's buys wait (NeonTrader refuses prices older than 26 h) | close the sale and reveal Tuesday–Thursday; nothing is lost, deliveries resume on the next trading day |
 | ETH falls between the sale and the top-up purchases | the vault's ETH buys fewer tokens | the reveal comes the day the sale ends and the set bonuses are bought during the sale; the vault keeps ≈ 24% above the baskets on a sell-out; the treasury can send ETH to the vault and anyone can send basket tokens to the seeder |
 | A basket token or its feed stops working | deliveries with that token revert, the Face shows Pending | before `lock-seeder`, swap the leg with `setBasket`; lock only when `covered()` is true, so after the lock nothing depends on buying anymore |

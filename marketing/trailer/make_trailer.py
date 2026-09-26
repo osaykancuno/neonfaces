@@ -1,6 +1,8 @@
 """15-second presentation trailer, built from the collection's own art (art/output) + one generated opening shot.
 
-    python marketing/trailer/make_trailer.py        (repo root; ffmpeg on PATH)
+    python marketing/trailer/make_trailer.py              (repo root; ffmpeg on PATH) -> neonfaces-trailer.mp4
+    python marketing/trailer/make_trailer.py --no-name    -> trailer-no-name.mp4: the same cut, and the card
+                                                             says THEY DON'T BLINK. / ROBINHOOD CHAIN, no name, no site
 
 0.0-3.5   set #124 comes alive: the first 0.9 s of hero.mp4 (Veo 3.1 Lite from the pixel face: a hard glitch; after
           that Veo turned the face into a photo and added a microphone, so it is cut), then a push-in on the
@@ -28,6 +30,8 @@ from make_posts import DIM, INK, NEON, PALE, draw_text, text_width  # noqa: E402
 
 W, H, FPS = 1280, 720, 24
 SINGLES = 3335
+NO_NAME = "--no-name" in sys.argv
+OUT = HERE / ("trailer-no-name.mp4" if NO_NAME else "neonfaces-trailer.mp4")
 
 
 def run(args):
@@ -133,8 +137,12 @@ def card(out: Path, arts):
         base.paste(NEON, (90 + k, 559 - k, 1190 - k, 560 - k))
         base.paste(NEON, (90 + k, 160 + k, 91 + k, 560 - k))
         base.paste(NEON, (1189 - k, 160 + k, 1190 - k, 560 - k))
-    draw_text(base, "NEONFACES", 820, 290, 12, NEON, "center")
-    draw_text(base, "NEONFACES.XYZ", 820, 420, 5, DIM, "center")
+    if NO_NAME:
+        draw_text(base, "THEY DON'T BLINK.", 820, 300, 6, NEON, "center")
+        draw_text(base, "ROBINHOOD CHAIN", 820, 420, 5, DIM, "center")
+    else:
+        draw_text(base, "NEONFACES", 820, 290, 12, NEON, "center")
+        draw_text(base, "NEONFACES.XYZ", 820, 420, 5, DIM, "center")
     dark = Image.eval(base, lambda v: v // 6)
     flicker = [0, 1, 0, 0, 1, 1, 0, 1]  # off/on for the first frames, then steady
     for i in range(96):
@@ -200,8 +208,8 @@ def main():
              "[3:a]atrim=0:7.8,asetpts=PTS-STARTPTS,adelay=7200|7200[a3];"
              "[a1][a2][a3]amix=inputs=3:normalize=0,atrim=0:15[a]",
              "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", "15",
-             str(HERE / "neonfaces-trailer.mp4")])
-    print("marketing/trailer/neonfaces-trailer.mp4")
+             str(OUT)])
+    print(OUT.relative_to(ROOT))
 
 
 if __name__ == "__main__":

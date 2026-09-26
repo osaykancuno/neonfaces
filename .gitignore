@@ -20,6 +20,12 @@ web/public/agent-presets.json
 web/public/deployment.json
 config/allowlists/opensea/
 config/allowlists/holders.json
+# which collections qualify is not published: the lists, their configs and reports stay local
+config/allowlists/*.csv
+config/allowlists/*.report.json
+config/allowlists/list.json
+config/allowlists/robinhood.json
+config/allowlists/partners.json
 tools/.keeper-state.json
 # local rehearsal only (mock NeonTrader on anvil)
 contracts/deployments/trader.*.json

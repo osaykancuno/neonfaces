@@ -72,7 +72,7 @@
   /* hero */
   header { display: grid; gap: 22px; }
   .banner { border: 2px solid var(--neon); display: block; width: 100%; height: auto; image-rendering: pixelated; aspect-ratio: 3 / 1; background: var(--panel); }
-  h1 { font: 700 clamp(40px, 9vw, 76px)/1 var(--pixel); color: var(--neon); letter-spacing: .02em; }
+  h1 { font: 700 clamp(30px, 10.7vw, 76px)/1 var(--pixel); color: var(--neon); letter-spacing: .02em; }
   .tagline { font: 400 clamp(20px, 3.6vw, 26px)/1.3 var(--pixel); color: var(--ice); }
   .lede { font-size: 21px; line-height: 1.55; color: var(--ice); max-width: 640px; }
 
@@ -169,7 +169,7 @@
   @keyframes eq { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
   @media (prefers-reduced-motion: reduce) { .sound-btn.on i { animation: none; } }
   /* the app shell: views, a sidebar on desktop, a bottom tab bar on phones */
-  .view { display: grid; gap: 56px; }
+  .view { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; } /* columns shrink to the phone: nothing sets a min width */
   .view[hidden] { display: none; }
   .tabbar .side-brand { display: none; }
   .tabbar { position: fixed; z-index: 25; background: #000; }
@@ -211,6 +211,28 @@
     .page, .view { gap: 44px; }
     .lede { font-size: 19px; }
   }
+  /* the list: wallet check and its result banner */
+  .al-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .al-row { display: flex; gap: 8px; }
+  .al-row input { flex: 1; width: 0; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 10px 12px; background: #000; color: var(--ice); border: 2px solid var(--olive); font: 400 16px/1.2 var(--mono); }
+  .al-row input:focus { outline: none; border-color: var(--neon); }
+  .al-msg { min-height: 1.4em; font-size: 15px; color: var(--dim); }
+  .al-fine { font-size: 14px; color: var(--dim); }
+  .al-banner { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .55); -webkit-backdrop-filter: blur(10px) saturate(.5) brightness(.6); backdrop-filter: blur(10px) saturate(.5) brightness(.6); animation: al-fade .25s steps(4) both; }
+  .al-banner:not([hidden]) .al-box { animation: al-pop .35s steps(5) both; }
+  @keyframes al-fade { from { opacity: 0; } }
+  @keyframes al-pop { from { transform: scale(.82); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .al-banner, .al-banner:not([hidden]) .al-box { animation: none; } }
+  .al-banner[hidden] { display: none; }
+  .al-box { width: min(420px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 12px; padding: 14px; box-sizing: border-box; background: #000; border: 3px solid var(--neon); box-shadow: 0 0 40px rgba(204, 255, 0, .25); }
+  .al-box video, .al-box img { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; background: #000; }
+  .al-title { font: 700 20px/1.2 var(--pixel); color: var(--neon); letter-spacing: .04em; }
+  .al-box p { font-size: 16px; color: var(--ice); }
+  .al-box .al-addr { font: 400 13px/1.3 var(--mono); color: var(--dim); word-break: break-all; }
+  .al-banner.out .al-box { border-color: var(--olive); box-shadow: none; }
+  .al-banner.out .al-title { color: #aab878; }
+  .al-banner.out .cam-btn { background: transparent; color: #aab878; border-color: var(--olive); }
+
   /* touch screens (iPhone and Android) */
   html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   a, button, label, input { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
@@ -259,6 +281,21 @@
     </div>
   </header>
 
+  <section id="list" class="col">
+    <span class="label">The list</span>
+    <h2>Is your wallet on the list?</h2>
+    <p>Wallets on the list mint first: 24 hours reserved to them, up to 3 Faces each. Then the sale opens to everyone.</p>
+    <form id="al-form" class="al-form" novalidate>
+      <label class="label" for="al-addr">Wallet address</label>
+      <div class="al-row">
+        <input id="al-addr" type="text" placeholder="0x…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="42">
+        <button class="cam-btn" type="submit" id="al-go">Check</button>
+      </div>
+      <p id="al-msg" class="al-msg" role="status" aria-live="polite"></p>
+    </form>
+    <p class="al-fine">The list comes from a snapshot of NFT holders, one entry per wallet, and is final when the sale is announced. The check runs in your browser: your address is never sent anywhere.</p>
+  </section>
+
   <section id="idea" class="col">
     <span class="label">The idea</span>
     <h2>A portrait that holds something</h2>
@@ -269,7 +306,7 @@
     <span class="label">Life of a Face</span>
     <h2>From mint to your wallet</h2>
     <ol class="steps">
-      <li><b>Mint on OpenSea</b>One stage, open to everyone: the same price for all, up to 3 Faces per wallet, open until every Face is sold. The date and the price are announced before the sale.</li>
+      <li><b>Mint on OpenSea</b>Wallets on the list mint first, for 24 hours, up to 3 Faces each; then the sale opens to everyone, up to 5 Faces per wallet in total, until every Face is sold. The date and the prices are announced before the sale.</li>
       <li><b>Wallet and base basket</b>Your Face gets its wallet in the same transaction and its base basket from the pool.</li>
       <li><b>Reveal</b>When the mint closes, the chain assigns every Face its art and tier.</li>
       <li><b>Top-up</b>Watch and Heavy Stare Faces receive their extra basket.</li>
@@ -499,6 +536,15 @@
     <p>Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
   </footer>
 </main>
+<div id="al-banner" class="al-banner" hidden>
+  <div class="al-box" role="dialog" aria-modal="true" aria-labelledby="al-title">
+    <video id="al-video" muted playsinline preload="none" aria-hidden="true"></video>
+    <h3 id="al-title" class="al-title"></h3>
+    <p id="al-text"></p>
+    <p class="al-addr" id="al-who"></p>
+    <button class="cam-btn" type="button" id="al-close">Close</button>
+  </div>
+</div>
 <nav class="tabbar" aria-label="Sections"><a class="side-brand" href="#home">NEONFACES</a><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#cam" data-tab="cam" aria-label="NEONCAM"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="3" width="6" height="2"/><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="9"/><rect x="2" y="16" width="16" height="2"/><rect x="8" y="8" width="4" height="2"/><rect x="6" y="10" width="2" height="3"/><rect x="12" y="10" width="2" height="3"/><rect x="8" y="13" width="4" height="2"/></svg><span>Cam</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
 <script>
   // sound in the NEONFACES style: synthesized in the browser (no music, no files), off by default, remembered
@@ -773,6 +819,54 @@
     show();
   })();
 
+
+  // the list: SHA-256 of the lowercase address, first 20 hex digits, looked up in list/<first digit>.txt (16 small
+  // files written by tools/allowlist.mjs). Only that slice is downloaded; the address itself never leaves the page.
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const form = $("al-form"), input = $("al-addr"), msg = $("al-msg"), go = $("al-go");
+    const banner = $("al-banner"), video = $("al-video"), still = matchMedia("(prefers-reduced-motion: reduce)");
+    const shards = new Map();
+    const shard = (d) => {
+      if (!shards.has(d)) shards.set(d, fetch(`list/${d}.txt`).then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); }).then((t) => new Set(t.split("\n"))).catch((e) => { shards.delete(d); throw e; }));
+      return shards.get(d);
+    };
+    const hash = async (a) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(a)))].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 20);
+    const show = (inList, addr) => {
+      banner.classList.toggle("out", !inList);
+      $("al-title").textContent = inList ? "You're on the list" : "Not on the list";
+      $("al-text").textContent = inList
+        ? "This wallet can mint up to 3 Faces in the 24 hours reserved to the list, before the sale opens to everyone."
+        : "This wallet isn't on the list. It can mint when the sale opens to everyone, after the 24 hours reserved to the list.";
+      $("al-who").textContent = addr;
+      const name = inList ? "list-in" : "list-out";
+      video.poster = `img/${name}.png`;
+      video.src = `img/${name}.mp4`;
+      banner.hidden = false;
+      if (!still.matches) video.play().catch(() => {}); // muted + playsinline: allowed on iPhone and Android
+      inList ? sound.open() : sound.close();
+      $("al-close").focus();
+    };
+    const close = () => { banner.hidden = true; video.pause(); video.removeAttribute("src"); video.load(); input.focus(); };
+    $("al-close").addEventListener("click", close);
+    banner.addEventListener("click", (e) => { if (e.target === banner) close(); });
+    addEventListener("keydown", (e) => { if (e.key === "Escape" && !banner.hidden) close(); });
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const addr = input.value.trim();
+      if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) { msg.textContent = "Paste a wallet address: 0x followed by 40 letters and digits (names like .eth don't work here)."; return; }
+      if (!crypto.subtle) { msg.textContent = "Your browser can't run the check on this connection. Open the page with https."; return; }
+      msg.textContent = "Checking…"; go.disabled = true;
+      try {
+        const h = await hash(addr.toLowerCase());
+        const inList = (await shard(h[0])).has(h);
+        msg.textContent = "";
+        show(inList, addr);
+      } catch {
+        msg.textContent = "The list couldn't be loaded. Check your connection and try again.";
+      } finally { go.disabled = false; }
+    });
+  })();
 </script>
 </body>
 </html>

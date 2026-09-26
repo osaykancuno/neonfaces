@@ -61,8 +61,8 @@ const [drop, payout, root, fees, signers, payers, gated, owner, manager, admin, 
 ok(getAddress(payout) === getAddress(dep.payout), `creator payout is NeonPayout (${payout})`);
 ok(drop.feeBps <= 1000 && drop.restrictFeeRecipients, `public stage fee ${drop.feeBps / 100}% with restricted recipients`);
 info(`public stage: ${formatEther(drop.mintPrice)} ETH, ${drop.maxTotalMintableByWallet}/wallet, ${new Date(Number(drop.startTime) * 1000).toISOString()} -> ${new Date(Number(drop.endTime) * 1000).toISOString()}`);
-ok(drop.mintPrice === 0n || drop.mintPrice === 13_000_000_000_000_000n, "public price is 0.013 ETH, the one price for everyone (self-funding floor ≈ 0.009 ETH)");
-ok(drop.mintPrice === 0n || drop.maxTotalMintableByWallet === 3, `3 Faces per wallet (${drop.maxTotalMintableByWallet})`);
+ok(drop.mintPrice === 0n || drop.mintPrice === 18_000_000_000_000_000n, "public price is 0.018 ETH (the list stage, 0.013 ETH, lives in the allowlist leaves: check it in Studio)");
+ok(drop.mintPrice === 0n || drop.maxTotalMintableByWallet === 5, `public: 5 Faces per wallet in total (${drop.maxTotalMintableByWallet})`);
 ok(fees.length === 1, `exactly one allowed fee recipient: ${fees.join(", ") || "none"}`);
 if (process.env.OPENSEA_FEE_RECIPIENT) {
   ok(fees.every((f) => getAddress(f) === getAddress(process.env.OPENSEA_FEE_RECIPIENT)), "fee recipient is OpenSea's");
@@ -70,7 +70,7 @@ if (process.env.OPENSEA_FEE_RECIPIENT) {
 ok(signers.length === 0, `no server-signed mint signers (${signers.length})`);
 ok(gated.length === 0, `no token-gated stages (${gated.length})`);
 info(`payers allowed to mint for others: ${payers.length ? payers.join(", ") : "none"} (OpenSea may add its own)`);
-ok(/^0x0{64}$/.test(root), `no allowlist stage: one public stage for everyone (root ${root})`);
+ok(!/^0x0{64}$/.test(root), `the list stage has its allowlist (root ${root}); its CSV and terms are checked in Studio`);
 info(`owner() on OpenSea: ${owner}${getAddress(manager) === "0x0000000000000000000000000000000000000000" ? " (the Safe)" : " (sale manager: clear it after the sale)"}; admin ${admin}`);
 info(`supply ${supply} / sellable max ${max}; mint ${paused ? "PAUSED" : "open"}`);
 // ---- who holds power ----

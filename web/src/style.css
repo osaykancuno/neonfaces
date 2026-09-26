@@ -542,6 +542,27 @@ body { -webkit-tap-highlight-color: transparent; }
   .nav { left: calc(var(--frame-x) + var(--side)); right: var(--frame-x); }
 }
 
+/* ------------------------------------------------------------------ the list: wallet check and its result banner */
+.al-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; max-width: 620px; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); }
+.al-row { display: flex; gap: 8px; }
+.al-row input { flex: 1; width: 0; min-width: 0; min-height: 44px; background: #050600; border: 1px solid var(--olive-2); color: var(--ice); font-family: var(--mono); font-size: 16px; padding: 10px 12px; text-transform: none; letter-spacing: 0; }
+.al-row input:focus { outline: none; border-color: var(--neon); }
+.al-msg { min-height: 1.4em; margin: 0; text-transform: none; letter-spacing: 0; font-size: 14px; }
+.al-banner { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 16px; background: rgba(0,0,0,.55); -webkit-backdrop-filter: blur(10px) saturate(.5) brightness(.6); backdrop-filter: blur(10px) saturate(.5) brightness(.6); animation: al-fade .25s steps(4) both; }
+.al-banner[hidden] { display: none; }
+.al-banner:not([hidden]) .al-box { animation: al-pop .35s steps(5) both; }
+@keyframes al-fade { from { opacity: 0; } }
+@keyframes al-pop { from { transform: scale(.82); opacity: 0; } }
+.al-box { width: min(420px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 12px; padding: 14px; background: #000; border: 3px solid var(--neon); box-shadow: 0 0 40px rgba(204,255,0,.25); }
+.al-box video { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; background: #000; }
+.al-title { margin: 0; font-family: var(--pixel); font-weight: 400; font-size: 20px; color: var(--neon); }
+.al-box p { margin: 0; font-size: 16px; color: var(--ice); }
+.al-box .al-who { font-family: var(--mono); font-size: 13px; color: var(--dim); word-break: break-all; }
+.al-banner.out .al-box { border-color: var(--olive-2); box-shadow: none; }
+.al-banner.out .al-title { color: #aab878; }
+.al-banner.out .btn { background: transparent; color: #aab878; border-color: var(--olive-2); box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .al-banner, .al-banner:not([hidden]) .al-box { animation: none; } }
+
 /* ------------------------------------------------------------------ touch screens (iPhone and Android) */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: 88px; } /* no text inflation in landscape; anchors land below the header */
 a, button, summary, label, input, select, textarea { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }

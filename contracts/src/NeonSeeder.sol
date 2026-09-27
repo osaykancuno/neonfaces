@@ -28,8 +28,8 @@ import {NeonFaces} from "./NeonFaces.sol";
 /// Seeding never blocks a mint: base funding runs in a try/catch self-call. If the pool is short (or
 /// a token refuses the transfer) the seed stays *pending* and anyone can call `fund(tokenId)` later.
 ///
-/// Stock Tokens give economic exposure only (no legal ownership of the underlying share) and are not
-/// available to US persons. The holder can empty the Face account at any time.
+/// Stock Tokens give economic exposure only (no legal ownership of the underlying share); their availability
+/// depends on where the holder lives and on the issuer's terms. The holder can empty the Face account at any time.
 contract NeonSeeder is AccessControlDefaultAdminRules, ReentrancyGuard {
     using SafeERC20 for IERC20;
 

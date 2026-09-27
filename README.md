@@ -17,7 +17,7 @@
 - **Lock before listing**: a holder can freeze the account until a date; the lock survives the sale, so buyers get exactly what they see.
 - **Money said before, not after**: after OpenSea's 10% drop fee, SeaDrop can pay mint proceeds only to `NeonPayout`, a 55 / 15 / 15 / 15 split with no owner; team share vests over 6 months.
 
-> Plain truth: NEONFACES does not sell shares or shareholder rights. It sells an artwork that can hold on-chain exposure. Stock Tokens give economic exposure only and are not available to US persons.
+> Plain truth: NEONFACES does not sell shares or shareholder rights. It sells an artwork that can hold on-chain exposure. Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
 ## Repository
 

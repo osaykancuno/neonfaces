@@ -36,7 +36,7 @@ from make_frames import corners, screen_mask  # noqa: E402
 W, H, FPS = 1080, 1920, 24
 OUT = HERE / "out"
 TONES = np.array([(0, 0, 0), (31, 37, 4), (65, 77, 18), (103, 121, 32), (148, 178, 29), (204, 255, 0)], np.float32)
-STEPS = [0.20, 0.34, 0.47, 0.60, 0.72]  # the art's thresholds (NEONCAM uses the same)
+STEPS = [0.20, 0.34, 0.47, 0.60, 0.72]  # the art's six-tone thresholds: the turn ends on the real Face
 DEEP = (40, 48, 10)
 YUNET = ROOT / "art" / "models" / "face_detection_yunet_2023mar.onnx"
 FONT.update({  # digits for DAY 30 / 90 / 365, in the same 5x7 hand

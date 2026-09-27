@@ -73,8 +73,8 @@ contract NeonRenderer {
         j.p(bytes(tokenId.toString()), " is an account: ", bytes(LibString.toHexStringChecksummed(s.account)));
         j.p(". Whatever it holds travels with it.", set_.note);
         j.p(
-            " Stock Tokens give economic exposure only, not legal ownership of the ",
-            "underlying shares, and are not available to US persons. Art and metadata are fully on-chain.",
+            " Stock Tokens give economic exposure only, not legal ownership of the underlying shares; availability ",
+            "depends on where you live and on the issuer's terms. Art and metadata are fully on-chain.",
             '","image":"data:image/svg+xml;base64,'
         );
         j.p(bytes(Base64.encode(bytes(_image(tokenId, revealed ? artId : PLACEHOLDER_ART_ID, rec, set_.assembled ? set_.setId : 0, set_.fused)))));

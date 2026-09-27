@@ -24,7 +24,7 @@ esac
 
 check() {
   local base=${1:-${SITE:-https://neonfaces.xyz}} n=0 bad=0 p u tmp
-  # _headers and _redirects are read by Pages, not served; index.html is served at "/" (Pages drops the name)
+  # _headers and _redirects are read by Cloudflare, not served; index.html is served at "/" (the name is dropped)
   while IFS= read -r f; do
     p=${f#"$DIR"/}
     case "$p" in _headers | _redirects) continue ;; esac

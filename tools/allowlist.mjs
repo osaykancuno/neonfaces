@@ -88,4 +88,4 @@ const total = [...rows.values()].reduce((s, n) => s + n, 0);
 const limits = [...new Set(rows.values())].sort((a, b) => a - b);
 console.log(`${name}: ${rows.size} wallets (room for ${OPENSEA_MAX_PER_STAGE - rows.size} more), ${total} Faces max (per-wallet limits: ${limits.join(", ")})`);
 console.log(`wrote ${outPath}`);
-console.log("wrote the preview's check files: landing/list/ (re-drop landing/ on Netlify)");
+console.log("wrote the preview's check files: landing/list/ (publish them: tools/site.sh deploy preview)");

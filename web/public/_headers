@@ -1,4 +1,4 @@
-# Netlify response headers for the web app. No other site may frame it (a framed page could trick a click
+# Response headers for the web app (read by Cloudflare, like Netlify before). No other site may frame it (a framed page could trick a click
 # before a wallet prompt); browsers must not guess file types; other sites see only the origin in the referrer.
 /*
   X-Frame-Options: DENY
@@ -8,6 +8,6 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
 # Vite names every built file after its content (assets/index-<hash>.js): a new build gets new names, so browsers
-# and Netlify's edge can keep these for a year and a crowd on sale day only fetches index.html and deployment.json
+# and Cloudflare's edge can keep these for a year and a crowd on sale day only fetches index.html and deployment.json
 /assets/*
   Cache-Control: public, max-age=31536000, immutable

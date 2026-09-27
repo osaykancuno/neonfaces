@@ -2,7 +2,7 @@
 
 Pre-sale content after the name reveal: 5 videos of 21-26 s (9:16 + 4:5), 5 images (4:5 + 9:16), 5 GIFs. Theme: real people, 25 to 45, who keep an eye on the market, their faces lit acid lime by a phone that shows their own Face. The viewer should feel part of it: everyone has a screen, some screens stare back.
 
-Rules (as for every public piece): name yes, **no site, no date, no price** until the sale announcement; no em dashes; nothing that suggests destroying Faces; no returns or hype; never name the list's collections; the Stock Token line whenever a basket is named in a post.
+Rules (as for every public piece): name yes, **no site, no date, no price** until the sale announcement; no em dashes; nothing that suggests destroying Faces; no returns or hype; never name the list's collections; the Stock Token line (docs/LORE.md) whenever a basket is named in a post.
 
 ## Real first (the user's rule, 27 Sep)
 
@@ -105,7 +105,7 @@ NEONFACES: faces that keep watching.
 
 **V3** Every Face is a wallet.
 Pixel art on the chain, with its own account and a small basket of Stock Tokens inside.
-Stock Tokens give economic exposure only and are not available to US persons.
+Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
 **V4** One face. Four pieces.
 Some Faces are one of four that make one face. Each is a Face of its own.

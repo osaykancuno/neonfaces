@@ -57,7 +57,9 @@ Post from the account with the video attached, on a weekday at 14:00 UTC (16:00 
 > · every Face has its own wallet (ERC-6551) and gets a small basket of Stock Tokens when it's minted.
 > · keep it, add to it, withdraw what's inside, or sell it with everything in it.
 >
-> Stock Tokens give economic exposure only and are not available to US persons.
+> Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
+>
+> (Posted on 27 Sep with the older line naming US persons; the site's wording was made general on 28 Sep. Use this one from now on.)
 
 **3/3 (reply)**
 > Some Faces stare harder than others. Some are one of four pieces that make one face. The longer a Face stays with its holder, the stronger its Gaze.

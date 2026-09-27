@@ -64,5 +64,5 @@ The reference isn't the biggest collection on the chain. It's the one that prove
 ## Tone rules for every channel
 
 - Say "on-chain exposure held in an account bound to the Face". Never "shares inside an NFT", never "dividends", never "returns".
-- Every post that mentions the basket carries: *Stock Tokens give economic exposure only, not legal ownership, and are not available to US persons.*
+- Every post that mentions the basket carries: *Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.* (calm and general: no country is singled out; the same sentence as the site).
 - No mascots, no emojis in the brand voice, no countdown hype. Market, stare, neon.

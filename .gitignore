@@ -34,6 +34,12 @@ config/agent-presets.46630.json
 tools/.runner-state.json
 # teaser takes as delivered by the video model (finals are in marketing/teasers/)
 marketing/teasers/raw/
+# generator references (made from the source portraits, which stay off GitHub) and the movement's generated
+# stills, clips and finished pieces (hundreds of MB; rebuilt by the scripts in marketing/movement/)
+marketing/movement/refs/
+marketing/movement/raw/
+marketing/movement/frames/
+marketing/movement/out/
 # source portraits (the manifest is committed, the images are not)
 art/portraits/*.png
 # face detection / identity models (opencv_zoo), fetched by art/portraits.py models

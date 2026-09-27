@@ -10,7 +10,7 @@ Since 2026 Cloudflare Pages is part of Cloudflare Workers: `wrangler pages proje
 - `wrangler dev` (4.142.0) served `landing/` byte for byte (53/53 files), right types (`.txt`, `.mp4`, `.json`), `landing/_headers` applied (camera allowed for NEONCAM, microphone blocked), an unknown path answering 404 as on Netlify, `_headers` not served. The wallet check worked on Cloudflare's simulator with a listed and an unlisted wallet, no console errors.
 - `wrangler dev` served `web/dist/` with its app routes (`/face/12` and `/sets` get `index.html`), `deployment.json`, `llms.txt`, `neonfaces-mcp.mjs`, the security headers and the one-year cache on `assets/*` (17/17 files byte for byte). `web/dist/_redirects` (`/* /index.html 200`, for Netlify) is ignored with the warning "Infinite loop detected in this rule and has been ignored": expected, the config's single-page mode does that job.
 - `/index.html` redirects to `/` (nothing links to it).
-- **Phase 1 is done**: the preview is live at `https://neonfaces.osaykancuno.workers.dev` (53/53 files byte for byte, `server: cloudflare`, the headers, 404 on unknown paths).
+- **Phases 1-3 are done (28 Sep)**: neonfaces.xyz is served by the Worker through zone routes (53/53 files byte for byte, `server: cloudflare`, the headers, 404 on unknown paths, www 301 to the apex).
 - An apex domain on Cloudflare must be a **Cloudflare zone**: the nameservers move from Porkbun to Cloudflare; the registration stays at Porkbun.
 
 ## Phase 0: the account (the founder; done 27 Sep)
@@ -39,15 +39,17 @@ The zone is created with the same records, so while the nameservers change the s
 8. Wait for Cloudflare's email "neonfaces.xyz is now active" (usually under an hour, up to 24 h). Claude can confirm with `nslookup -type=NS neonfaces.xyz 8.8.8.8`.
 9. Zone settings, once active: SSL/TLS > Edge Certificates > **Always Use HTTPS: On**; Scrape Shield > **Email Address Obfuscation: Off** (it rewrites HTML; the byte check must stay exact). Leave the rest at the defaults.
 
-## Phase 3: the switch (the founder clicks, Claude checks; about 5 minutes, no downtime)
+## Phase 3: the switch (done 28 Sep 2026, about 01:45 Italy; no gap)
 
-10. Workers & Pages > `neonfaces` > Settings > **Domains & Routes** > Add > **Custom domain** > `neonfaces.xyz` > Add. Cloudflare replaces the Netlify A records with its own and issues the certificate (minutes). Accept when it asks to replace the existing DNS records.
-11. The same for `www.neonfaces.xyz` (it replaces the CNAME to Netlify).
-12. Keep `www` redirecting to the apex as today: Rules > **Redirect Rules** > Create rule > template **"Redirect from WWW to root"** > Deploy (301, the path kept).
-13. Claude adds the two custom domains to `tools/cloudflare/preview.jsonc` and `web.jsonc` (`"routes": [{ "pattern": "neonfaces.xyz", "custom_domain": true }, { "pattern": "www.neonfaces.xyz", "custom_domain": true }]`), so every later deploy states them, and checks: `tools/site.sh check preview` (53/53 on neonfaces.xyz), `server: cloudflare` and the headers, `https://www.neonfaces.xyz/face/1` answering 301 to `https://neonfaces.xyz/face/1`, the wallet check and NEONCAM in the browser.
-14. Keep the Netlify site as it is until 15 October (the way back, below); then delete it.
+A Worker **custom domain** was the first plan, but Cloudflare refuses it while the hostname has other records ("already has externally managed DNS records... Delete them first", also through the API with `override_existing_dns_record`), and deleting them would leave a moment with no record, which a resolver can cache for up to 30 minutes. So the Worker is reached through **routes** instead, and the records never disappear:
 
-The way back during phase 3: remove the two custom domains from the Worker; in DNS put back the three records of step 6 (DNS only). Netlify answers again within minutes.
+10. `routes` in both configs: `neonfaces.xyz/*` and `www.neonfaces.xyz/*` on the zone `neonfaces.xyz`; `wrangler deploy -c tools/cloudflare/preview.jsonc` published them while the records were still grey (nothing changed for visitors).
+11. Checked through Cloudflare's edge before switching (`curl --resolve neonfaces.xyz:443:188.114.96.7`): 53/53 files byte for byte, the security headers, 404 on unknown paths.
+12. Zone: Rules > Redirect Rules > template **"Redirect from WWW to root"** (301, path kept). Checked through the edge: `https://www.neonfaces.xyz/face/1` → 301 `https://neonfaces.xyz/face/1`.
+13. DNS: the three records switched to **Proxied** (orange). Resolvers then returned Cloudflare's addresses (104.21.67.212, 172.67.181.95, 188.114.96-97.x). Live check through them: 53/53 files, `server: cloudflare`, headers, 404, www 301, http → https 301.
+14. The Netlify site stays as it is until 15 October (the way back: set the three records to DNS only, grey; Netlify answers again within minutes), then it is deleted.
+
+Lesson from the evening: when the zone turned active the records were orange before the edge had a certificate, and HTTPS failed for a few minutes (01:15-01:18) until they were set grey. Keep records grey until the Worker is ready behind them.
 
 ## From now on: publishing
 

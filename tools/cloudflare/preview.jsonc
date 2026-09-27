@@ -9,6 +9,12 @@
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
   },
+  // the zone's proxied records reach this Worker through these routes (a custom domain would need the records deleted
+  // first, leaving a gap; routes keep the records in place). www is redirected to the apex by a zone Redirect Rule.
+  "routes": [
+    { "pattern": "neonfaces.xyz/*", "zone_name": "neonfaces.xyz" },
+    { "pattern": "www.neonfaces.xyz/*", "zone_name": "neonfaces.xyz" }
+  ],
   "workers_dev": true,
   "preview_urls": false
 }

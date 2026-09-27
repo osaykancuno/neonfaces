@@ -109,6 +109,18 @@
   .cam-msg { font-size: 14px; color: var(--dim); min-height: 1.4em; margin: 10px 0 6px; }
 
   .cam-btn[hidden], #cam-tools[hidden] { display: none; }
+  /* NEONCAM's light: neon on the screen's edges while framing, the whole screen for the shot, so a face in the dark is
+     lit acid lime (like the films). Interface only: the photo is the rendered canvas, never the screen. The ring sits
+     under the nav and the tab bar (they stay usable) and never takes a tap; while it is on, the CRT lines and the noise
+     step aside (they would dim it) and the Cam view moves inward so no control sits under it. The flash covers all. */
+  :root { --ring: clamp(22px, 9vmin, 72px); }
+  #cam-light { position: fixed; inset: 0; z-index: 45; pointer-events: none;
+    box-shadow: inset 0 0 0 var(--ring) var(--neon), inset 0 0 calc(var(--ring) * 1.6) calc(var(--ring) * .9) rgba(204, 255, 0, .55); }
+  #cam-light[hidden] { display: none; }
+  #cam-light.flash { z-index: 95; background: var(--neon); box-shadow: none; }
+  body.cam-lit .crt, body.cam-lit .noise { display: none; }
+  body.cam-lit [data-view="cam"], body.cam-lit footer { padding-left: var(--ring); padding-right: var(--ring); box-sizing: border-box; }
+  body.cam-lit [data-view="cam"] { padding-bottom: var(--ring); }
   @media (max-width: 860px) { .cam-seg button { min-height: 44px; min-width: 44px; } }
 
   .al-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
@@ -362,7 +374,7 @@
       <div class="label">NEONCAM</div>
       <h2>See yourself the way they see you</h2>
       <div class="prose">
-        <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it.</p>
+        <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it. In the dark, turn the light on: the screen glows neon and lights your face; the glow never appears in the photo.</p>
       </div>
       <div class="cam">
       <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas>
@@ -385,6 +397,7 @@
       <div class="cam-seg" data-opt="neon"><span>Neon</span><button type="button" data-v="0" aria-pressed="true">Standard</button><button type="button" data-v="1" aria-pressed="false">Deep</button><button type="button" data-v="2" aria-pressed="false">Hot</button></div>
       <div class="cam-seg" data-opt="grain"><span>Grain</span><button type="button" data-v="0" aria-pressed="true">Clean Print</button><button type="button" data-v="1" aria-pressed="false">Dusty</button><button type="button" data-v="2" aria-pressed="false">Heavy Scan</button></div>
       <div class="cam-seg" data-opt="gaze"><span>Gaze</span><button type="button" data-v="0" aria-pressed="true">None</button><button type="button" data-v="1" aria-pressed="false">Steady</button><button type="button" data-v="2" aria-pressed="false">Fixed</button><button type="button" data-v="3" aria-pressed="false">Piercing</button></div>
+      <div class="cam-seg" data-opt="light"><span>Light</span><button type="button" data-v="0" aria-pressed="true">Off</button><button type="button" data-v="1" aria-pressed="false">Neon</button></div>
     </div>
     </section>
   </section>
@@ -450,13 +463,14 @@
     ].map((p) => p.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))));
     const $ = (id) => document.getElementById(id);
     const out = $("cam-out"), msg = $("cam-msg");
-    const opt = { cells: 24, neon: 0, grain: 0, gaze: 0 };
+    const opt = { cells: 24, neon: 0, grain: 0, gaze: 0, light: 0 };
     const small = document.createElement("canvas"), sctx = small.getContext("2d", { willReadFrequently: true });
     const cellCanvas = document.createElement("canvas"), cctx = cellCanvas.getContext("2d");
     const glow = document.createElement("canvas"), gctx = glow.getContext("2d");
     const video = document.createElement("video");
     video.muted = true; video.playsInline = true; video.setAttribute("playsinline", "");
     let stream = null, facing = "user", still = null, shot = null, raf = 0, last = 0, seed = 1;
+    let level = 1, dark = 0, lightTouched = false; // the scene's brightness, for the light's first automatic turn-on
     const say = (t) => (msg.textContent = t);
 
     // one frame of the source (video or photo) -> the NEONFACES look, drawn on canvas `c` (size x size).
@@ -474,10 +488,12 @@
       sctx.drawImage(src, (sw - side) / 2, (sh - side) / 2, side, side, 0, 0, m, m);
       sctx.restore();
       const px = sctx.getImageData(0, 0, m, m).data, lum = new Float32Array(m * m), hist = new Uint32Array(256);
+      let tot = 0;
       for (let i = 0; i < m * m; i++) {
         const y = 0.2126 * px[i * 4] + 0.7152 * px[i * 4 + 1] + 0.0722 * px[i * 4 + 2];
-        lum[i] = y; hist[y | 0]++;
+        lum[i] = y; hist[y | 0]++; tot += y;
       }
+      if (c === out) level = tot / (m * m) / 255;
       let lo = 0, hi = 255, acc = 0;
       for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= m * m * 0.01) { lo = v; break; } }
       acc = 0;
@@ -544,6 +560,25 @@
       if (t - last < 66) return; // about 15 frames a second: enough for the look, kind to phones
       last = t;
       frame();
+      if (stream && facing === "user" && !lightTouched && !opt.light) {
+        dark = level < 0.2 ? dark + 1 : 0;
+        if (dark >= 15) { // about a second of darkness: light it once; the user's own choice always wins after that
+          lightTouched = true;
+          setLight(1);
+          say("Low light: the neon light is on. Bring your face close to the screen.");
+        }
+      }
+    }
+    // the light shows only while the live camera is framing (not for an uploaded photo, not after the shot)
+    function light() {
+      const on = !!(opt.light && stream && !still && !shot && location.hash === "#cam" && !document.hidden);
+      $("cam-light").hidden = !on;
+      document.body.classList.toggle("cam-lit", on);
+    }
+    function setLight(v) {
+      opt.light = v;
+      document.querySelectorAll('#cam-tools .cam-seg[data-opt="light"] button').forEach((x) => x.setAttribute("aria-pressed", String(Number(x.dataset.v) === v)));
+      light();
     }
 
     async function startCam() {
@@ -563,6 +598,7 @@
       const cams = (await navigator.mediaDevices.enumerateDevices().catch(() => [])).filter((x) => x.kind === "videoinput");
       $("cam-flip").hidden = cams.length < 2;
       say("");
+      light();
     }
     function stopCam() {
       stream?.getTracks().forEach((t) => t.stop());
@@ -585,11 +621,21 @@
       $("cam-shot").hidden = taken;
       $("cam-save").hidden = $("cam-x").hidden = $("cam-again").hidden = !taken;
       $("cam-share").hidden = !taken || !canShareFiles;
+      $("cam-shot").disabled = false;
       if (taken) $("cam-flip").hidden = true;
+      light();
     }
 
     // the photo: 1080 x 1080, the face, then a thin band with the name and the site
     function takePhoto() {
+      if (!(opt.light && stream && !still)) return capture();
+      const L = $("cam-light");
+      $("cam-shot").disabled = true;
+      L.hidden = false;
+      L.classList.add("flash");
+      setTimeout(() => { capture(); L.classList.remove("flash"); light(); }, 450); // the camera's exposure settles on the lit face
+    }
+    function capture() {
       const c = document.createElement("canvas");
       c.width = c.height = 1080;
       if (still) render(still, still.naturalWidth, still.naturalHeight, false, c, 1080);
@@ -655,6 +701,7 @@
         if (!b) return;
         seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
         opt[seg.dataset.opt] = Number(b.dataset.v);
+        if (seg.dataset.opt === "light") { lightTouched = true; light(); return; }
         if (shot) { say(""); ready(); } else if (!raf) frame();
       }),
     );
@@ -663,6 +710,8 @@
       if (location.hash === "#cam" && !document.hidden) return;
       const was = !!stream;
       stopCam();
+      $("cam-light").hidden = true;
+      document.body.classList.remove("cam-lit");
       cancelAnimationFrame(raf);
       raf = 0;
       if (was) { $("cam-idle").hidden = false; $("cam-tools").hidden = true; shot = null; }
@@ -736,5 +785,6 @@
     });
   })();
 </script>
+<div id="cam-light" hidden></div>
 </body>
 </html>

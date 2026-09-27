@@ -459,29 +459,45 @@
     let stream = null, facing = "user", still = null, shot = null, raf = 0, last = 0, seed = 1;
     const say = (t) => (msg.textContent = t);
 
-    // one frame of the source (video or photo) -> the NEONFACES look, drawn on canvas `c` (size x size)
+    // one frame of the source (video or photo) -> the NEONFACES look, drawn on canvas `c` (size x size).
+    // The same recipe as the collection (art/neonfaces/photo.py + render.py, Stair Step): levels between the 1st and
+    // 99th percentile, print contrast 1.25 (density Mid), each cell the mean of 6 x 6 samples, then the art's
+    // thresholds, so the brightest light opens into the neon field exactly as on the Faces.
+    const OS = 6, CONTRAST = 1.25, SHIFT = -0.03, STEPS = [0.20, 0.34, 0.47, 0.60, 0.72];
     function render(src, sw, sh, mirror, c, size) {
-      const n = opt.cells, side = Math.min(sw, sh);
+      const n = opt.cells, side = Math.min(sw, sh), m = n * OS;
       if (!side) return;
-      small.width = small.height = n;
+      small.width = small.height = m;
       sctx.save();
-      if (mirror) { sctx.translate(n, 0); sctx.scale(-1, 1); }
-      sctx.drawImage(src, (sw - side) / 2, (sh - side) / 2, side, side, 0, 0, n, n);
+      if (mirror) { sctx.translate(m, 0); sctx.scale(-1, 1); }
+      sctx.drawImage(src, (sw - side) / 2, (sh - side) / 2, side, side, 0, 0, m, m);
       sctx.restore();
-      const img = sctx.getImageData(0, 0, n, n), d = img.data, lum = new Float32Array(n * n), hist = new Uint32Array(256);
-      for (let i = 0; i < n * n; i++) {
-        const y = 0.2126 * d[i * 4] + 0.7152 * d[i * 4 + 1] + 0.0722 * d[i * 4 + 2];
+      const px = sctx.getImageData(0, 0, m, m).data, lum = new Float32Array(m * m), hist = new Uint32Array(256);
+      for (let i = 0; i < m * m; i++) {
+        const y = 0.2126 * px[i * 4] + 0.7152 * px[i * 4 + 1] + 0.0722 * px[i * 4 + 2];
         lum[i] = y; hist[y | 0]++;
       }
-      let lo = 0, hi = 255, acc = 0; // auto-levels: 3rd to 97th percentile, so any light works
-      for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= n * n * 0.03) { lo = v; break; } }
+      let lo = 0, hi = 255, acc = 0;
+      for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= m * m * 0.01) { lo = v; break; } }
       acc = 0;
-      for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc >= n * n * 0.03) { hi = v; break; } }
+      for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc >= m * m * 0.01) { hi = v; break; } }
       const span = Math.max(24, hi - lo), pal = PAL[opt.neon];
-      for (let i = 0; i < n * n; i++) {
-        const t = Math.min(1, Math.max(0, (lum[i] - lo) / span)) ** 1.15;
-        const [R, G, B] = pal[Math.min(5, Math.round(t * 5))];
-        d[i * 4] = R; d[i * 4 + 1] = G; d[i * 4 + 2] = B; d[i * 4 + 3] = 255;
+      const img = cctx.createImageData(n, n), d = img.data;
+      for (let r = 0; r < n; r++) {
+        for (let q = 0; q < n; q++) {
+          let sum = 0;
+          for (let y = 0; y < OS; y++) {
+            for (let x = 0; x < OS; x++) {
+              const v = Math.min(1, Math.max(0, (lum[(r * OS + y) * m + q * OS + x] - lo) / span));
+              sum += Math.min(1, Math.max(0, (v - 0.5) * CONTRAST + 0.5 + SHIFT));
+            }
+          }
+          const v = (sum / (OS * OS)) ** 1.05;
+          let k = 0;
+          while (k < 5 && v >= STEPS[k]) k++;
+          const [R, G, B] = pal[k], i = (r * n + q) * 4;
+          d[i] = R; d[i + 1] = G; d[i + 2] = B; d[i + 3] = 255;
+        }
       }
       cellCanvas.width = cellCanvas.height = n;
       cctx.putImageData(img, 0, 0);

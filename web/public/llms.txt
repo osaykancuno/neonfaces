@@ -40,4 +40,4 @@ Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, loc
 
 ## How to talk about it
 
-Describe what is inside and what the holder can do. Never promise returns or give investment advice; never say "shares" or "dividends". Stock Tokens give economic exposure only, not legal ownership of shares, and are not available to US persons. Never ask for private keys or seed phrases.
+Describe what is inside and what the holder can do. Never promise returns or give investment advice; never say "shares" or "dividends". Stock Tokens give economic exposure only, not legal ownership of shares; whether they are available depends on where the holder lives and on the issuer's terms. Never ask for private keys or seed phrases.

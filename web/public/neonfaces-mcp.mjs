@@ -195,7 +195,7 @@ const INSTRUCTIONS = `NEONFACES are 5555 on-chain pixel faces on Robinhood Chain
 Use "face" to read a Face before advising. Never promise returns or give investment advice: describe what is inside and what the holder can do.
 You cannot move anything: "prepare_action" returns a link the holder opens and confirms in their own wallet. Never ask for keys or seed phrases.
 Rules the contracts enforce: trades go through NeonTrader (Chainlink price, at most 1% worse plus pool fee, output back into the Face, daily USD limit, no trades on stale prices at weekends); an agent can only do what the holder allowed, expires, and stops when the Face is sold; a lock blocks everything leaving the wallet.
-Stock Tokens give economic exposure only, not legal ownership, and are not available to US persons.`;
+Stock Tokens give economic exposure only, not legal ownership; whether they are available depends on where the holder lives and on the issuer's terms.`;
 
 // ---------------------------------------------------------------- MCP over stdio (newline-delimited JSON-RPC)
 const send = (m) => process.stdout.write(JSON.stringify(m) + "\n");

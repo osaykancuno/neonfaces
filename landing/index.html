@@ -196,8 +196,7 @@
       <ol class="steps">
       <li><b>Mint on OpenSea</b>Wallets on the list mint first, for 24 hours, up to 3 Faces each; then the sale opens to everyone, up to 5 Faces per wallet in total, until every Face is sold. The date and the prices are announced before the sale.</li>
       <li><b>Wallet and base basket</b>Your Face gets its wallet in the same transaction and its base basket from the pool.</li>
-      <li><b>Reveal</b>When the mint closes, the chain assigns every Face its art and tier.</li>
-      <li><b>Top-up</b>Watch and Heavy Stare Faces receive their extra basket.</li>
+      <li><b>Reveal and top-up</b>When the mint closes, the chain assigns every Face its art and tier; Watch and Heavy Stare Faces then receive their extra basket.</li>
       <li><b>Complete a set</b>If your Face is a piece, find the other three and assemble the whole face.</li>
       <li><b>Yours to use</b>Keep it and let the Gaze grow, add to it, withdraw, set up an agent, lock it before listing, or sell it with everything inside.</li>
     </ol>
@@ -363,7 +362,7 @@
       <div class="label">NEONCAM</div>
       <h2>See yourself the way they see you</h2>
       <div class="prose">
-        <p>Your camera through the same pipeline as the collection: a close-up of 24 cells in the collection's six tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it.</p>
+        <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it.</p>
       </div>
       <div class="cam">
       <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas>
@@ -422,7 +421,7 @@
       <span class="brand-sm">NEONFACES</span>
       <span class="foot-contracts">neonfaces.xyz · Mint: OpenSea, Robinhood Chain</span>
     </div>
-    <p class="disclaimer">Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares and are not available to US persons. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
+    <p class="disclaimer">Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares. Whether they are available to you depends on where you live and on the issuer's terms. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
   </footer>
 </main>
 <div id="al-banner" class="al-banner" hidden>
@@ -439,14 +438,15 @@
 <script type="module">
   import { sound } from "./app.js";
 
-  // NEONCAM: camera (or a photo) -> center square -> luminance, auto-levels -> the art's 6 tones on a 24/32/48 grid,
+  // NEONCAM: camera (or a photo) -> center square -> luminance, auto-levels -> 5 tones on a 24/32/48 grid (five, the
+  // collection's number: the art's build_palette formula in render.py with 5 steps instead of 6),
   // the collection's grain and Gaze bloom. Local only: no upload, nothing stored.
   (() => {
     const PAL = [
       // black to the neon field, like the art (art/neonfaces/render.py): the brightest light becomes neon, never white
-      ["#000000", "#1f2504", "#414d12", "#677920", "#94b21d", "#ccff00"], // Standard
-      ["#000000", "#1c2304", "#3c4811", "#5f701e", "#89a61b", "#bcee00"], // Deep
-      ["#000000", "#202609", "#454e1b", "#6d7b2d", "#9cb432", "#d6ff1f"], // Hot
+      ["#000000", "#272f07", "#53621a", "#88a220", "#ccff00"], // Standard
+      ["#000000", "#242c07", "#4d5b18", "#7d971e", "#bcee00"], // Deep
+      ["#000000", "#29300d", "#586425", "#90a533", "#d6ff1f"], // Hot
     ].map((p) => p.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))));
     const $ = (id) => document.getElementById(id);
     const out = $("cam-out"), msg = $("cam-msg");
@@ -461,9 +461,10 @@
 
     // one frame of the source (video or photo) -> the NEONFACES look, drawn on canvas `c` (size x size).
     // The same recipe as the collection (art/neonfaces/photo.py + render.py, Stair Step): levels between the 1st and
-    // 99th percentile, print contrast 1.25 (density Mid), each cell the mean of 6 x 6 samples, then the art's
-    // thresholds, so the brightest light opens into the neon field exactly as on the Faces.
-    const OS = 6, CONTRAST = 1.25, SHIFT = -0.03, STEPS = [0.20, 0.34, 0.47, 0.60, 0.72];
+    // 99th percentile, print contrast 1.25 (density Mid), each cell the mean of 6 x 6 samples, then five tones: the
+    // art's outer thresholds (black under 0.20, the neon field from 0.72, so the brightest light opens into neon as on
+    // the Faces) and the band between them split in three.
+    const OS = 6, CONTRAST = 1.25, SHIFT = -0.03, STEPS = [0.20, 0.37, 0.55, 0.72];
     function render(src, sw, sh, mirror, c, size) {
       const n = opt.cells, side = Math.min(sw, sh), m = n * OS;
       if (!side) return;
@@ -494,7 +495,7 @@
           }
           const v = (sum / (OS * OS)) ** 1.05;
           let k = 0;
-          while (k < 5 && v >= STEPS[k]) k++;
+          while (k < STEPS.length && v >= STEPS[k]) k++;
           const [R, G, B] = pal[k], i = (r * n + q) * 4;
           d[i] = R; d[i + 1] = G; d[i + 2] = B; d[i + 3] = 255;
         }

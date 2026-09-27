@@ -6,3 +6,8 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Vite names every built file after its content (assets/index-<hash>.js): a new build gets new names, so browsers
+# and Netlify's edge can keep these for a year and a crowd on sale day only fetches index.html and deployment.json
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

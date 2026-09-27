@@ -13,12 +13,29 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const chainId = Number(process.argv[2] ?? 4663);
 const CHAINS = {
-  4663: { name: "Robinhood Chain", rpcUrl: "https://rpc.mainnet.chain.robinhood.com", explorer: "https://robinhoodchain.blockscout.com", opensea: "https://opensea.io/item/robinhood" },
+  // rpcFallbacks: keyless public nodes the site switches to when the official one fails or rate-limits (checked
+  // 27 Sep: same head block; PublicNode takes batches but no archive logs, dRPC's free tier neither batches nor
+  // logs over 10,000 blocks, so the journal's full-range logs stay on the official node, then Blockscout)
+  4663: {
+    name: "Robinhood Chain",
+    rpcUrl: "https://rpc.mainnet.chain.robinhood.com",
+    rpcFallbacks: ["https://robinhood-rpc.publicnode.com", "https://robinhood.drpc.org"],
+    explorer: "https://robinhoodchain.blockscout.com",
+    opensea: "https://opensea.io/item/robinhood",
+  },
   46630: { name: "Robinhood Chain Testnet", rpcUrl: "https://rpc.testnet.chain.robinhood.com", explorer: "https://explorer.testnet.chain.robinhood.com", opensea: "" },
   31337: { name: "Local", rpcUrl: "http://127.0.0.1:8545", explorer: "", opensea: "" },
 };
 const chain = { ...(CHAINS[chainId] ?? CHAINS[31337]) };
 if (process.argv[3]) chain.rpcUrl = process.argv[3];
+// ALCHEMY_RPC_URL: a keyed endpoint, first fallback after the official node. It ends up public in deployment.json
+// (every visitor's browser uses it), so it is never committed: the key must be restricted in Alchemy's dashboard to
+// the site's domains and capped, and the site falls through to the keyless nodes if it runs out.
+if (process.env.ALCHEMY_RPC_URL) {
+  if (!/^https:\/\/robinhood-mainnet\.g\.alchemy\.com\/v2\/[\w-]+$/.test(process.env.ALCHEMY_RPC_URL) || chainId !== 4663)
+    throw new Error("ALCHEMY_RPC_URL: https://robinhood-mainnet.g.alchemy.com/v2/<key>, chain 4663 only");
+  chain.rpcFallbacks = [process.env.ALCHEMY_RPC_URL, ...(chain.rpcFallbacks ?? [])];
+}
 
 const dep = JSON.parse(readFileSync(resolve(here, `../contracts/deployments/${chainId}.json`), "utf8"));
 const out = { ...dep, chain: { id: chainId, ...chain } };

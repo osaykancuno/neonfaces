@@ -1,0 +1,14 @@
+// neonfaces.xyz from the public stage: the web app (web/dist/), static assets only; every unknown path serves
+// index.html (/face/<id>, /sets, ...), like the SPA rewrite in web/dist/_redirects on Netlify. Publish: tools/site.sh deploy web
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "neonfaces",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "../../web/dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "single-page-application"
+  },
+  "workers_dev": true,
+  "preview_urls": false
+}

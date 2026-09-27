@@ -68,6 +68,12 @@ Sound: each real shot keeps its own generated sound (no voice); the over-the-sho
 
 **V5 The Gaze** (25.4 s): #198 on a bench on a grey morning, the glow faint, "DAY 30." · at an office window at dusk, stronger, "DAY 90." · over her shoulder at night, "DAY 365." · she looks up into the lens · her face turns into her Face · STEADY, FIXED, PIERCING (the renderer's bloom per level) · card, "THE LONGER IT STAYS, THE HARDER IT STARES."
 
+## The story (out/story.mp4 + story-4x5.mp4, 60 s): `python marketing/movement/make_story.py`
+
+Every piece of the movement in one arc, and the only piece with the site: the card says NEONFACES, NEONFACES.XYZ, COMING SOON (no date, no price; the user, 27 Sep). Two new clips and a music bed were generated for it (about 15 credits): `s-eye` (a macro eye with the lime of a screen in its pupil, the hook: it opens wide and never blinks), `s-windows` (a building's facade, window after window lighting up lime, the camera pulling back), and a 60 s instrumental score (Sonilo Music) under the whole cut.
+
+0-3.5 the eye, "They don't blink." (voice and bass hit on the first second) · 3.5-17 the world: tram, rain, 5:50 AM, 11 PM on the metro, 2 AM in a taxi ("The market never closes." spoken), a rooftop, "NEITHER DO THEY." · 17-28.5 some screens stare back: her Face on her phone over her shoulder, she looks up, her face becomes her Face, "5555 FACES. EACH ONE SOMEONE." · 28.5-38.5 "Look closer." (spoken): into his screen, "EVERY FACE IS A WALLET.", the basket inside · 38.5-53.4 the wall of Faces "FULLY ON-CHAIN.", four people with four pieces, the pieces lock, "THE LONGER IT STAYS," Steady, Fixed, Piercing · 53.4-60 the lit building, "Someone has to keep watching." (spoken), the card with the site, "They don't blink. Neither do I." (spoken).
+
 ## Images (out/i*-4x5.png for feeds, -9x16.png for stories)
 
 | # | Shot | Line |

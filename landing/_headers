@@ -1,0 +1,9 @@
+# Cloudflare Pages response headers for the preview (the same as the web app's, except the camera: NEONCAM uses it,
+# on this origin only). No other site may frame it; browsers must not guess file types; other sites see only the
+# origin in the referrer. This file is read by Pages, not served.
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(), geolocation=()

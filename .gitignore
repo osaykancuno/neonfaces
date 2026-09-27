@@ -48,3 +48,9 @@ art/portraits/*.log
 art/portraits/identity.npy
 art/portraits/replaced/
 art/portraits/manifest.tmp
+# Cloudflare wrangler local state (pages dev)
+.wrangler/
+
+.dev.vars*
+!.dev.vars.example
+!.env.example

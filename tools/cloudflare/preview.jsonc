@@ -1,0 +1,14 @@
+// neonfaces.xyz until the public stage: the preview (landing/), served as static assets only (no Worker code runs,
+// so requests are free and unlimited). An unknown path answers 404, as on Netlify. Publish: tools/site.sh deploy preview
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "neonfaces",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "../../landing",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+  "workers_dev": true,
+  "preview_urls": false
+}

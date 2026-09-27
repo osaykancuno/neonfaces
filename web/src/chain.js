@@ -1,7 +1,7 @@
 // Chain access for the NEONFACES site. No backend: everything is read from Robinhood Chain.
 // `/deployment.json` (written by tools/export-web.mjs) holds addresses + chain; without it the site
 // runs in preview mode (art previews only). Minting happens on OpenSea (SeaDrop), not here.
-import { createPublicClient, createWalletClient, custom, http, parseAbi, defineChain, getAddress } from "viem";
+import { createPublicClient, createTransport, createWalletClient, custom, http, parseAbi, defineChain, getAddress, shouldThrow } from "viem";
 
 export const ABI = {
   faces: parseAbi([
@@ -119,6 +119,57 @@ export const state = {
   preview: true,
 };
 
+/**
+ * Reads go to the chain's official node; when it fails or rate-limits, to the keyless fallbacks in order. In the
+ * launch days thousands of browsers read at once: a "Too Many Requests" (HTTP 429, or a JSON-RPC 429 in a 200) clears
+ * in about 2 s on the official node (measured 27 Sep). Each node retries twice (0.5 s, 1 s), then the next one
+ * answers. dRPC's free tier refuses JSON-RPC batches: single requests there.
+ */
+function transport(chain) {
+  const opts = { retryCount: 2, retryDelay: 500 };
+  const nodes = [
+    http(chain.rpcUrl, { ...opts, batch: true }),
+    ...(chain.rpcFallbacks ?? []).map((u) => http(u, { ...opts, batch: !u.includes("drpc.org") })),
+  ];
+  return nodes.length > 1 ? sticky(nodes) : nodes[0];
+}
+
+/**
+ * viem's fallback starts from the first node on every request, so with the official node down each read would wait
+ * for its retries (a Face page took 27 s in the test of 27 Sep). This one stays on the node that answered for a
+ * minute, then tries the official node again. Contract errors (a revert) and wallet refusals are answers, not
+ * failures: they are thrown at once, as viem's own fallback does (`shouldThrow`).
+ */
+function sticky(list, stayMs = 60_000) {
+  let preferred = 0;
+  let until = 0;
+  return ({ chain, ...rest }) => {
+    const nodes = list.map((t) => t({ chain, ...rest, retryCount: undefined }));
+    return createTransport({
+      key: "sticky",
+      name: "Sticky fallback",
+      type: "fallback",
+      retryCount: 0,
+      async request(args) {
+        const start = Date.now() < until ? preferred : 0;
+        let last;
+        for (let k = 0; k < nodes.length; k++) {
+          const i = (start + k) % nodes.length;
+          try {
+            const res = await nodes[i].request(args);
+            if (i !== start) [preferred, until] = i === 0 ? [0, 0] : [i, Date.now() + stayMs];
+            return res;
+          } catch (e) {
+            if (shouldThrow(e)) throw e;
+            last = e;
+          }
+        }
+        throw last;
+      },
+    });
+  };
+}
+
 export async function loadDeployment() {
   try {
     const r = await fetch("/deployment.json", { cache: "no-store" });
@@ -132,7 +183,7 @@ export async function loadDeployment() {
       rpcUrls: { default: { http: [dep.chain.rpcUrl] } },
       blockExplorers: dep.chain.explorer ? { default: { name: "Blockscout", url: dep.chain.explorer } } : undefined,
     });
-    state.pub = createPublicClient({ chain: state.chain, transport: http(dep.chain.rpcUrl, { batch: true }) });
+    state.pub = createPublicClient({ chain: state.chain, transport: transport(dep.chain) });
     state.preview = false;
   } catch {
     state.preview = true;

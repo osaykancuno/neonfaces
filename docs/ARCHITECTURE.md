@@ -69,6 +69,24 @@ Holder: `execute` / `executeBatch` (CALL only), receives ETH / ERC-20 / 721 / 11
 
 `tokenURI` reads: Stare tier (Unrevealed until reveal), base seed and status, Stare Upgrade, **Set** (number) / **Set Status** (Assembled, or Inside Another Piece; the description names the pieces) / **Set Bonus** on set pieces, **Holds <TICKER>** balances (numbers), **Unblinking Days**, **Eyes Open Since**, **Gaze**, **Locked Until**, Art ID. The art is sealed; the only thing time adds to the image is the **Gaze**: after 30 / 90 / 365 days with the same holder the SVG is screened with a blurred copy of itself (Steady / Fixed / Piercing bloom, `gazeOf`), reset by a sale. Time-based changes emit no event, so `NeonFaces.refreshMetadata()` (anyone, once a day; the keeper calls it) emits `BatchMetadataUpdate` for marketplaces. A future renderer can be plugged via `setRenderer` until `freezeMetadata()`; ERC-4906 events on every change.
 
+## Evolving without upgrades
+
+No contract is behind a proxy, and none will be: the rules holders buy into (5555 Faces, 111 for the team, the sealed art, the 55 / 15 / 15 / 15 split, transfers never restricted) can't be changed by anyone. The project can still grow around them. Decided on 27 September 2026, before the deploy; a non-standard "ERC-721T" (per-token data stored in the token contract) and a proxy were considered and rejected, and ERC-7496 (Dynamic Traits) was not added to `NeonFaces` this late (1,053 bytes of margin, and every trait is already on-chain in `tokenURI`).
+
+| A future need | Where it goes |
+|---|---|
+| New traits, badges, achievements, states | a new contract that records them, and a new renderer that shows them (`setRenderer`, Safe only) |
+| New baskets or rewards | tokens sent into the Faces' accounts: an ERC-6551 account receives any ERC-20, 721 or 1155, from anyone |
+| New account features | a second ERC-6551 account per Face with a new implementation (the registry allows several per token), opt-in for each holder |
+| New protocols, markets, strategies | the holder calls them from the Face's account (`execute`); NeonTrader has no owner, and a new trader can sit beside it |
+| New mechanics around sets, votes, events | new contracts that read the public state: `ownerOf`, `NeonSeeder.setOf` / `isAssembled` / `fusedAnchorOf`, `unblinkingFor`, `effectiveLockedUntil` |
+| Collection text, royalties | `setContractURI` or the renderer; `setRoyaltyInfo` (≤ 5%) |
+
+What keeps these doors open:
+- **Never call `freezeMetadata()`** while a future renderer is possible: the renderer is the only way new data reaches marketplaces. A new renderer must keep rendering the sealed art, and every change of renderer emits `BatchMetadataUpdate`.
+- A module that changes what a Face shows asks marketplaces to re-read it through the Safe (`refreshMetadata(from, to)`, METADATA_ROLE) or waits for the daily `refreshMetadata()`. Don't grant METADATA_ROLE to a module: it could also swap the renderer or request the reveal.
+- Every new module is its own contract, reviewed on its own, and holders opt in: none can take anything out of a Face or its account.
+
 ## Entropy
 
-`ChainEntropy` uses ArbSys `arbBlockNumber` / `arbBlockHash` (real L2 values) when both work, otherwise native opcodes; precompile calls are gas-capped. Not a VRF — used only for the reveal key and the choice among equal-value base baskets.
+`ChainEntropy` uses ArbSys `arbBlockNumber` / `arbBlockHash` (real L2 values) when both work, otherwise native opcodes; precompile calls are gas-capped. Not a VRF: used only for the reveal key and the choice among equal-value base baskets.

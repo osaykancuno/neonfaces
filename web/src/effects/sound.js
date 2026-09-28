@@ -103,6 +103,7 @@ export const sound = {
   success: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, { dur: 0.07, delay: i * 0.07, vol: 0.04 })),
   error: () => (tone(140, { dur: 0.18, vol: 0.05, type: "sawtooth" }), tone(110, { dur: 0.22, delay: 0.12, vol: 0.05, type: "sawtooth" })),
   sweep: () => tone(180, { dur: 0.45, slide: 1400, vol: 0.025, type: "sawtooth" }), // a Face resolving block by block
+  buzz: (dur = 0.06) => (tone(120, { dur, vol: 0.035, type: "sawtooth" }), tone(240, { dur, vol: 0.012, type: "square" })), // a neon tube striking
 };
 
 /** Wire a toggle button and the ambient cues (hover and click on links and buttons). */

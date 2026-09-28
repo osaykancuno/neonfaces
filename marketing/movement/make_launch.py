@@ -3,6 +3,7 @@ the collection's own art and short instrumental beds (gen_music.py). Captions in
 
     python marketing/movement/make_launch.py              # all -> out/l-*.mp4 (+ -4x5.mp4)
     python marketing/movement/make_launch.py wall cam     # only these
+    python marketing/movement/make_launch.py --site announce howto today   # plan B: the mint on neonfaces.xyz -> l-*-site.mp4
 
 No date in: wall, tiers, chain, facts, cam, list, open, public. Dated (docs/LAUNCH-RUNBOOK.md, moved forward on 28 Sep):
 announce, howto, tomorrow, today. Thu 1 Oct 18:00 UTC on OpenSea, the list first for 24 hours (0.013 ETH, up to 3),
@@ -26,6 +27,7 @@ from make_cut import (ART, FPS, H, INK, NEON, PALE, DIM, SCORE, T1, T3, T5, W, b
 from export_brand import eye_image, gaze_path  # noqa: E402
 
 ARTS = json.loads((ART / "art.json").read_text())
+SITE = "--site" in sys.argv  # plan B (28 Sep): the mint happens on neonfaces.xyz, through SeaDrop, not on OpenSea's page
 mc.FONT["?"] = ["01110", "10001", "00001", "00010", "00100", "00000", "00100"]
 # everything that matters sits inside the 4:5 crop (y 360 to 1710)
 
@@ -285,7 +287,7 @@ def tiers():
 
 def announce():
     seq = [(2.2, [("THURSDAY", 12, NEON), ("1 OCTOBER", 12, NEON)]),
-           (2.2, [("18:00 UTC", 12, NEON), ("", 4, PALE), ("ON OPENSEA", 7, PALE)]),
+           (2.2, [("18:00 UTC", 12, NEON), ("", 4, PALE), ("ON NEONFACES.XYZ" if SITE else "ON OPENSEA", 7, PALE)]),
            (3.0, [("THE LIST FIRST", 9, NEON), ("", 4, PALE), ("24 HOURS", 7, PALE), ("0.013 ETH, UP TO 3", 6, PALE)]),
            (3.0, [("THEN EVERYONE", 9, NEON), ("", 4, PALE), ("FROM FRIDAY", 7, PALE), ("0.018 ETH, UP TO 5", 6, PALE)]),
            (2.8, [("CHECK YOUR WALLET", 8, NEON), ("", 4, PALE), ("NEONFACES.XYZ", 8, PALE)])]
@@ -322,7 +324,7 @@ def cam():
 def howto():
     steps = [("1", "CHECK YOUR WALLET", "ON NEONFACES.XYZ"),
              ("2", "PUT ETH ON", "ROBINHOOD CHAIN"),
-             ("3", "THURSDAY 18:00 UTC", "OPEN THE DROP ON OPENSEA"),
+             ("3", "THURSDAY 18:00 UTC", "MINT ON NEONFACES.XYZ" if SITE else "OPEN THE DROP ON OPENSEA"),
              ("4", "THE LIST MINTS FIRST", "24 HOURS, UP TO 3 EACH"),
              ("5", "YOUR FACE ARRIVES", "WITH ITS OWN WALLET")]
     seq = [(2.7, [(n, 20, NEON), ("", 4, PALE), (a, 7, PALE), (b, 5, DIM)]) for n, a, b in steps]
@@ -346,7 +348,7 @@ def today():
              (3.0, lambda: turn("t-a", 3.6, "f257", 3.0, "18:00 UTC.")),
              (3.2, lambda: cards([(3.2, [("THE LIST FIRST", 8, NEON), ("", 3, PALE), ("24 HOURS", 7, PALE), ("", 3, PALE),
                                          ("NEONFACES.XYZ", 7, PALE)])], seed=17)),
-             (3.0, lambda: card("f257", "TODAY. 18:00 UTC. OPENSEA."))]
+             (3.0, lambda: card("f257", "TODAY. 18:00 UTC. NEONFACES.XYZ." if SITE else "TODAY. 18:00 UTC. OPENSEA."))]
     sounds = [(raw("t-a"), 0.1, 3.9, 0.0, 1.0, 0.0, 0.15), score(music("day"), 0.0, 13.0, 0.9, rise=(1.0, 3.8, 0.35))]
     return parts, sounds
 
@@ -396,6 +398,7 @@ PIECES = {"public": public, "facts": facts, "chain": chain, "wall": wall, "tiers
           "tomorrow": tomorrow, "today": today, "open": open_}
 
 if __name__ == "__main__":
-    for name in sys.argv[1:] or list(PIECES):
-        mc.VIDEOS[f"l-{name}"] = PIECES[name]
-        mc.render(f"l-{name}")
+    for name in [a for a in sys.argv[1:] if not a.startswith("--")] or list(PIECES):
+        out = f"l-{name}-site" if SITE else f"l-{name}"
+        mc.VIDEOS[out] = PIECES[name]
+        mc.render(out)

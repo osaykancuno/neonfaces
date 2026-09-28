@@ -136,6 +136,20 @@ OPENSEA_URL=https://opensea.io/collection/<slug> node tools/export-web.mjs 4663
 
 Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers never pause).
 
+### Plan B: the stages set on-chain, the mint on neonfaces.xyz
+
+For when Studio can't manage the contract (28 Sep: OpenSea indexed the collection, but Studio doesn't list a contract it didn't deploy). The stages are the same SeaDrop stages Studio would set, so the Faces still mint through OpenSea's SeaDrop contract, OpenSea still takes its fee, and the collection page shows every Face.
+
+```bash
+node tools/seadrop-drop.mjs 4663        # Merkle tree of the list, the proofs (web/public/drop/, git-ignored), the calldata
+node tools/configure-drop.mjs 4663      # http://127.0.0.1:8787 in the browser of the sale manager's wallet
+```
+The page states every term, refuses any wallet other than the sale manager, simulates, sends the one `multiConfigure` and reads SeaDrop back (four checks). Then `verify-drop.mjs` as above. Re-run `seadrop-drop.mjs` whenever the list changes, and configure again before the list stage starts.
+
+The web app mints when `web/public/drop/params.json` is published with it: the panel on Home shows a countdown, then the stage open for the connected wallet (its proof on the list, what it minted, what is left), simulates each mint and sends it to SeaDrop with OpenSea's fee recipient. Every Face minted is then born on screen with its account and basket, read from the transaction, and the screen lights up neon; each size from 1 to 5 has its own scene. So on plan B the web app goes live **before Thu 18:00 UTC**, with the proofs (`tools/site.sh deploy web`, 256 proof files, 29 MB). **On the Studio path, delete `web/public/drop/` before building**, or the site would offer its own mint next to OpenSea's.
+
+Tested on a fork of mainnet (29 Sep): the configure page (wrong account refused, dry run, four checks PASS), the countdown switching to the list stage at 18:00:00 without a reload, listed and unlisted wallets, the per-wallet limits, a refused signature, mints of 1 to 5 in both stages, then a keeper round seeding all 100 Faces of a 100-Face rehearsal. A mint of 5 uses about 1.5M gas (a few cents at 0.02 gwei). The first Faces are born with their basket pending: the pool fills from the mint itself, on the keeper's next round.
+
 ### Site capacity (checked 27 Sep)
 
 The mint happens on OpenSea; neonfaces.xyz is static files plus reads from the chain made by each visitor's browser, so thousands of visitors at once are fine as long as two things hold.

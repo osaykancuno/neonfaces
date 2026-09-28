@@ -9,6 +9,7 @@ import { route as tradeRoute } from "./actions.js";
 import { liveValue, valueHistory, sparkline } from "./value.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
+import { loadDrop, setupSiteMint, MINT_ERRORS } from "./mint.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -20,6 +21,7 @@ let lastView = null;
 let sets = []; // [{ set, stare, face, records[4] }]: whole sets for the Sets section
 let placeholder = null;
 let rarity = null;
+let siteMint = false; // plan B: the mint happens on this page, through SeaDrop (mint.js)
 const faceURI = (f) => svgDataURI(f.artId, f.record);
 
 // =====================================================================================
@@ -395,6 +397,8 @@ const FRIENDLY = {
   Unauthorized: "Only the holder can do this.",
 };
 
+Object.assign(FRIENDLY, MINT_ERRORS);
+
 const tokenOf = (address) => (state.dep?.tradeTokens ?? []).find((t) => t.address.toLowerCase() === String(address).toLowerCase());
 
 function errMsg(e) {
@@ -403,6 +407,7 @@ function errMsg(e) {
   if (f) return typeof f === "function" ? f(data.args ?? []) : f;
   const m = e?.shortMessage || e?.details || e?.message || String(e);
   if (/User rejected|denied/i.test(m)) return "Transaction rejected.";
+  if (/insufficient funds|exceeds (the )?balance/i.test(m)) return "Not enough ETH on Robinhood Chain for this mint plus gas.";
   if (/Too little received/i.test(m)) return "This market is more than 1% away from its reference price right now, so NeonTrader won't trade at a worse price. Nothing was signed: try again later.";
   const custom = m.match(/reverted with the following reason:\s*(.*)|error (\w+)\(/);
   return custom ? custom[1] || custom[2] : m.slice(0, 180);
@@ -432,6 +437,30 @@ function setupMint() {
   }
   refreshMint();
   setInterval(refreshMint, 12_000);
+  loadDrop().then((drop) => drop && startSiteMint(drop));
+}
+
+/** Plan B: the panel mints here. The words that said "on OpenSea" say where the mint really happens. */
+function startSiteMint(drop) {
+  siteMint = true;
+  const fee = Number(drop.list.feeBps) / 100;
+  $("#hero-mint").textContent = "Mint";
+  const btn = $("#opensea-btn");
+  btn.className = "btn btn-ghost btn-wide";
+  btn.textContent = "The collection on OpenSea ↗";
+  if (!btn.href) btn.hidden = true;
+  $("#mint-fine").textContent = `Minting happens right here, through OpenSea's SeaDrop contract: the same contract OpenSea's own drops use, so the stage, price, limit and list are enforced on-chain, not by this page. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only, not ownership of shares.`;
+  $("#funds-lead").innerHTML = `The mint runs through OpenSea's SeaDrop contract${fee ? `, and OpenSea keeps ${fee}% of primary sales` : ""}. The rest can only be paid to <code>NeonPayout</code>: shares and addresses are immutable, and anyone can push the split with <code>releaseAll()</code>. Resale royalties: 5% suggested on-chain (ERC-2981) to the treasury multisig, optional because transfers are never restricted.`;
+  $("#faq-where").textContent = "Right here: the Mint button on Home opens the panel, which mints through OpenSea's SeaDrop contract on Robinhood Chain. Your Faces show up on OpenSea and trade there. This app is also where you look inside your Faces and manage them: withdraw, trade, lock, assemble sets, delegate an agent.";
+  setupSiteMint({
+    doConnect,
+    errMsg,
+    toast,
+    sound,
+    records: gallery.map((f) => f.record),
+    onMinted: () => { refreshMint(); renderMyFaces(); },
+    open: (id) => { history.pushState({}, "", `/face/${id}`); route(); },
+  });
 }
 
 async function refreshMint() {
@@ -439,8 +468,8 @@ async function refreshMint() {
   try {
     const [supply, funded, closed] = await Promise.all([read("faces", "totalSupply"), read("seeder", "fundedCount"), read("faces", "mintClosed")]);
     const done = closed || supply >= 5555n;
-    $("#phase-pill").textContent = done ? "Mint over · trade on OpenSea" : "Minting on OpenSea";
-    $("#phase-pill").classList.toggle("live", !done);
+    if (!siteMint) $("#phase-pill").textContent = done ? "Mint over · trade on OpenSea" : "Minting on OpenSea";
+    if (!siteMint) $("#phase-pill").classList.toggle("live", !done);
     if (done && state.dep?.opensea?.collection) $("#opensea-btn").textContent = "View on OpenSea ↗";
     $("#progress-text").textContent = `${supply} / 5555`;
     $("#progress-bar").style.width = `${(Number(supply) / 5555) * 100}%`;

@@ -571,3 +571,85 @@ a, button, summary, label, input, select, textarea { -webkit-tap-highlight-color
   .block { padding-left: max(var(--gutter), env(safe-area-inset-left)); padding-right: max(var(--gutter), env(safe-area-inset-right)); }
   .tabbar { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 }
+
+/* ------------------------------------------------------------------ the mint on this site (plan B, mint.js + effects/birth.js) */
+.mint-line { font-family: var(--mono); font-size: 14px; margin: 0 0 14px; color: var(--text); }
+.mint-line b { color: var(--neon); font-weight: 400; font-family: var(--pixel); }
+.mint-count { font-family: var(--pixel); font-size: clamp(34px, 7vw, 54px); color: var(--neon); margin: 4px 0 8px; letter-spacing: 2px; text-shadow: 0 0 18px rgba(204, 255, 0, .45); font-variant-numeric: tabular-nums; }
+.qty { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; flex-wrap: wrap; }
+.qty .btn { width: 48px; height: 48px; padding: 0; font-size: 22px; line-height: 1; }
+.qty .btn:disabled { opacity: .3; }
+.qty output { font-family: var(--pixel); font-size: 34px; color: var(--neon); min-width: 44px; text-align: center; }
+.qty .fine { margin: 0; }
+#site-mint .btn-wide[data-mint="mint"]:not(:disabled) { box-shadow: 0 0 0 1px var(--neon), 0 0 26px rgba(204, 255, 0, .35); }
+#site-mint .btn:disabled { cursor: not-allowed; }
+#site-mint + .mint-log + .btn { margin-top: 14px; }
+.mint-log { font-family: var(--mono); font-size: 12px; line-height: 1.7; color: var(--text); background: #000; border: 1px solid var(--line); padding: 10px 12px; margin-top: 14px; white-space: pre-wrap; }
+.mint-log .neon, .birth-log .neon { color: var(--neon); }
+.mint-log .dim, .birth-log .dim { color: var(--dim); }
+.mint-log .err { color: #ff5d7a; }
+.mint-panel.flash { animation: stage-open 1.1s steps(6) 1; }
+@keyframes stage-open { 0%, 30%, 60% { background: var(--neon); } 15%, 45%, 100% { background: #030400; } }
+
+/* the art pane while minting: the eye while you sign, Faces flickering while the chain writes */
+.chamber-flick, .chamber-eye, .chamber-scan { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity .2s steps(3); }
+.chamber-eye { top: 25%; height: 50%; }
+.mint-art[data-stage="sign"] { background: #000; }
+.mint-art[data-stage="sign"] img { opacity: 0; }
+.mint-art[data-stage="sign"] .chamber-eye { opacity: 1; }
+.mint-art[data-stage="chain"] .chamber-flick, .mint-art[data-stage="chain"] .chamber-scan { opacity: 1; }
+.chamber-scan { background: linear-gradient(transparent 0 46%, rgba(204, 255, 0, .5) 50%, transparent 54%) 0 0 / 100% 200%; animation: scan 1.1s linear infinite; mix-blend-mode: screen; }
+@keyframes scan { from { background-position: 0 100%; } to { background-position: 0 -100%; } }
+
+/* the birth: dark, the Faces strike one by one, then the whole screen lights neon */
+.birth { position: fixed; inset: 0; z-index: 95; background: #000; color: var(--text); display: grid; place-items: center; padding: var(--gutter); overflow: auto; opacity: 0; transition: opacity .25s steps(4); }
+.birth.open { opacity: 1; }
+.birth-burst { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+.birth-box { position: relative; z-index: 1; display: grid; grid-template-columns: auto minmax(0, 380px); gap: 36px; align-items: center; max-width: 1180px; width: 100%; justify-content: center; }
+.birth-sign { grid-column: 1 / -1; display: flex; justify-content: center; gap: .1em; font-family: var(--pixel); font-size: clamp(30px, 7vw, 72px); color: #1f2504; }
+.birth-sign[hidden] { display: none; }
+.birth-sign span { transition: color .05s, text-shadow .05s; }
+.birth-sign span.on { color: var(--neon); text-shadow: 0 0 12px var(--neon), 0 0 34px rgba(204, 255, 0, .6); }
+.birth-grid { display: grid; gap: 14px; justify-content: center; transition: gap .6s steps(6); }
+.birth[data-n="1"] .birth-grid { grid-template-columns: min(480px, 70vh, 86vw); }
+.birth[data-n="2"] .birth-grid { grid-template-columns: repeat(2, min(300px, 40vw)); }
+.birth[data-n="3"] .birth-grid { grid-template-columns: repeat(3, min(240px, 27vw)); }
+.birth[data-n="4"] .birth-grid { grid-template-columns: repeat(2, min(220px, 38vw)); }
+.birth[data-n="5"] .birth-grid { grid-template-columns: repeat(5, min(170px, 17vw)); }
+.birth[data-n="5"] .birth-box { grid-template-columns: 1fr; gap: 24px; }
+.birth[data-n="5"] .birth-side { max-width: 640px; justify-self: center; width: 100%; }
+.birth[data-n="5"] .birth-log { min-height: 0; }
+.birth-grid.closed { gap: 0; }
+.birth-grid.closed .birth-tile { border-color: transparent; }
+.birth-grid.closed .birth-tile span { opacity: 0; }
+.birth-tile { position: relative; padding: 0; border: 2px solid #1f2504; background: #000; cursor: pointer; opacity: .18; transition: opacity .04s, box-shadow .04s, border-color .04s; }
+.birth-tile.on { opacity: 1; border-color: var(--neon); box-shadow: 0 0 22px rgba(204, 255, 0, .55); }
+.birth-tile canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.birth-tile span { position: absolute; left: 6px; bottom: 6px; font-family: var(--mono); font-size: 11px; background: #000; color: var(--neon); padding: 1px 5px; }
+.birth-tile[aria-current] { outline: 3px solid var(--neon); outline-offset: 4px; }
+.birth-title { font-family: var(--pixel); font-size: clamp(22px, 3.4vw, 34px); margin: 0 0 14px; color: var(--ice); }
+.birth-log { font-family: var(--mono); font-size: 12px; line-height: 1.7; white-space: pre-wrap; min-height: 9em; margin-bottom: 18px; }
+.birth-acts { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.birth-acts .fine { flex-basis: 100%; margin: 4px 0 0; }
+.birth-close { position: fixed; top: 14px; right: 14px; z-index: 3; }
+/* lit: NEONCAM's palette, the screen itself is the neon */
+.birth.lit { background: #ccff00 radial-gradient(rgba(0, 0, 0, .1) 1px, transparent 1.5px) 0 0 / 22px 22px; color: #000; --neon: #000; --ice: #000; --text: #000; --dim: #3d4a0c; --line: rgba(0, 0, 0, .3); }
+.birth.lit .birth-tile { border-color: #000; box-shadow: 10px 10px 0 rgba(0, 0, 0, .85); }
+.birth.lit .birth-tile span { background: #000; color: #ccff00; }
+.birth.lit .birth-tile[aria-current] { outline-color: #000; }
+.birth.lit .birth-grid.closed .birth-tile { box-shadow: none; }
+.birth.lit .birth-grid.closed { box-shadow: 10px 10px 0 rgba(0, 0, 0, .85); }
+.birth.lit .birth-sign span.on { color: #000; text-shadow: none; }
+.birth.lit .btn-neon { background: #000; color: #ccff00; border-color: #000; }
+.birth.lit .btn-ghost { background: transparent; color: #000; border-color: #000; }
+.birth.lit .birth-log .neon { font-weight: 700; }
+html.birth-lit #cursor { border-color: #000; }
+@media (max-width: 860px) {
+  .birth { place-items: start center; }
+  .birth-box { grid-template-columns: 1fr; gap: 20px; padding-top: 64px; }
+  .birth[data-n="1"] .birth-grid { grid-template-columns: min(420px, 82vw); }
+  .birth[data-n="3"] .birth-grid { grid-template-columns: repeat(3, 28vw); gap: 8px; }
+  .birth[data-n="5"] .birth-grid { grid-template-columns: repeat(3, 27vw); gap: 8px; }
+  .birth-log { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .chamber-scan { animation: none; } .mint-panel.flash { animation: none; } }

@@ -280,4 +280,11 @@ Every Face is stored on Robinhood Chain, and the contract draws it every time so
 **Story** Someone has to keep watching.
 NEONFACES. neonfaces.xyz
 
+**Plan B wording** (if the mint runs on neonfaces.xyz through SeaDrop, docs/LAUNCH-RUNBOOK.md 7; videos `make_launch.py --site announce howto today` -> out/l-announce-site.mp4, l-howto-site.mp4, l-today-site.mp4; the other pieces don't name the venue). The links go to https://neonfaces.xyz
+- **Announce** NEONFACES opens on neonfaces.xyz: Thursday 1 October, 18:00 UTC. (the rest as above)
+- **How to mint** step 3: Thursday 1 October, 18:00 UTC: mint on neonfaces.xyz
+- **Today** Today, 18:00 UTC, on neonfaces.xyz. The list goes first, for 24 hours.
+- **Open**, **Public**: the same text, with neonfaces.xyz in place of the drop's OpenSea link.
+- One reply under the announcement: The mint runs through OpenSea's SeaDrop contract, the same one OpenSea's own drops use; your Faces show up on OpenSea and trade there.
+
 Every person in these pieces was generated: like every face in the collection, they don't exist.

@@ -1,0 +1,101 @@
+{
+  "_generated": "from NeonTrader 0x93C02C45890616B2c63435E7E97Fb8B788B73610 on 2026-09-28T19:03:20.671Z",
+  "presets": [
+    {
+      "id": "trade",
+      "title": "Trade Stock Tokens at fair prices",
+      "plain": "Your agent can buy and sell Stock Tokens, USDG and ETH for this Face on Uniswap. Everything it buys comes straight back into the Face, never more than 1% below the Chainlink price, and never more than the daily amount you choose. It can't send anything anywhere else.",
+      "risk": "low",
+      "needsEth": true,
+      "approvals": [
+        {
+          "token": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "USDG"
+        },
+        {
+          "token": "0x322F0929c4625eD5bAd873c95208D54E1c003b2d",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "TSLA"
+        },
+        {
+          "token": "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "NVDA"
+        },
+        {
+          "token": "0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "AAPL"
+        },
+        {
+          "token": "0x12f190a9F9d7D37a250758b26824B97CE941bF54",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "AMZN"
+        },
+        {
+          "token": "0xe93237C50D904957Cf27E7B1133b510C669c2e74",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "MSFT"
+        },
+        {
+          "token": "0x2e0847E8910a9732eB3fb1bb4b70a580ADAD4FE3",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "GOOGL"
+        },
+        {
+          "token": "0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "META"
+        },
+        {
+          "token": "0x117cc2133c37B721F49dE2A7a74833232B3B4C0C",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "SPY"
+        },
+        {
+          "token": "0xD5f3879160bc7c32ebb4dC785F8a4F505888de68",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "QQQ"
+        },
+        {
+          "token": "0x411eFb0E7f985935DAec3D4C3ebaEa0d0AD7D89f",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "SLV"
+        },
+        {
+          "token": "0xC9a981FEE1F9DEc688bb123ccDeCc63D0deBFC4e",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "GLD"
+        },
+        {
+          "token": "0xCEC185eB182c47d1bA1EFc84e6959e18cd620Be4",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "CBBTC"
+        },
+        {
+          "token": "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa",
+          "spender": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "label": "SPCX"
+        }
+      ],
+      "dailyLimit": {
+        "target": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+        "signature": "setDailyLimit(uint256)",
+        "decimals": 8
+      },
+      "calls": [
+        {
+          "target": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "signature": "swap(address[],uint24[],uint256,uint256)",
+          "label": "Trade on Uniswap through NeonTrader: fair price, back into the Face"
+        },
+        {
+          "target": "0x93C02C45890616B2c63435E7E97Fb8B788B73610",
+          "signature": "swapWithNote(address[],uint24[],uint256,uint256,string)",
+          "label": "The same trade, with a short public note saying why (shown in the Face's journal)"
+        }
+      ]
+    }
+  ]
+}

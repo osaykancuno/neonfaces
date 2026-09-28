@@ -190,6 +190,135 @@
       "kind": "plain",
       "scene": "Wide cinematic night photograph, vertical, of the facade of a tall apartment building seen from across a dark street: a grid of dozens of windows. In many of the windows a different person sits or stands alone looking down at a phone held low, the screen facing them, never the camera, their faces lit acid lime from below; small human figures, no one in focus. Some windows are dark.",
       "light": "The lime glows in the windows are the brightest things in the picture; the rest of the city is dark: a few warm street lights at the bottom, wet asphalt, a black sky."
+    },
+    {
+      "id": "n1-a",
+      "set": 336,
+      "kind": "front",
+      "scene": "Candid cinematic photograph at rush hour, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 26, dark bomber jacket) stands perfectly still in the middle of a huge train station concourse, looking down at his phone, while crowds of commuters rush past him on both sides as streaks of motion blur.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on his face and hands, while the concourse is dim and cold blue, the rushing crowd only dark blurred shapes, no one else in focus."
+    },
+    {
+      "id": "n1-b",
+      "set": 57,
+      "kind": "front",
+      "scene": "Candid cinematic night photograph, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 34, black trench coat) stands still on a very long escalator descending deep into a metro station, looking down at her phone, while people walk down past her in motion blur.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on her face and hands, while the escalator tunnel is dark, lines of dim ceiling lights receding behind her, the other people only blurred shadows."
+    },
+    {
+      "id": "n1-c",
+      "set": 5,
+      "kind": "front",
+      "scene": "Candid cinematic photograph at dusk, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 45, dark wool jacket) stands still on a pedestrian bridge over a wide highway, looking down at his phone.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on his face and hands, while behind and below him the highway is a river of long red and white light streaks of traffic under a deep blue dusk sky."
+    },
+    {
+      "id": "n1-o",
+      "set": 336,
+      "kind": "ots",
+      "screen": "f336",
+      "scene": "Candid cinematic photograph at rush hour, vertical, over-the-shoulder shot from just behind and to the side of the man from the reference image (same face, 26, dark bomber jacket). He stands still in a huge train station concourse and looks down at the smartphone in his hands. We see his cheek and jaw in soft three-quarter profile, and over his shoulder the phone's screen, large in the frame.",
+      "light": "The screen lights his cheek and fingers acid lime; around him the concourse is dim blue and the rushing crowd is only motion blur."
+    },
+    {
+      "id": "n2-a",
+      "set": 378,
+      "kind": "front",
+      "scene": "Candid cinematic photograph during a city blackout, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 44, natural afro, dark cardigan) stands inside a stalled elevator with brushed metal walls, completely dark, looking down at her phone.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on her face and hands, while the elevator is pitch black apart from that glow reflecting faintly on the metal walls."
+    },
+    {
+      "id": "n2-b",
+      "set": 490,
+      "kind": "front",
+      "scene": "Candid cinematic photograph during a city blackout, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 42, dark overshirt) sits on the steps of a concrete stairwell in total darkness, looking down at his phone.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on his face and hands, while the stairwell is black, only the edges of the nearest steps and the handrail catch the lime light."
+    },
+    {
+      "id": "n2-c",
+      "set": 211,
+      "kind": "front",
+      "scene": "Candid cinematic night photograph during a blackout, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 27, shoulder-length curly hair, black puffer jacket) stands between parked cars in an underground parking garage where every light is out, looking down at her phone.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on her face and hands, while the garage is dark, concrete pillars and the shapes of cars barely visible, one faint red exit light far away."
+    },
+    {
+      "id": "n2-o",
+      "set": 378,
+      "kind": "ots",
+      "screen": "f378",
+      "scene": "Candid cinematic photograph during a blackout, vertical, over-the-shoulder shot from just behind and to the side of the woman from the reference image (same face, 44, natural afro, dark cardigan). She stands in a dark stalled elevator and looks down at the smartphone in her hands. We see her cheek in soft three-quarter profile, and over her shoulder the phone's screen, large in the frame.",
+      "light": "The screen is the only light: it lights her cheek and fingers acid lime; the brushed metal walls around are almost black."
+    },
+    {
+      "id": "n3-a",
+      "set": 182,
+      "kind": "front",
+      "scene": "Candid cinematic night photograph in heavy snowfall, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 26, blond hair with a side-swept fringe, black parka with the hood down, snowflakes in her hair) waits at an empty bus stop, looking down at her phone.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on her face and hands, while the street is dark and snowy, big snowflakes lit lime as they fall close to the phone."
+    },
+    {
+      "id": "n3-b",
+      "set": 60,
+      "kind": "front",
+      "scene": "Candid cinematic photograph in thick fog before dawn, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 55, shaved head, moustache, dark wool coat) stands on an old iron bridge over a river, looking down at his phone.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on his face and hands, while the fog around him is dense and dark grey, the bridge's lamps only faint haloes, the lime glow spreading softly into the mist."
+    },
+    {
+      "id": "n3-c",
+      "set": 226,
+      "kind": "front",
+      "scene": "Candid cinematic night photograph during a thunderstorm, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 45, long wavy dark hair, dark knit sweater) stands at a tall window streaming with rain in a dark apartment, looking down at her phone.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on her face and hands, while the room is dark; outside the rain-streaked glass a deep blue storm, a distant lightning flash lighting the clouds."
+    },
+    {
+      "id": "n3-o",
+      "set": 182,
+      "kind": "ots",
+      "screen": "f182",
+      "scene": "Candid cinematic night photograph in heavy snowfall, vertical, over-the-shoulder shot from just behind and to the side of the woman from the reference image (same face, 26, blond hair, black parka, snowflakes in her hair). She waits at a bus stop and looks down at the smartphone in her gloved hands. We see her cheek in soft three-quarter profile, and over her shoulder the phone's screen, large in the frame.",
+      "light": "The screen lights her cheek and fingers acid lime; snowflakes fall through the light; the street is dark."
+    },
+    {
+      "id": "c-a",
+      "set": 539,
+      "kind": "plain",
+      "scene": "Candid cinematic night photograph, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 27, wavy blond hair, full trimmed beard, black t-shirt) sits on his bed in a dark bedroom and holds his phone up at arm's length in front of his face, taking a selfie: the phone's screen faces him, the camera sees only the dark back of the phone at the edge of the frame, never the screen.",
+      "light": "The whole phone screen glows solid acid lime neon and floods his face with an even, intense lime light, like a soft box, his eyes catching two small lime reflections; the bedroom behind him is black."
+    },
+    {
+      "id": "t-a",
+      "set": 257,
+      "kind": "front",
+      "scene": "Candid cinematic photograph in the first blue light before sunrise, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 52, natural afro, dark robe over a t-shirt) stands on a small city balcony holding a mug of coffee in one hand, looking down at her phone in the other.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on her face and hands, while behind her the city skyline in deep pre-dawn blue with a thin line of light on the horizon, a few windows still lit."
+    },
+    {
+      "id": "a-a",
+      "set": 56,
+      "kind": "front",
+      "scene": "Candid cinematic night photograph, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 33, long wavy black hair moving in the wind, black leather jacket) stands on a high rooftop terrace behind a metal railing at night, looking down at her phone.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on her face and hands, while behind her a huge dark city spreads to the horizon in thousands of small lights, a deep night sky."
+    },
+    {
+      "id": "l-a",
+      "set": 130,
+      "kind": "front",
+      "scene": "Candid cinematic night photograph, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 34, shoulder-length curly brown hair, dark green knit sweater) sits alone at the window counter of an empty late-night cafe, a cup beside her, looking down at her phone, curious and focused.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on her face and hands, while the cafe is dim, the rain-wet street outside the glass dark with blurred reflections of street lights."
+    },
+    {
+      "id": "h-a",
+      "set": 471,
+      "kind": "front",
+      "scene": "Candid cinematic night photograph, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 35, wavy blond hair, short beard, dark grey hoodie) sits at a wooden kitchen table in a dark apartment, leaning forward on his elbows, looking down at his phone, calm and concentrated.",
+      "light": "The phone's screen is the main light source: a strong acid lime neon glow from below on his face and hands, while the kitchen is dark, a closed laptop and a glass of water on the table catching faint lime reflections."
+    },
+    {
+      "id": "m-a",
+      "set": 58,
+      "kind": "front",
+      "scene": "Candid cinematic night photograph, vertical, close-up from slightly above. The man from the reference image (same face, same age, 54, shaved head, grey t-shirt) lies in bed in a dark bedroom, head on the pillow, holding his phone above his face, wide awake, looking at it.",
+      "light": "The phone's screen is the only light: a strong acid lime neon glow falling on his face and the pillow, while the rest of the bedroom is black; the camera sees only the dark back of the phone at the top edge of the frame, never the screen."
     }
   ],
   "plain": ""

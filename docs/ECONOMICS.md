@@ -23,12 +23,12 @@ Because tiers and sets come in fixed proportions, every Face costs the pool the 
 
 Stock Token prices only update on trading days (NeonTrader refuses prices older than 26 h): open the sale Tuesday–Thursday, so restocking never waits a weekend at the start (a sell-out on a weekend only delays the top-ups to Monday's prices).
 
-## Sale plan (Wednesday 2026-10-07)
+## Sale plan (Thursday 2026-10-01, 18:00 UTC)
 
 | OpenSea stage | Who | Time (UTC; Italy +2) | Price | Per wallet | Supply |
 |---|---|---|---|---|---|
-| 1. The list | 27,902 wallets from the snapshot of NFT holders (one NFT of a listed collection is enough) | Wednesday 7 October 14:00 to Thursday 8 October 14:00 | 0.013 ETH | 3 | 5444 |
-| 2. Public | everyone | Thursday 8 October 14:00, open until the last Face sells | 0.018 ETH | 5 in total (Faces minted on the list count) | 5444 |
+| 1. The list | 27,902 wallets from the snapshot of NFT holders (one NFT of a listed collection is enough) | Thursday 1 October 18:00 to Friday 2 October 18:00 | 0.013 ETH | 3 | 5444 |
+| 2. Public | everyone | Friday 2 October 18:00, open until the last Face sells | 0.018 ETH | 5 in total (Faces minted on the list count) | 5444 |
 | Team | minted when the last Face sells, then the reveal the same day | | | | 111 |
 
 Decided 2026-09-26: 24 hours reserved to the list, then the public at a higher price. The list is built from the 25 September snapshot (`config/allowlists/list.json`, git-ignored: which collections qualify is not published); OpenSea takes at most 30,000 wallets per presale stage and one presale stage at a time. The preview's wallet check (neonfaces.xyz, not the web app) reads only hashes of the listed addresses (`tools/allowlist.mjs`). 14:00 UTC is 16:00 in Italy and 10:00 in New York: stock markets are open, so the feeds are fresh and restocking never waits. SeaDrop counts every Face a wallet mints, across stages, against the stage's limit. The public stage has no end time: minting closes only with the reveal request, so the Stare tiers, the top-ups and the sets wait for the sell-out.

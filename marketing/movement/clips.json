@@ -102,6 +102,96 @@
       "duration": 5,
       "motion": "From the very first frame there is movement: the camera slowly pulls back and rises, revealing more and more windows, and in window after window another lime glow switches on, people looking down at their phones; nobody looks away.",
       "sound": "a wide night city ambience, distant traffic, a low rising hum that swells as the windows light up."
+    },
+    {
+      "id": "n1-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the crowd rushes past him on both sides in fast motion blur. He alone stays completely still, eyes on his phone, then slowly lifts his eyes straight into the camera and holds the gaze without blinking while everyone keeps rushing. Static camera.",
+      "sound": "a deep bass hit on the first frame, the roar of a crowded station, hurried footsteps, a muffled departure chime."
+    },
+    {
+      "id": "n1-b",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the escalator carries her down, people hurry past her in a blur. She stays still, then lifts her eyes to the camera and holds them there, calm. The camera travels down with her.",
+      "sound": "the mechanical hum of an escalator, echoing footsteps, a train arriving deep below."
+    },
+    {
+      "id": "n1-c",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: traffic streams below in long light trails, wind moves his jacket. He stands still looking at his phone, then raises his eyes into the camera and holds the gaze. Slow push-in.",
+      "sound": "the wide rush of highway traffic, wind, a low sub pulse."
+    },
+    {
+      "id": "n2-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the elevator shudders slightly and a last emergency light flickers out. In the dark only the lime light on her face remains; she lifts her eyes into the camera, calm, not blinking. Slow push-in.",
+      "sound": "a heavy electric power-down thud on the first frame, a metal creak, then near silence and a soft neon buzz."
+    },
+    {
+      "id": "n2-b",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the lime light breathes on his face in the black stairwell. He looks up from the phone into the camera and holds the gaze, unmoved. Slow push-in.",
+      "sound": "a distant alarm dying out, a drip of water echoing, a low hum."
+    },
+    {
+      "id": "n2-c",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the last fluorescent tube down the row flickers and dies. She keeps watching her phone, then lifts her eyes into the camera and holds them there. Static camera.",
+      "sound": "the buzz and snap of a dying fluorescent tube, then a deep empty garage ambience."
+    },
+    {
+      "id": "n3-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: heavy snow falls through the lime light. She looks at her phone, then lifts her eyes into the camera, snowflakes on her lashes, not blinking. Slow push-in.",
+      "sound": "the muffled hush of snowfall, a distant bus engine, a soft deep tone."
+    },
+    {
+      "id": "n3-b",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: fog drifts slowly across the bridge and through the lime glow. He looks at his phone, then raises his eyes straight into the camera and holds them. Slow push-in.",
+      "sound": "a distant foghorn, water under the bridge, a low sub drone."
+    },
+    {
+      "id": "n3-c",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: rain streams down the glass, a lightning flash lights the room for an instant. She does not flinch; she lifts her eyes from the phone into the camera and holds the gaze. Slow push-in.",
+      "sound": "heavy rain on glass, a rolling thunder crack on the flash, a low hum."
+    },
+    {
+      "id": "c-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the lime light from the phone floods his face. He holds the phone at arm's length, looks at himself on the screen, tilts his head slightly and taps to take the photo; the light stays on; then he lowers his eyes into the camera with a faint, confident half smile. Slight handheld drift.",
+      "sound": "a soft camera shutter click, a low neon buzz, a deep bass hit on the click."
+    },
+    {
+      "id": "t-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: steam rises from the coffee and the horizon slowly brightens. She looks at her phone, then lifts her eyes into the camera and holds them, awake and calm. Slow push-in.",
+      "sound": "early morning city ambience, birds far away, a soft rising tone."
+    },
+    {
+      "id": "a-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the wind moves her hair and jacket, the city lights shimmer far below. She looks at her phone, then lifts her eyes straight into the camera and holds the gaze, calm, not blinking. Slow push-in.",
+      "sound": "wind on a rooftop, the distant hum of a city at night, a deep bass hit on the first frame."
+    },
+    {
+      "id": "l-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: rain streaks slide down the window. She reads something on her phone, her eyebrows lift slightly, a small surprised smile appears, then she looks up into the camera. Static camera.",
+      "sound": "soft rain on the glass, the quiet hum of an empty cafe, a cup set down gently."
+    },
+    {
+      "id": "h-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: he scrolls slowly with his thumb, the lime light shifting on his face, then he nods slightly to himself and raises his eyes into the camera. Slight handheld drift.",
+      "sound": "a quiet night kitchen, a fridge humming, a soft tap on glass."
+    },
+    {
+      "id": "m-a",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the lime light flickers softly on his face as he reads. He does not blink; slowly he turns his eyes from the phone to the camera and holds the gaze, wide awake in the dark. Very slow push-in.",
+      "sound": "a silent bedroom at night, a clock far away, his slow breathing, a low hum."
     }
   ]
 }

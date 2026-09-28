@@ -4,9 +4,9 @@ Everything to paste into OpenSea, field by field. Images: `python marketing/open
 from the collection's own art. Sizes follow OpenSea's creator FAQ as read on 28 Sep 2026; if Studio asks for another
 size, rebuild with the script rather than stretching a file.
 
-**When**: the collection only exists on OpenSea after the deploy (Sat 3 Oct). Connected with the **sale manager**
+**When**: the collection only exists on OpenSea after the deploy (Tue 29 Sep). Connected with the **sale manager**
 (0x70Ad3dA485fD66F0986f465457AE804Bb11EFb99, the contract's `owner()`), import the contract in Studio, build the drop as
-a **Draft**, fill the pages below, check the preview. The drop is published on Tue 6 Oct, after the Sun 4 announcement:
+a **Draft**, fill the pages below, check the preview. The drop is published on Thu 1 Oct, once the Safe holds the admin role (the announcement is Tue 29 Sep, 16:00 Italy):
 dates and prices on these pages are fine, they go public only then. The OpenSea account itself (connect the sale
 manager, sign in) can be made any time.
 
@@ -52,8 +52,8 @@ Stock Tokens give economic exposure only, not legal ownership of shares; availab
 
 | Stage | Allowlist | Start / end (UTC) | Price | Per wallet |
 |---|---|---|---|---|
-| The list | `config/allowlists/opensea/list.csv` | Wed 7 Oct 14:00 / Thu 8 Oct 14:00 | 0.013 ETH | 3 (from the CSV) |
-| Public | none | Thu 8 Oct 14:00 / at least 90 days later | 0.018 ETH | 5 |
+| The list | `config/allowlists/opensea/list.csv` | Thu 1 Oct 18:00 / Fri 2 Oct 18:00 | 0.013 ETH | 3 (from the CSV) |
+| Public | none | Fri 2 Oct 18:00 / at least 90 days later | 0.018 ETH | 5 |
 
 Payout address: `NeonPayout` (`payout` in contracts/deployments/4663.json). Then `verify-drop.mjs` (Playbook).
 
@@ -100,7 +100,7 @@ A Face: an NFT with its own wallet, born with a base basket of about $5 in Stock
 
 **How does the sale work?**
 ```
-Wednesday 7 October, 14:00 UTC: 24 hours reserved to wallets on the list, 0.013 ETH, up to 3 each (check your wallet on neonfaces.xyz). Thursday 8 October, 14:00 UTC: the sale opens to everyone at 0.018 ETH, up to 5 per wallet in total, until every Face is sold. 5444 Faces are for sale; the 111 team Faces are minted after the sell-out.
+Thursday 1 October, 18:00 UTC: 24 hours reserved to wallets on the list, 0.013 ETH, up to 3 each (check your wallet on neonfaces.xyz). Friday 2 October, 18:00 UTC: the sale opens to everyone at 0.018 ETH, up to 5 per wallet in total, until every Face is sold. 5444 Faces are for sale; the 111 team Faces are minted after the sell-out.
 ```
 
 **Where does the mint money go?**

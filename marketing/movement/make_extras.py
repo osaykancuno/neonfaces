@@ -1,6 +1,7 @@
 """The five images and five GIFs of the movement, from the stills, the clips and the finished videos.
 
-    python marketing/movement/make_extras.py     (after make_cut.py) -> out/i1..i5 (-4x5.png, -9x16.png), out/g1..g5.gif
+    python marketing/movement/make_extras.py        (after make_cut.py) -> out/i1..i5 (-4x5.png, -9x16.png), out/g1..g5.gif
+    python marketing/movement/make_extras.py gifs2  -> out/g6..g12.gif (4:5 reaction GIFs of the second batch)
 
 Images: the over-the-shoulder heroes (high, 2k) with the real Face on the screen, the line in the pixel font.
 GIFs: 480 px wide loops of 2-3 s, well under X's 15 MB.
@@ -65,10 +66,10 @@ def grid4(name: str):
     feed.save(OUT / f"{name}-4x5.png")
 
 
-def gif(frames, name: str, fps=12):
+def gif(frames, name: str, fps=12, size=(480, 853)):
     with tempfile.TemporaryDirectory() as t:
         for i, f in enumerate(frames):
-            Image.fromarray(f).resize((480, 853), Image.LANCZOS).save(Path(t) / f"f{i:04d}.png")
+            Image.fromarray(f).resize(size, Image.LANCZOS).save(Path(t) / f"f{i:04d}.png")
         pattern = str(Path(t) / "f%04d.png")
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(fps), "-i", pattern, "-vf",
                         "split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer:bayer_scale=4",
@@ -99,6 +100,34 @@ def gifs():
     gif(every(C.gaze("f198", 4.8)), "g5")
 
 
+def gif45(frames, name: str, fps=12):
+    """A 4:5 GIF (480 x 600, the middle of the 9:16 frame, where the captions sit): reaction GIFs for replies."""
+    gif([np.ascontiguousarray(f[360:1710]) for f in frames], name, fps, size=(480, 600))
+
+
+def gifs2():
+    """Reaction GIFs of the second batch (28 Sep): a line anyone can reuse in a reply, and always the collection in it
+    (the founder: a real face turns into its Face, or the pixels alone)."""
+    import make_launch as L
+
+    def person(clip, t0, face, line, t_turn=3.7):
+        s = every(C.real(clip, t0, t_turn, line)) + every(C.turn(clip, t_turn - 0.1, face, 2.4, line))
+        return s + [s[-1]] * 10
+
+    gif45(person("l-a", 1.8, "f130", "WHEN YOUR WALLET IS ON THE LIST."), "g6")
+    gif45(person("m-a", 0.8, "f58", "THE NIGHT BEFORE THE MINT.", t_turn=2.6), "g7")
+    gif45(person("n1-a", 1.6, "f336", "EVERYONE RUSHES. YOU DON'T."), "g8")
+    face = Image.open(HERE / "refs" / "cam-539.png")
+    s = every(C.real("c-a", 1.2, 3.0, "MY NEW PFP.")) + every(L.cam_turn(face, 2.0, "MY NEW PFP."))
+    gif45(s + [s[-1]] * 10, "g9")
+    s = every(C.turn("n3-c", 3.6, "f226", 3.0, "HOW THEY SEE YOU."))
+    gif45(s + [s[-1]] * 8, "g10")
+    # the pixels alone: a wall of Faces lighting up, and the count
+    s = every(C.grid("f226", 3.0, "THEY DON'T BLINK.", seed=11))
+    gif45(s + [s[-1]] * 8, "g11")
+    gif45(every(L.counter(3.5, "5555 FACES.")), "g12")
+
+
 def main():
     OUT.mkdir(exist_ok=True)
     for name, (shot, line) in LINES.items():
@@ -110,4 +139,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    gifs2() if sys.argv[1:] == ["gifs2"] else main()

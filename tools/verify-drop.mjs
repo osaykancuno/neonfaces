@@ -41,7 +41,7 @@ const ROLES = {
   seedVault: ["DEFAULT_ADMIN", "KEEPER_ROLE"],
   art: ["DEFAULT_ADMIN", "ARTIST_ROLE"],
 };
-const PUBLIC_START = Date.UTC(2026, 9, 8, 14) / 1000; // Thursday 8 October 2026 14:00 UTC
+const PUBLIC_START = Date.UTC(2026, 9, 2, 18) / 1000; // Friday 2 October 2026 18:00 UTC (20:00 in Italy)
 const roleId = (r) => (r === "DEFAULT_ADMIN" ? "0x" + "00".repeat(32) : keccak256(toHex(r)));
 const sd = (functionName) => pub.readContract({ address: dep.seaDrop, abi, functionName, args: [dep.faces] });
 const nf = (functionName) => pub.readContract({ address: dep.faces, abi, functionName });
@@ -66,7 +66,7 @@ info(`public stage: ${formatEther(drop.mintPrice)} ETH, ${drop.maxTotalMintableB
 ok(drop.startTime !== 0, "the public stage is configured");
 ok(drop.mintPrice === 18_000_000_000_000_000n, "public price is 0.018 ETH (the list stage, 0.013 ETH, lives in the allowlist leaves: check it in Studio)");
 ok(drop.maxTotalMintableByWallet === 5, `public: 5 Faces per wallet in total (${drop.maxTotalMintableByWallet})`);
-ok(drop.startTime === PUBLIC_START, `public opens Thursday 8 October 14:00 UTC (${new Date(drop.startTime * 1000).toISOString()})`);
+ok(drop.startTime === PUBLIC_START, `public opens Friday 2 October 18:00 UTC (${new Date(drop.startTime * 1000).toISOString()})`);
 ok(drop.endTime >= drop.startTime + 90 * 86400, "public stage ends at least 90 days after it opens (minting really closes with the reveal request)");
 ok(fees.length === 1, `exactly one allowed fee recipient: ${fees.join(", ") || "none"}`);
 if (process.env.OPENSEA_FEE_RECIPIENT) {

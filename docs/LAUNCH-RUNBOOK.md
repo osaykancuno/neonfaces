@@ -2,21 +2,22 @@
 
 Everything below has been rehearsed end-to-end on a local node with the canonical registry and OpenSea SeaDrop bytecode (`contracts/script/rehearsal.sh`, `contracts/script/launch-day.sh`) and on **testnet (46630)** with the final art (26 Sep).
 
-## Calendar (sale on Wednesday 2026-10-07)
+## Calendar (sale on Thursday 2026-10-01, 18:00 UTC = 20:00 in Italy)
 
-The Safe accepts the admin role 2 days after the deploy, and `verify-drop.mjs` fails until it has: deploy by **Saturday 3 October** (Sunday 4 at the latest).
+Moved forward from Wednesday 7 October by the founder on 28 September. The Safe accepts the admin role 2 days after the
+deploy, and `verify-drop.mjs` fails until it has: deploy on **Tuesday 29 September in the morning** (18:00 UTC at the
+very latest, so the Safe can accept before the list opens).
 
 | When | What |
 |---|---|
 | done 26 Sep | addresses ready (step 0); public GitHub repo; Safe tested with two signatures; the testnet rehearsal with the final art passed (deploy, art sealed with provenance `0x6525337e…` and verified byte for byte, SeaDrop stage, 20 mints, reveal, top-ups, split paid, a set assembled in one transaction with its bonus, a set vote, the set fused, a withdrawal and a lock from a Face account; ≈ 0.0033 test ETH; addresses in `contracts/deployments/46630.json`). The same day a local launch-day run at the real price covered the rest: six wallets buying, keeper, team mint, reveal by a stranger, `restockAndDeliver` with an empty pool, a NeonTrader trade from a Face account, a resale under lock, vesting, a stand-in Safe accepting admin after 2 days, `lockConfig`, `releaseSurplus`. OpenSea no longer supports testnets, so Studio is checked on mainnet in Draft mode on deploy day |
-| by Fri 2 Oct | the founder funds the mainnet wallets: deployer 0.015 ETH, keeper 0.01 ETH, sale manager 0.003 ETH, Safe signer 1 +0.002 ETH (it executes the Safe batches: accept-admin, the 111 team Faces ≈ 21M gas, the reveal request; it held 0.0008 ETH on 26 Sep). The deploy was simulated on mainnet on 26 Sep: ≈ 32M gas for Deploy.s.sol, ≈ 258M for the art, at a base fee of 0.028 gwei |
-| Fri 2 Oct | `node tools/baskets.mjs --live` during US market hours (Friday's prices are the last fresh ones before the weekend). It also quotes a $50 buy of every leg on the real pools: a leg marked BLOCKED (its pool more than 1% above Chainlink, so the vault would refuse to buy it) is replaced before the deploy (USO was blocked on Sat 26 Sep: its pool was 1.6% above the feed); re-check the floor in [ECONOMICS.md](ECONOMICS.md) against the ETH price |
-| Sat 3 Oct | deploy, upload the art, verify, keeper on; import the contract in OpenSea Studio with the sale-manager account and build the drop as a **Draft** (the list stage and the public stage, the list's CSV, payout), check the preview, publish only when `verify-drop.mjs` passes |
-| Sun 4 Oct | announce the sale: Wednesday 7 October 14:00 UTC on OpenSea, 24 hours reserved to the list (0.013 ETH, 3 per wallet; wallets check themselves on the preview, neonfaces.xyz), then the public from Thursday 8 October 14:00 UTC (0.018 ETH, 5 per wallet in total) until the last Face sells; team Faces and reveal after the sell-out |
-| Mon 5 Oct | the Safe accepts the admin role (2 days after the deploy); check the Studio draft |
-| Tue 6 Oct | the list's CSV is in the presale stage (rebuilt with the extra wallets if any, see section 7), `verify-drop.mjs` passes, then publish the drop in Studio (it opens by itself at the start time) |
-| Wed 7 Oct | 14:00 UTC the list stage opens for 24 hours; neonfaces.xyz stays the preview, so listed wallets can use its wallet check for the whole window |
-| Thu 8 Oct | 14:00 UTC the public stage opens, until the last Face sells; at the same time replace the preview with the web app on Cloudflare (`tools/site.sh deploy web`, [SITE-HOSTING.md](SITE-HOSTING.md); the wallet check lives only on the preview and is no longer needed); after the sell-out: team mint and reveal the same day (a sell-out on a weekend only delays the Stare top-ups to Monday's prices) |
+| Mon 28 Sep night | the founder funds the mainnet wallets: deployer 0.015 ETH, keeper 0.01 ETH, sale manager 0.003 ETH, Safe signer 1 +0.002 ETH (it executes the Safe batches: accept-admin, the 111 team Faces ≈ 21M gas, the reveal request; it held 0.0008 ETH on 26 Sep). The deploy was simulated on mainnet on 26 Sep: ≈ 32M gas for Deploy.s.sol, ≈ 258M for the art, at a base fee of 0.028 gwei |
+| Tue 29 Sep, morning | the fork tests and `node tools/baskets.mjs --live` (Monday's closing prices are still fresh on Tuesday: NeonTrader accepts prices up to 26 h old). It also quotes a $50 buy of every leg on the real pools: a leg marked BLOCKED (its pool more than 1% above Chainlink, so the vault would refuse to buy it) is replaced before the deploy (USO was blocked on Sat 26 Sep: its pool was 1.6% above the feed); re-check the floor in [ECONOMICS.md](ECONOMICS.md) against the ETH price |
+| Tue 29 Sep, by midday | deploy, upload the art, verify, keeper on; import the contract in OpenSea Studio with the sale-manager account and build the drop as a **Draft** (the list stage and the public stage, the list's CSV, payout), check the preview, publish only when `verify-drop.mjs` passes |
+| Tue 29 Sep, 16:00 Italy | announce the sale, only once the contracts are deployed and verified: Thursday 1 October 18:00 UTC on OpenSea, 24 hours reserved to the list (0.013 ETH, 3 per wallet; wallets check themselves on the preview, neonfaces.xyz), then the public from Friday 2 October 18:00 UTC (0.018 ETH, 5 per wallet in total) until the last Face sells; team Faces and reveal after the sell-out |
+| Thu 1 Oct, morning | the Safe accepts the admin role (2 days after the deploy); the list's CSV is in the presale stage (rebuilt with the extra wallets if any, see section 7), `verify-drop.mjs` passes, then publish the drop in Studio (it opens by itself at the start time) |
+| Thu 1 Oct | 18:00 UTC the list stage opens for 24 hours; neonfaces.xyz stays the preview, so listed wallets can use its wallet check for the whole window |
+| Fri 2 Oct | 18:00 UTC the public stage opens, until the last Face sells; at the same time replace the preview with the web app on Cloudflare (`tools/site.sh deploy web`, [SITE-HOSTING.md](SITE-HOSTING.md); the wallet check lives only on the preview and is no longer needed); after the sell-out: team mint and reveal the same day (a sell-out on a weekend only delays the Stare top-ups to Monday's prices) |
 
 ## 0. Accounts
 
@@ -117,8 +118,8 @@ In OpenSea Studio, connected with the sale manager: create the drop from the exi
 
 | Stage | Allowlist | Start / end (UTC) | Price | Per wallet | Supply |
 |---|---|---|---|---|---|
-| 1. The list | `config/allowlists/opensea/list.csv` | Wed 7 Oct 14:00 / Thu 8 Oct 14:00 | 0.013 ETH | from CSV (3) | 5444 |
-| 2. Public | none | Thu 8 Oct 14:00 / months ahead (Studio needs an end; minting really closes with the reveal request after the sell-out) | 0.018 ETH | 5 | 5444 |
+| 1. The list | `config/allowlists/opensea/list.csv` | Thu 1 Oct 18:00 / Fri 2 Oct 18:00 | 0.013 ETH | from CSV (3) | 5444 |
+| 2. Public | none | Fri 2 Oct 18:00 / months ahead (Studio needs an end; minting really closes with the reveal request after the sell-out) | 0.018 ETH | 5 | 5444 |
 
 Never below the self-funding floor (≈ 0.009 ETH at ETH $2,687, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
 
@@ -131,7 +132,7 @@ Site:
 ```bash
 OPENSEA_URL=https://opensea.io/collection/<slug> node tools/export-web.mjs 4663
 ```
-`web/public/{deployment.json, agent-presets.json}` are generated (git-ignored). Set `VITE_SITE_URL` in `web/.env` to the final domain (same as `SITE_URL`): link previews on X, Telegram, WhatsApp and Discord need that absolute URL. `tools/site.sh deploy web` builds and publishes `dist/` on Cloudflare and checks it byte for byte ([SITE-HOSTING.md](SITE-HOSTING.md); the config's single-page mode serves `/face/:id`; `dist/_redirects` is for Netlify; on IPFS use `/#/face/:id`). It replaces the preview (landing/) on Thursday 8 October at 14:00 UTC, when the list window ends and the public stage opens: the wallet check lives only on the preview, so it stays online for the whole list window.
+`web/public/{deployment.json, agent-presets.json}` are generated (git-ignored). Set `VITE_SITE_URL` in `web/.env` to the final domain (same as `SITE_URL`): link previews on X, Telegram, WhatsApp and Discord need that absolute URL. `tools/site.sh deploy web` builds and publishes `dist/` on Cloudflare and checks it byte for byte ([SITE-HOSTING.md](SITE-HOSTING.md); the config's single-page mode serves `/face/:id`; `dist/_redirects` is for Netlify; on IPFS use `/#/face/:id`). It replaces the preview (landing/) on Friday 2 October at 18:00 UTC, when the list window ends and the public stage opens: the wallet check lives only on the preview, so it stays online for the whole list window.
 
 Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers never pause).
 
@@ -180,7 +181,7 @@ Needs a person, on purpose (each is a decision or a key only the team should hol
 | The sale sells slowly | holders wait for a reveal that needs minting closed | the stage has no end time (decided 26 Sep): the reveal, the tiers, the Stare top-ups and the sets wait for the sell-out; minting closes only with the Safe's reveal request, so ending the sale early would be a separate decision, announced before it is taken. Base seeds are delivered all along |
 | The reveal window is missed | `reveal()` must land within ≈ 25 s of the target block | the watcher plus the keeper's safety net; if both miss, `reveal-request` again once the window has passed (every request is public) |
 | A Safe owner isn't at hand | team mint, reveal request, lock and surplus wait | both owners are on the computer (MetaMask and the personal wallet); prepare the Safe batches (`safe-tx.mjs`) in advance, sign accept-admin first on deploy day, keep both seed phrases on paper |
-| Weekend or stale feeds | the vault's buys wait (NeonTrader refuses prices older than 26 h) | the sale opens on a Wednesday; if the sell-out falls on a weekend, reveal anyway: nothing is lost, the top-ups and pending seeds are delivered on the next trading day |
+| Weekend or stale feeds | the vault's buys wait (NeonTrader refuses prices older than 26 h) | the sale opens on a Thursday; if the sell-out falls on a weekend, reveal anyway: nothing is lost, the top-ups and pending seeds are delivered on the next trading day |
 | ETH falls between the sale and the top-up purchases | the vault's ETH buys fewer tokens | the reveal comes the day the sale ends and the set bonuses are bought during the sale; the vault keeps ≈ 24% above the baskets on a sell-out; the treasury can send ETH to the vault and anyone can send basket tokens to the seeder |
 | A basket token or its feed stops working | deliveries with that token revert, the Face shows Pending | before `lock-seeder`, swap the leg with `setBasket`; lock only when `covered()` is true, so after the lock nothing depends on buying anymore |
 | The keeper stops (key out of gas, GitHub switches the schedule off) | pending deliveries wait | every delivery is permissionless, buying included: the Face page makes the vault buy what is missing and deliver it in one transaction (`restockAndDeliver`; if a market is off its price the page says so before anything is signed), and `seed-keeper.mjs` runs with any funded key (without the role it restocks through the same door); a set's bonus comes with the transfer of its last piece, from a stock bought during the sale; the weekly keepalive job (an empty commit after 45 quiet days; if the default branch is protected, let github-actions push); if Actions ever shows the keeper disabled, press Enable; top up the keeper key |

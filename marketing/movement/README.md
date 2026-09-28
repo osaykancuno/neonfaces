@@ -127,4 +127,157 @@ Steady. Fixed. Piercing.
 
 Suggested order until the sale announcement (Sun 4 Oct), videos at 16:00 Italy (US markets open), images and GIFs as replies or in the morning: Mon V1 + G1 · Tue I2 + V2 · Wed V3 + G2 · Thu I4 + V4 · Fri V5 + G5 · Sat I1, I3, I5, G3, G4 spread out. After the announcement the same pieces can carry the site.
 
+## Second batch (28 Sep): two posts a day until the sale
+
+The founder posts twice a day, at 10:00 and 16:00 Italy, from Tue 29 Sep to the sale (Wed 7 Oct). New people and new
+places (no scene repeats a scene of the first batch), and an instrumental score under every piece this time, below
+the clips' own sound. Budget set by the founder: 65 credits, then 25 more "to do it at best"; spent **87.96** (18
+stills 9, 15 clips 60, 17 tracks 18.96). After the founder's first listen: the voice lines from the teasers always
+whole ("They don't blink." 0-1.9 s and "Look closer." 6.0-7.5 s in teaser 1, "They don't blink. Neither do I." from
+3.3 s in teaser 5), never two voices at once, no teaser zap opening every piece, no teaser ticking; V3 got its own
+melodic track (the score's opening pulses read as a repeating digital sound); wall, chain, announce and cam were
+generated again as melodies (the first takes, all drums and glitches, are kept as raw/music-*-percussive.m4a); two-line
+captions are balanced. N1 stays as first cut (the founder liked its sound). Second listen: V3's soft melodic track
+was not liked, so it has a dark driving one in N1's style (the soft take kept as raw/music-v3-soft.m4a); the art
+segments drift in a slow sub-pixel push-in (the cells alone moved in steps and read as a stutter); the music is no
+longer a fixed bed (`score()` in make_cut.py): it comes in after the scene's own sound, joins its track mid-way as if
+it had started before, ends with the track's own ending on the card, and dips under every voice line.
+
+| Set | Who | Where |
+|---|---|---|
+| #336 | man, 26 | a station concourse at rush hour, the crowd rushing past (N1, also over the shoulder) |
+| #57 | woman, 34 | a long metro escalator going down (N1) |
+| #5 | man, 45 | a footbridge over a highway at dusk (N1) |
+| #378 | woman, 44 | a stalled elevator in a blackout (N2, also over the shoulder) |
+| #211 | woman, 27 | an underground garage, the last light dying (N2) |
+| #490 | man, 42 | a black stairwell in a blackout (N2) |
+| #182 | woman, 26 | a bus stop in heavy snow (N3, also over the shoulder) |
+| #60 | man, 55 | an iron bridge in fog (N3) |
+| #226 | woman, 45 | a window in a thunderstorm (N3) |
+| #539 | man, 27 | a selfie in a dark bedroom, the phone's neon light on his face (NEONCAM) |
+| #257 | woman, 52 | a balcony before sunrise, coffee in hand (Today) |
+| #56 | woman, 33 | a rooftop terrace at night, wind in her hair (Announce) |
+| #130 | woman, 34 | a late-night cafe in the rain, a small surprised smile (List) |
+| #471 | man, 35 | a kitchen table at night (How to mint) |
+| #58 | man, 54 | awake in bed, the night before (Tomorrow) |
+
+Rebuild: `make_refs.py`, then `gen_frames.py` / `gen_clips.py` / `gen_music.py` with the ids above (prompts in
+frames.json, clips.json, music.json), then `make_cut.py n1 n2 n3 v3 v4 v5` and `make_launch.py`. Beds: V3, V4 and V5
+take three sections of the story's score (one sound for the series); every new piece has its own track. Masters at
+-14 LUFS (V1 and V2 were -16).
+
+| Piece | File | s | What |
+|---|---|---|---|
+| N1 Everyone moves | out/n1.mp4 | 18.8 | stillness in the rush: concourse, escalator, footbridge; his Face on his phone; the turn; card |
+| N2 Lights out | out/n2.mp4 | 18.6 | a blackout: elevator, garage, stairwell; her Face in the dark; the turn; card |
+| N3 Snow. Fog. Storm. | out/n3.mp4 | 18.6 | three kinds of weather, nobody blinks; the turn; card |
+| Wall | out/l-wall.mp4 | 12 | 5555 faces flash by with a counter to 5555, then the eye: "one of them is looking at you" |
+| Tiers | out/l-tiers.mp4 | 15.6 | Glance 4444, Watch 833, Heavy Stare 278 as walls of their own art; "the art decides, the reveal shows it" |
+| Chain | out/l-chain.mp4 | 15 | a real on-chain record: its bytes scroll, then the Face is drawn from them, row by row |
+| Announce | out/l-announce.mp4 | 20 | a woman on a rooftop looks up: NEONFACES has a date; then Thursday 1 October, 18:00 UTC, OpenSea, the list first, then everyone from Friday, the site |
+| Public | out/l-public.mp4 | 12.6 | nine other people look up together: open to everyone, 0.018 ETH, up to 5 |
+| List | out/l-list.mp4 | 14.2 | she finds out and smiles; the list's own clip; how the check works |
+| Cam | out/l-cam.mp4 | 13 | a selfie lit neon, his face into NEONCAM's five tones, the photo, the site |
+| Facts | out/l-facts.mp4 | 17.8 | check it yourself: five facts fixed on the chain |
+| How to mint | out/l-howto.mp4 | 20 | a man at his kitchen table at night, then five steps, plain |
+| Tomorrow | out/l-tomorrow.mp4 | 10.2 | awake in bed the night before; 14:00 UTC, the list goes first |
+| Today | out/l-today.mp4 | 13 | sunrise, the turn, the facts |
+| Open | out/l-open.mp4 | 12.6 | nine people of the batch look up together; the list is open |
+
+### Calendar (videos only, 10:00 and 16:00 Italy, plus the two openings at 20:00)
+
+The sale moved forward on 28 Sep (the founder): the list opens **Thu 1 Oct, 18:00 UTC (20:00 Italy)** for 24 hours,
+then everyone from **Fri 2 Oct, 18:00 UTC**. The announcement goes out only once the contracts are deployed and verified.
+
+| Day | 10:00 | 16:00 | 20:00 |
+|---|---|---|---|
+| Tue 29 Sep | N1 | **Announce** (first post with date, price and site; only after the deploy) | |
+| Wed 30 Sep | List | How to mint | (optional) Tomorrow |
+| Thu 1 Oct | Today | Cam | **Open** (the list opens) |
+| Fri 2 Oct | N2 | V3 | **Public** (open to everyone) |
+| Sat 3 Oct | N3 | V4 | |
+| Sun 4 Oct | V5 | Tiers | |
+| Mon 5 Oct | Wall | Chain | |
+| Tue 6 Oct | Facts | the story, live cut (out/story-live.mp4: the card says ON OPENSEA; `make_story.py live`) | |
+
+Until the sell-out; after it, the reveal needs its own pieces. N1 to N3, V3 to V5, wall, tiers, chain, facts and cam
+carry no date and work any day. Reaction GIFs (g6 to g12) go as replies under the day's post, never as a slot.
+
+| GIF | Line | What |
+|---|---|---|
+| g6 | WHEN YOUR WALLET IS ON THE LIST. | she smiles, then her face falls into cells and becomes her Face |
+| g7 | THE NIGHT BEFORE THE MINT. | awake in bed, then his Face |
+| g8 | EVERYONE RUSHES. YOU DON'T. | the still man in the crowd, then his Face |
+| g9 | MY NEW PFP. | the neon selfie, then NEONCAM's photo |
+| g10 | HOW THEY SEE YOU. | a real face into its Face |
+| g11 | THEY DON'T BLINK. | a wall of Faces lighting up |
+| g12 | 5555 FACES. | the count, faces flashing by |
+
+4:5, 480 x 600, loops, 4.7 to 6.3 MB. `python marketing/movement/make_extras.py gifs2`.
+
+### Posts for the second batch (X, English)
+
+**N1** Everyone moves. Some don't.
+NEONFACES. 5555 faces that keep watching.
+
+**Announce** NEONFACES opens on OpenSea: Thursday 1 October, 18:00 UTC.
+The list goes first: 24 hours, 0.013 ETH, up to 3 Faces per wallet. Check your wallet on neonfaces.xyz
+Then everyone, from Friday 2 October, 18:00 UTC: 0.018 ETH, up to 5 per wallet in total, until every Face is sold.
+Every Face is a wallet with a small basket of Stock Tokens inside. Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
+
+**List** Is your wallet on the list?
+Paste your address on neonfaces.xyz: the check runs in your browser, and your address is never sent anywhere.
+The list mints first: 24 hours from Thursday 1 October, 18:00 UTC, up to 3 Faces each.
+
+**How to mint** How to mint a Face, in five steps:
+1. Check your wallet on neonfaces.xyz
+2. Put ETH on Robinhood Chain, in the wallet you mint with
+3. Thursday 1 October, 18:00 UTC: open the drop on OpenSea
+4. The list mints first: 24 hours, up to 3 each
+5. Your Face arrives with its own wallet
+The public sale follows on Friday 2 October, 18:00 UTC.
+
+**Tomorrow** Tomorrow, 18:00 UTC. The list goes first.
+neonfaces.xyz
+
+**Today** Today, 18:00 UTC, on OpenSea. The list goes first, for 24 hours.
+(the drop's OpenSea link)
+
+**Cam** See yourself the way they see you.
+NEONCAM turns your camera into a Face: five tones, from black to neon. Nothing is uploaded.
+neonfaces.xyz, Cam
+
+**Open** The list is open.
+24 hours for wallets on the list, up to 3 Faces each. Then everyone, from tomorrow at 18:00 UTC.
+(the drop's OpenSea link)
+
+**N2** Lights out. Eyes open.
+When the city goes dark, the stare stays on.
+
+**V3** as in "Posts" above (with the Stock Token line).
+
+**Public** Now, everyone.
+The sale is open to all: 0.018 ETH, up to 5 Faces per wallet, until the last one is sold.
+(the drop's OpenSea link)
+
+**N3** Snow. Fog. Storm.
+Nothing makes them blink.
+
+**V4, V5** as in "Posts" above.
+
+**Tiers** Glance. Watch. Heavy Stare.
+4444, 833 and 278 among the 5555 artworks. The art decides the tier; the reveal shows it, for everyone at once.
+
+**Wall** 5555 faces. One of them is looking at you.
+Every one drawn by the chain itself.
+
+**Chain** 190 bytes.
+Every Face is stored on Robinhood Chain, and the contract draws it every time someone asks. No server, no link that can break.
+
+**Facts** Check it yourself.
+5555 Faces, fixed in the contract. 111 for the team, capped. No proxy: the contracts can't be swapped. No pause: transfers can never be stopped. The art sealed against a fingerprint published before the mint.
+
+**Story** Someone has to keep watching.
+NEONFACES. neonfaces.xyz
+
 Every person in these pieces was generated: like every face in the collection, they don't exist.

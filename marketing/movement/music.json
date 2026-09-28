@@ -1,0 +1,61 @@
+{
+  "tail": "Instrumental music only, with a clear melody and real chords you can hum: no vocals, no lyrics, no speech, no sound effects, no glitches, no bleeps, no ticking noises. Mixed for a phone speaker, the music starts on the very first beat.",
+  "tracks": [
+    {
+      "id": "n1",
+      "duration": 20,
+      "prompt": "Dark, melodic synthwave instrumental about standing still while a crowd rushes past: a memorable four-note lead melody on a warm analog synth from the first second, over lush minor-key chords, a deep round bass and a steady driving beat at 100 bpm. Halfway the melody rises an octave and the chords open up; it ends on a sustained chord."
+    },
+    {
+      "id": "n2",
+      "duration": 20,
+      "prompt": "A dark cue about a city blackout. It opens with an electrical power-down sweep and a heavy low thud on the first beat, then almost silence: a deep sub drone, a slow heartbeat kick, faint electric crackle and the buzz of a neon tube. A detuned minor synth motif of three notes rises slowly, with glitch stutters, growing heavier, to one big low hit at 15 seconds, then only the neon buzz."
+    },
+    {
+      "id": "n3",
+      "duration": 20,
+      "prompt": "A cold, atmospheric electronic cue about snow, fog and a storm at night. A deep pulse from the first beat, icy shimmering pads, sparse bell-like plucks in a minor key, distant thunder-like sub rumbles that grow; it builds from quiet to a wide, dark swell, with a single deep hit at 15 seconds and a ringing tail."
+    },
+    {
+      "id": "v3",
+      "duration": 22,
+      "prompt": "A dark, driving electronic cue in the same world as a night of neon: a hard sub-bass hit on the very first beat, a steady pulsing analog bass line, crisp hi-hats, a hypnotic minor-key synth arpeggio at 118 bpm; at 8 seconds it opens up with a wider synth chord and a heavier beat, building to 17 seconds, then one final deep hit and a low hum to the end.",
+      "tail": "Instrumental only: no vocals, no lyrics, no speech, no choir. Mixed for a phone speaker: a clear sub-bass that still reads on small speakers, punchy transients, no long silent intro, the first hit on the very first beat. Dark, adult, minimal, electronic; the sound of neon at night."
+    },
+    {
+      "id": "wall",
+      "duration": 12,
+      "prompt": "A fast, catchy, melodic electronic hook at 128 bpm for a rapid montage of thousands of faces: a bright, memorable synth lead riff from the first beat over pumping minor chords and a punchy kick, the riff climbing higher as it speeds up, ending on one big final chord at 11 seconds."
+    },
+    {
+      "id": "tiers",
+      "duration": 15,
+      "prompt": "A cue in three steps of five seconds for three kinds of stare. First step: sparse and light, a quick ticking pulse and a small glance-like synth blip. Second step: fuller, a steady beat and a warm bass line. Third step: heavy and intense, distorted sub-bass, a slow menacing half-time beat. End on one deep hit and a low hum."
+    },
+    {
+      "id": "chain",
+      "duration": 15,
+      "prompt": "A melodic, hypnotic electronic cue for a picture being drawn line by line: a repeating arpeggiated synth melody in a minor key from the first beat, warm pads underneath, the melody gaining a bass line and a soft beat as it builds, resolving on a full, bright chord at 10 seconds that rings to the end."
+    },
+    {
+      "id": "announce",
+      "duration": 20,
+      "prompt": "A big, cinematic, melodic announcement theme: a bold, memorable synth melody from the first beat over deep minor chords, cinematic electronic drums from 4 seconds, the melody repeated higher and fuller, a wide swell to 15 seconds, then one huge final chord ringing out to 20 seconds."
+    },
+    {
+      "id": "cam",
+      "duration": 15,
+      "prompt": "A playful, confident, catchy electronic tune at 110 bpm for a selfie camera that turns a face into pixel art: a bouncy plucked synth melody you can hum from the first beat, a round bass line, crisp claps and finger snaps, dark but fun, ending on a clean final chord."
+    },
+    {
+      "id": "info",
+      "duration": 20,
+      "prompt": "A steady, calm minimal electronic bed for a clear step-by-step explainer: a clean four-on-the-floor pulse at 100 bpm from the first beat, a warm round bass, light ticking hats, a soft positive synth chord every two bars, understated and confident, a gentle lift at 10 seconds, ending on a soft final chord."
+    },
+    {
+      "id": "day",
+      "duration": 20,
+      "prompt": "A morning-to-moment cue for the day of a launch: soft rising pads and a gentle pulse from the first beat, like the first light before sunrise; the pulse slowly gets faster and the bass grows; a bright but dark-toned release at 11 seconds with full drums and a shining neon synth lead, then a final hit at 18 seconds."
+    }
+  ]
+}

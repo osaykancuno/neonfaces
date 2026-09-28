@@ -12,7 +12,9 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent / "refs"
-CAST = [54, 286, 419, 51, 385, 198]
+CAST = [54, 286, 419, 51, 385, 198,
+        336, 57, 5, 378, 490, 211, 182, 60, 226, 539, 257,  # the second batch (28 Sep)
+        56, 130, 471, 58]  # the launch-week scenes
 
 
 def main() -> None:

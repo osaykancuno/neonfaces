@@ -1,7 +1,7 @@
-"""The five movement videos, 9:16 (1080x1920, 24 fps), cut from the generated clips and stills and the
+"""The movement videos, 9:16 (1080x1920, 24 fps), cut from the generated clips and stills and the
 collection's own art. Captions in the collection's pixel font, for muted autoplay.
 
-    python marketing/movement/make_cut.py            # all five -> out/v1.mp4 ... out/v5.mp4 (+ 4:5 crops)
+    python marketing/movement/make_cut.py            # all -> out/v1.mp4 ... out/n3.mp4 (+ 4:5 crops)
     python marketing/movement/make_cut.py v2 v5      # only these
 
 Needs raw/<id>.mp4 (gen_clips.py) and frames/<id>.png (gen_frames.py). The grammar is the same in every video,
@@ -84,12 +84,25 @@ def caption(img: Image.Image, text: str | None, y: int = 1470, cell: int = 6, co
         else:
             cur = t
     lines.append(cur)
+    if len(lines) == 2:  # balance two lines, so no word is left alone on the second one
+        cuts = [(" ".join(words[:k]), " ".join(words[k:])) for k in range(1, len(words))]
+        lines = list(min((c for c in cuts if max(text_width(x, cell) for x in c) <= 960),
+                         key=lambda c: max(text_width(x, cell) for x in c), default=lines))
     lh = 11 * cell
     wmax = max(text_width(l_, cell) for l_ in lines) + 8 * cell
     band = Image.new("RGB", (wmax, lh * len(lines) + 4 * cell), INK)
     img.paste(band, ((W - wmax) // 2, y - 3 * cell))
     for k, l_ in enumerate(lines):
         draw_text(img, l_, W // 2, y + k * lh, cell, color, "center")
+
+
+def drift(fr: np.ndarray, i: int, n: int, z: float = 0.07) -> np.ndarray:
+    """A slow, continuous push-in (sub-pixel), so the art never holds still: the cells alone move in steps, which
+    reads as a stutter on a phone (28 Sep, the founder on V3)."""
+    s = 1.0 + z * (i / max(1, n - 1))
+    h, w = fr.shape[:2]
+    m = np.float32([[s, 0, (1 - s) * w / 2], [0, s, (1 - s) * h / 2]])
+    return cv2.warpAffine(fr, m, (w, h), flags=cv2.INTER_LINEAR)
 
 
 def with_caption(fr: np.ndarray, text: str | None, **kw) -> np.ndarray:
@@ -267,7 +280,7 @@ def grid(lead, dur=3.5, text=None, seed=54):
                 if s != home and s == order[min(lit, len(order)) - 1] and i % 2:  # the newest one flickers on
                     v = v * 0.45
                 out[y:y + tile, x:x + tile] = v
-        yield with_caption(finish(out, i, art=True), text)
+        yield with_caption(finish(drift(out.astype(np.uint8), i, n, 0.06), i, art=True), text)
 
 
 def cells(d, x0, y0, rows, colours, cell):
@@ -335,7 +348,7 @@ def eye(face, dur=3.5, text=None):
             out = np.asarray(fr)
         else:
             t = (i - zoom_n) / FPS
-            out = np.asarray(chamber(t, objects=False, bars=min(1.0, t / 1.6)))
+            out = drift(np.asarray(chamber(t, objects=False, bars=min(1.0, t / 1.6))), i - zoom_n, n - zoom_n)
             if i - zoom_n < 2:
                 out = flash(out)
         yield with_caption(finish(out, i, art=True), text)
@@ -352,7 +365,7 @@ def inside(dur=4.5, text=None):
     n = int(round(dur * FPS))
     for i in range(n):
         t = i / FPS
-        out = np.asarray(chamber(t, objects=t > 0.5, bars=min(1.0, t / 1.2)))
+        out = drift(np.asarray(chamber(t, objects=t > 0.5, bars=min(1.0, t / 1.2))), i, n, 0.1)
         if i < 2:
             out = flash(out)
         yield with_caption(finish(out, i, art=True), text)
@@ -372,7 +385,7 @@ def assembly(dur=3.5, text=None):
         fr = Image.new("RGB", (W, H), INK)
         for q in range(4):
             fr.paste(pieces[q], (int(home[q][0] + away[q][0] * (1 - e)), int(home[q][1] + away[q][1] * (1 - e))))
-        out = np.asarray(fr)
+        out = drift(np.asarray(fr), i, n, 0.05)
         if lock <= i < lock + 3:  # the click
             out = np.minimum(out.astype(np.int32) * 1.35, 255).astype(np.uint8)
         yield with_caption(finish(out, i, art=True), text)
@@ -402,7 +415,7 @@ def gaze(face, dur=4.8, text=None):
         fr = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
         if name:
             draw_text(fr, name, W // 2, top + W + 90, 12, NEON, "center")
-        yield with_caption(finish(np.asarray(fr), i, art=True), text)
+        yield with_caption(finish(drift(np.asarray(fr), i, n, 0.06), i, art=True), text)
 
 
 def card(face, line, dur=3.0):
@@ -418,7 +431,7 @@ def card(face, line, dur=3.0):
     n = int(round(dur * FPS))
     for i in range(n):
         fr = base if i >= len(flick) or flick[i] else dark
-        yield finish(np.asarray(fr), i, art=True)
+        yield finish(drift(np.asarray(fr), i, n, 0.06), i, art=True)
 
 
 # ---------------------------------------------------------------- the five videos
@@ -430,6 +443,47 @@ def raw(c):
 
 
 T1, T2, T3, T5 = (TEASERS / f"{n}.mp4" for n in ("1-signal", "2-watching", "3-eyes", "5-soon"))
+# instrumental beds (28 Sep): V3 to V5 take sections of the story's score, so the series has one sound; each new
+# video has its own short score (gen_music.py, music.json). Under the clips' own sound, never over it.
+SCORE = HERE / "raw" / "music.m4a"
+LUFS = -14  # social platforms normalise to about -14 LUFS (V1 and V2 were mastered at -16)
+
+
+def bed(src, a, length, vol=0.5, fo=1.2):
+    return (src, a, a + length, 0.0, vol, 0.3, fo)
+
+
+def music(name):
+    return HERE / "raw" / f"music-{name}.m4a"
+
+
+_LEN = {}
+
+
+def track_len(src) -> float:
+    if src not in _LEN:
+        _LEN[src] = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                                          str(src)], capture_output=True, text=True, check=True).stdout)
+    return _LEN[src]
+
+
+def score(src, enter, total, vol=0.9, ducks=(), rise=None, offset=None, fi=0.5):
+    """Music that moves with the cut (28 Sep, the founder: not a fixed bed). It comes in at `enter` (after the scene's
+    own sound), already running (the piece joins the track mid-way, as if it had started before) and it ends with the
+    track's own ending on the last frames, so its final hit and tail land on the card. `ducks`: (from, to) in video
+    time, the music dips under a voice line; `rise`: (from, to, gain) a soft start that swells."""
+    dur = track_len(src)
+    if offset is None:
+        offset = max(0.0, dur - (total - enter))
+    length = min(dur - offset, total - enter)
+    g = [f"{vol}"]
+    if rise:
+        a, b, g0 = rise[0] - enter, rise[1] - enter, rise[2]
+        g.append(f"({g0}+{1 - g0}*max(0,min(1,(t-{a:.3f})/{b - a:.3f})))")
+    for a, b in ducks:
+        a, b = a - enter, b - enter
+        g.append(f"(1-0.5*max(0,min(1,min((t-{a:.3f})/0.25+1,({b:.3f}-t)/0.25+1))))")
+    return (src, offset, offset + length, enter, "*".join(g), fi, 0.3)
 
 
 def v1():
@@ -475,10 +529,13 @@ def v3():
         (4.6, lambda: real("v3-d", 0.2, 4.8, "IT GOES WHERE YOU GO.")),
         (3.5, lambda: card("f286", "EVERY FACE IS A WALLET.", 3.5)),
     ]
-    sounds = [(raw("v3-a"), 0.2, 4.7, 0.0, 1.0, 0.0, 0.15), (T1, 6.1, 7.2, 0.3, 1.3, 0.02, 0.2),
-              (raw("v3-a"), 0.0, 3.5, 4.5, 0.5, 0.1, 0.3), (T1, 0.0, 1.6, 7.3, 1.2, 0.02, 0.3),
-              (T3, 0.0, 5.0, 8.0, 1.6, 0.1, 0.4), (raw("v3-d"), 0.2, 4.8, 13.0, 1.0, 0.1, 0.2),
-              (T5, 3.6, 7.9, 17.4, 1.0, 0.05, 0.8)]
+    # the voice lines whole ("Look closer." 6.0-7.5 and "They don't blink." 0-1.9 in teaser 1), no teaser ticking;
+    # its own melodic track (28 Sep: the score's opening pulses read as a repeating digital sound, not music)
+    sounds = [(raw("v3-a"), 0.2, 4.7, 0.0, 0.8, 0.0, 0.15), (T1, 6.0, 7.5, 0.3, 1.3, 0.02, 0.1),
+              (raw("v3-a"), 0.0, 3.5, 4.5, 0.4, 0.1, 0.3), (T1, 0.0, 1.9, 7.3, 1.2, 0.02, 0.1),
+              (raw("v3-d"), 0.2, 4.8, 13.0, 0.8, 0.1, 0.2),
+              (T5, 3.3, 7.4, 17.0, 1.0, 0.05, 0.3),
+              score(music("v3"), 0.0, 21.1, 0.9, ducks=[(7.3, 9.2), (17.2, 20.7)], rise=(1.0, 4.6, 0.3))]
     return parts, sounds
 
 
@@ -493,7 +550,8 @@ def v4():
         at += 4.2
     parts.append((3.5, lambda: assembly(3.5, "ONE FACE.")))
     parts.append((3.0, lambda: card("set-337", "ONE FACE. FOUR PIECES.")))
-    sounds += [(T5, 1.2, 7.9, at + 1.1, 1.0, 0.3, 0.8)]  # the riser under the pieces, the line on the card
+    sounds += [(T5, 1.2, 7.9, at + 0.1, 1.0, 0.3, 0.3)]  # the riser under the pieces, the line on the card, whole
+    sounds.append(score(SCORE, 1.3, 23.3, 0.55, ducks=[(at + 2.4, at + 5.8)], offset=21.3))
     return parts, sounds
 
 
@@ -509,12 +567,67 @@ def v5():
     ]
     sounds = [(raw("v5-a"), 0.3, 4.6, 0.0, 1.0, 0.0, 0.15), (raw("v5-b"), 0.3, 4.6, 4.3, 1.0, 0.05, 0.15),
               (raw("v5-c"), 0.0, 3.0, 8.6, 0.6, 0.1, 0.1), (raw("v5-c"), 0.4, 3.4, 11.6, 1.0, 0.05, 0.1),
-              (T1, 0.0, 1.5, 14.6, 1.0, 0.0, 0.3), (T2, 2.8, 5.0, 14.8, 1.3, 0.05, 0.2),
-              (T2, 5.0, 8.0, 17.0, 1.2, 0.2, 0.6), (T5, 1.2, 7.9, 20.0, 1.0, 0.3, 0.8)]
+              (T2, 2.8, 5.0, 14.8, 1.3, 0.05, 0.2),
+              (T2, 5.0, 8.0, 17.0, 1.2, 0.2, 0.6), (T5, 1.2, 7.9, 19.4, 1.0, 0.3, 0.3),
+              score(SCORE, 4.3, 25.4, 0.6, ducks=[(14.9, 17.2), (21.6, 25.1)], offset=38.9)]
     return parts, sounds
 
 
-VIDEOS = {"v1": v1, "v2": v2, "v3": v3, "v4": v4, "v5": v5}
+# ---------------------------------------------------------------- the second batch (28 Sep): new people, new places
+
+def n1():
+    """Everyone moves. Some don't: stillness in the rush."""
+    parts = [
+        (3.8, lambda: real("n1-a", 0.2, 4.0, "EVERYONE MOVES.")),
+        (3.3, lambda: real("n1-b", 0.4, 3.7, "SOME DON'T.")),
+        (2.3, lambda: ots("n1-o", 2.3, text="THEY KEEP WATCHING.")),
+        (3.4, lambda: real("n1-c", 0.3, 3.7)),
+        (3.0, lambda: turn("n1-c", 3.6, "f5", 3.0, "5555 FACES.")),
+        (3.0, lambda: card("f5", "EVERYONE MOVES. THEY DON'T.")),
+    ]
+    sounds = [(raw("n1-a"), 0.2, 4.0, 0.0, 1.0, 0.0, 0.15), (raw("n1-b"), 0.4, 3.7, 3.8, 0.9, 0.05, 0.1),
+              (raw("n1-a"), 1.0, 3.3, 7.1, 0.4, 0.1, 0.2), (raw("n1-c"), 0.3, 3.7, 9.4, 0.9, 0.05, 0.1),
+              (T1, 0.0, 1.5, 12.8, 1.0, 0.0, 0.3), (T3, 0.0, 2.8, 13.2, 2.0, 0.1, 0.3),
+              (T5, 3.6, 7.9, 14.5, 0.9, 0.05, 0.8), bed(music("n1"), 0.0, 18.8, 0.6)]
+    return parts, sounds
+
+
+def n2():
+    """Lights out: the city goes dark, the stare stays on."""
+    parts = [
+        (3.8, lambda: real("n2-a", 0.0, 3.8, "LIGHTS OUT.")),
+        (3.3, lambda: real("n2-c", 0.4, 3.7, "THE CITY GOES DARK.")),
+        (3.2, lambda: real("n2-b", 0.5, 3.7, "THE STARE STAYS ON.")),
+        (2.3, lambda: ots("n2-o", 2.3)),
+        (3.0, lambda: turn("n2-a", 3.6, "f378", 3.0)),
+        (3.0, lambda: card("f378", "LIGHTS OUT. EYES OPEN.")),
+    ]
+    sounds = [(raw("n2-a"), 0.0, 3.8, 0.0, 1.0, 0.0, 0.15), (raw("n2-c"), 0.4, 3.7, 3.8, 1.0, 0.05, 0.1),
+              (raw("n2-b"), 0.5, 3.7, 7.1, 1.0, 0.05, 0.1), (raw("n2-a"), 2.0, 4.0, 10.3, 0.4, 0.1, 0.2),
+              (T3, 0.0, 2.8, 13.0, 1.0, 0.1, 0.3),
+              (T5, 3.3, 7.4, 14.3, 1.0, 0.05, 0.3), score(music("n2"), 3.8, 18.6, 0.9, ducks=[(14.4, 18.0)])]
+    return parts, sounds
+
+
+def n3():
+    """Snow. Fog. Storm. Nothing makes them blink."""
+    parts = [
+        (3.6, lambda: real("n3-a", 0.2, 3.8, "SNOW.")),
+        (2.2, lambda: ots("n3-o", 2.2, text="SNOW.")),
+        (3.4, lambda: real("n3-b", 0.4, 3.8, "FOG.")),
+        (3.4, lambda: real("n3-c", 0.3, 3.7, "STORM.")),
+        (3.0, lambda: turn("n3-c", 3.6, "f226", 3.0, "NOTHING MAKES THEM BLINK.")),
+        (3.0, lambda: card("f226", "THEY DON'T BLINK.")),
+    ]
+    sounds = [(raw("n3-a"), 0.2, 3.8, 0.0, 1.0, 0.0, 0.15), (raw("n3-a"), 1.0, 3.2, 3.6, 0.5, 0.1, 0.2),
+              (raw("n3-b"), 0.4, 3.8, 5.8, 1.0, 0.05, 0.1), (raw("n3-c"), 0.3, 3.7, 9.2, 1.0, 0.05, 0.1),
+              (T3, 0.0, 2.8, 13.0, 1.0, 0.1, 0.3),
+              (T5, 3.3, 7.4, 14.3, 1.0, 0.05, 0.3),
+              score(music("n3"), 0.0, 18.6, 0.9, ducks=[(14.4, 18.0)], rise=(5.2, 6.4, 0.4))]
+    return parts, sounds
+
+
+VIDEOS = {"v1": v1, "v2": v2, "v3": v3, "v4": v4, "v5": v5, "n1": n1, "n2": n2, "n3": n3}
 
 
 # ---------------------------------------------------------------- render
@@ -549,11 +662,12 @@ def render(name: str):
         for k, (src, a, b, at, vol, fi, fo) in enumerate(sounds):
             inputs += ["-i", str(src)]
             d = b - a
+            vol = f"'{vol}':eval=frame" if isinstance(vol, str) else vol
             chains.append(f"[{k + 1}:a]atrim={a}:{b},asetpts=PTS-STARTPTS,volume={vol},afade=t=in:d={fi},"
                           f"afade=t=out:st={max(0.0, d - fo):.3f}:d={fo},adelay={int(at * 1000)}|{int(at * 1000)}[s{k}]")
             labels.append(f"[s{k}]")
         mix = ";".join(chains) + ";" + "".join(labels) + \
-            f"amix=inputs={len(labels)}:normalize=0,atrim=0:{length},loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000[a]"
+            f"amix=inputs={len(labels)}:normalize=0,atrim=0:{length},loudnorm=I={LUFS}:TP=-1.5:LRA=11,aresample=48000[a]"
         master = OUT / f"{name}.mp4"
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(silent), *inputs, "-filter_complex", mix,
                         "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{length}",

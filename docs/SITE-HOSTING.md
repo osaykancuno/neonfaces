@@ -56,14 +56,14 @@ Lesson from the evening: when the zone turned active the records were orange bef
 | When | Command | Way back |
 |---|---|---|
 | the preview changes (the list, the look) | `tools/site.sh deploy preview` | `npx --yes wrangler@4.142.0 rollback --name neonfaces` (the previous version, seconds), or Workers & Pages > neonfaces > Deployments |
-| **Thu 8 Oct 14:00 UTC**, the web app replaces the preview | export the deployment with the Alchemy key (below), then `tools/site.sh deploy web` (it refuses a deployment.json that is not the mainnet one) | the same rollback returns the preview |
+| **Fri 2 Oct 18:00 UTC**, the web app replaces the preview | export the deployment with the Alchemy key (below), then `tools/site.sh deploy web` (it refuses a deployment.json that is not the mainnet one) | the same rollback returns the preview |
 
 ## The Alchemy key (first fallback for chain reads)
 
 The site reads the chain from the official public node and falls back to Alchemy, PublicNode and dRPC (`web/src/chain.js`, `rpcFallbacks` in `tools/export-web.mjs`).
 
 1. The Alchemy app is on **Robinhood Chain Mainnet**; its domain allowlist holds `neonfaces.xyz`, `www.neonfaces.xyz`, `neonfaces.pages.dev` (add `neonfaces.osaykancuno.workers.dev` only if the web app is ever tested there).
-2. The URL (`https://robinhood-mainnet.g.alchemy.com/v2/<key>`) is kept in `contracts/.env` as `ALCHEMY_RPC_URL` (git-ignored). On 8 October:
+2. The URL (`https://robinhood-mainnet.g.alchemy.com/v2/<key>`) is kept in `contracts/.env` as `ALCHEMY_RPC_URL` (git-ignored). On 2 October:
    ```bash
    ALCHEMY_RPC_URL=$(grep '^ALCHEMY_RPC_URL=' contracts/.env | cut -d= -f2- | tr -d '\r" ') \
    OPENSEA_URL=https://opensea.io/collection/<slug> STRATEGY_AGENT=<runner address> node tools/export-web.mjs 4663

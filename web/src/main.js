@@ -577,7 +577,7 @@ async function showFace(id) {
       $("#face-agent").hidden = $("#face-agent").previousElementSibling.hidden = true; // the panel says it in full
     }
   } catch (e) {
-    $("#face-owner").innerHTML = `<b>status</b>${/nonexistent|ERC721NonexistentToken/i.test(String(e)) ? "not minted yet" : esc(errMsg(e))}`;
+    $("#face-owner").innerHTML = `<b>status</b>${/nonexistent|ERC721NonexistentToken|0x7e273289/i.test(String(e)) ? "not minted yet" : esc(errMsg(e))}`;
   }
 }
 

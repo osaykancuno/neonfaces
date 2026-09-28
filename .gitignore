@@ -54,3 +54,5 @@ art/portraits/manifest.tmp
 .dev.vars*
 !.dev.vars.example
 !.env.example
+# plan B proofs (29 MB, rebuilt by tools/seadrop-drop.mjs; published with the web app only if the mint runs on the site)
+web/public/drop/

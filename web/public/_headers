@@ -6,6 +6,7 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000
 
 # Vite names every built file after its content (assets/index-<hash>.js): a new build gets new names, so browsers
 # and Cloudflare's edge can keep these for a year and a crowd on sale day only fetches index.html and deployment.json

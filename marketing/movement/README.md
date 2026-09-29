@@ -191,14 +191,14 @@ then everyone from **Fri 2 Oct, 18:00 UTC**. The announcement goes out only once
 
 | Day | 10:00 | 16:00 | 20:00 |
 |---|---|---|---|
-| Tue 29 Sep | N1 | **Announce** (first post with date, price and site; only after the deploy) | |
+| Tue 29 Sep | N1 | **Cam** (the site revealed with NEONCAM: out/l-cam.mp4, post "Cam, launch") | **Announce** (neutral: out/l-announce-neutral.mp4, post "Announce, neutral") |
 | Wed 30 Sep | List | How to mint | (optional) Tomorrow |
-| Thu 1 Oct | Today | Cam | **Open** (the list opens) |
+| Thu 1 Oct | Today | Wall | **Open** (the list opens) |
 | Fri 2 Oct | N2 | V3 | **Public** (open to everyone) |
 | Sat 3 Oct | N3 | V4 | |
 | Sun 4 Oct | V5 | Tiers | |
-| Mon 5 Oct | Wall | Chain | |
-| Tue 6 Oct | Facts | the story, live cut (out/story-live.mp4: the card says ON OPENSEA; `make_story.py live`) | |
+| Mon 5 Oct | Chain | Facts | |
+| Tue 6 Oct | | the story, live cut (out/story-live.mp4: the card says ON OPENSEA; `make_story.py live`) | |
 
 Until the sell-out; after it, the reveal needs its own pieces. N1 to N3, V3 to V5, wall, tiers, chain, facts and cam
 carry no date and work any day. Reaction GIFs (g6 to g12) go as replies under the day's post, never as a slot.
@@ -283,6 +283,18 @@ NEONFACES. neonfaces.xyz
 **Safety** (a reply under the Announce, pinned until the sell-out; launch days are when fake mint links and fake support DMs appear):
 The only official links: neonfaces.xyz and opensea.io/collection/neonfaces. The contract on Robinhood Chain is 0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B.
 We never DM first, never ask for a seed phrase, and there is no airdrop or claim. A link anywhere else is not us.
+
+**Cam, launch** (Tue 29, 16:00; the founder's call on 29 Sep: the site goes public with NEONCAM, the date follows at 20:00)
+See yourself the way they see you.
+NEONCAM turns your camera into a Face: five tones, from black to neon, the collection's own recipe. It all happens on your phone: nothing is uploaded.
+Take yours on neonfaces.xyz and post it with #NEONCAM.
+
+**Announce, neutral** (Tue 29, 20:00; the venue isn't in it, the site shows where to mint)
+NEONFACES opens Thursday 1 October, 18:00 UTC.
+The list goes first: 24 hours, 0.013 ETH, up to 3 Faces per wallet. Check your wallet on neonfaces.xyz
+Then everyone, from Friday 2 October, 18:00 UTC: 0.018 ETH, up to 5 per wallet in total, until every Face is sold.
+Every Face is a wallet with a small basket of Stock Tokens inside. Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
+(reply: the Safety post below)
 
 **Plan B wording** (if the mint runs on neonfaces.xyz through SeaDrop, docs/LAUNCH-RUNBOOK.md 7; videos `make_launch.py --site announce howto today` -> out/l-announce-site.mp4, l-howto-site.mp4, l-today-site.mp4; the other pieces don't name the venue). The links go to https://neonfaces.xyz
 - **Announce** NEONFACES opens on neonfaces.xyz: Thursday 1 October, 18:00 UTC. (the rest as above)

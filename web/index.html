@@ -149,6 +149,39 @@
           </div>
         </section>
       </section>
+      <!-- ================= NEONCAM ================= -->
+      <section id="view-cam" class="page view" hidden>
+      <section id="neoncam" class="block reveal">
+        <div class="label">NEONCAM</div>
+        <h2>See yourself the way they see you</h2>
+        <div class="prose">
+          <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it. When the camera is on, the page itself glows neon, so your face is lit like theirs, even in the dark.</p>
+        </div>
+        <div class="cam">
+        <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas>
+        <div class="cam-idle" id="cam-idle">
+          <button class="btn btn-neon cam-btn" id="cam-start" type="button">Turn the camera on</button>
+          <label class="btn btn-ghost cam-btn">Use a photo<input type="file" accept="image/*" id="cam-file" hidden></label>
+        </div>
+      </div>
+      <p class="cam-msg" id="cam-msg" aria-live="polite"></p>
+      <div id="cam-tools" hidden>
+        <div class="cam-row">
+          <button class="btn btn-neon cam-btn" id="cam-shot" type="button">Take the photo</button>
+          <button class="btn btn-ghost cam-btn" id="cam-flip" type="button" hidden>Switch camera</button>
+          <button class="btn btn-neon cam-btn" id="cam-save" type="button" hidden>Save</button>
+          <button class="btn btn-neon cam-btn" id="cam-share" type="button" hidden>Share</button>
+          <button class="btn btn-neon cam-btn" id="cam-x" type="button" hidden>Post on X</button>
+          <button class="btn btn-ghost cam-btn" id="cam-again" type="button" hidden>Again</button>
+        </div>
+        <div class="cam-seg" data-opt="cells"><span>Cells</span><button type="button" data-v="24" aria-pressed="true">24</button><button type="button" data-v="32" aria-pressed="false">32</button><button type="button" data-v="48" aria-pressed="false">48</button></div>
+        <div class="cam-seg" data-opt="neon"><span>Neon</span><button type="button" data-v="0" aria-pressed="true">Standard</button><button type="button" data-v="1" aria-pressed="false">Deep</button><button type="button" data-v="2" aria-pressed="false">Hot</button></div>
+        <div class="cam-seg" data-opt="grain"><span>Grain</span><button type="button" data-v="0" aria-pressed="true">Clean Print</button><button type="button" data-v="1" aria-pressed="false">Dusty</button><button type="button" data-v="2" aria-pressed="false">Heavy Scan</button></div>
+        <div class="cam-seg" data-opt="gaze"><span>Gaze</span><button type="button" data-v="0" aria-pressed="true">None</button><button type="button" data-v="1" aria-pressed="false">Steady</button><button type="button" data-v="2" aria-pressed="false">Fixed</button><button type="button" data-v="3" aria-pressed="false">Piercing</button></div>
+      </div>
+      </section>
+      </section>
+
       <section id="view-faces" class="page view" hidden>
         <section id="gallery" class="block reveal">
           <div class="label">Faces</div>
@@ -332,6 +365,7 @@
     <nav id="tabbar" class="tabbar" aria-label="App">
       <a class="side-brand" href="/" data-link>NEONFACES</a>
       <a href="/" data-link data-tab="" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a>
+      <a href="/cam" data-link data-tab="cam" aria-label="NEONCAM"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="3" width="6" height="2"/><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="9"/><rect x="2" y="16" width="16" height="2"/><rect x="8" y="8" width="4" height="2"/><rect x="6" y="10" width="2" height="3"/><rect x="12" y="10" width="2" height="3"/><rect x="8" y="13" width="4" height="2"/></svg><span>Cam</span></a>
       <a href="/faces" data-link data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a>
       <a href="/sets" data-link data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a>
       <a href="/mine" data-link data-tab="mine" aria-label="Mine"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Mine</span></a>

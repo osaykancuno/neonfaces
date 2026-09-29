@@ -10,13 +10,14 @@ import { liveValue, valueHistory, sparkline } from "./value.js";
 import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 import { loadDrop, setupSiteMint, MINT_ERRORS } from "./mint.js";
+import { setupCam } from "./cam.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let gallery = []; // [{ artId, stare, record }]: on-chain pixel records
 let hunting = 0; // the set hunter shows only its latest lookup
-const VIEWS = { "": "view-home", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide" }; // routes of the app
+const VIEWS = { "": "view-home", cam: "view-cam", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide" }; // routes of the app
 let lastView = null;
 let sets = []; // [{ set, stare, face, records[4] }]: whole sets for the Sets section
 let placeholder = null;
@@ -75,6 +76,8 @@ document.addEventListener("click", (e) => {
 // routing: an app of views ("/", "/faces", "/sets", "/mine", "/guide") and "/face/:id"
 // =====================================================================================
 function route() {
+  // the preview's NEONCAM link (/#cam), shared before the launch, opens the Cam view
+  if (location.pathname === "/" && location.hash === "#cam") history.replaceState({}, "", "/cam");
   const m = location.pathname.match(/^\/face\/(\d+)/) || location.hash.match(/^#\/face\/(\d+)/);
   const tab = m ? "faces" : location.pathname.split("/")[1] ?? "";
   const view = m ? "face-page" : VIEWS[tab] ?? "view-home";
@@ -91,6 +94,9 @@ function route() {
     window.scrollTo(0, 0);
   }
   if (view === "view-mine") renderMyFaces();
+  // NEONCAM (cam.js) lights the page while its camera is on, and turns it off when the view is left
+  if (view === "view-cam") setupCam();
+  window.dispatchEvent(new Event("neon:route"));
 }
 
 // open a minted Face by number (Faces view)

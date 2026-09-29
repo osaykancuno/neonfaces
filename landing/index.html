@@ -110,7 +110,7 @@
 
   .cam-btn[hidden], #cam-tools[hidden] { display: none; }
   @media (max-width: 860px) { .cam-seg button { min-height: 44px; min-width: 44px; } }
-  /* NEONCAM's light: on the Cam view the whole page turns neon with black type, always, so the screen lights a face
+  /* NEONCAM's light: while its camera is on, the whole page turns neon with black type, so the screen lights a face
      acid lime even in the dark (like the films). Only the colours swap, never the layout. The camera's own square keeps
      the dark palette. The CRT lines and the noise step aside (they would dim it). The photo is the canvas, never the page. */
   html.neoncam { --bg: #ccff00; --neon: #000; --ice: #000; --text: #000; --dim: #3d4a0c; --line: rgba(0, 0, 0, .3);
@@ -380,7 +380,7 @@
       <div class="label">NEONCAM</div>
       <h2>See yourself the way they see you</h2>
       <div class="prose">
-        <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it. The page itself glows neon, so your face is lit like theirs, even in the dark.</p>
+        <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it. When the camera is on, the page itself glows neon, so your face is lit like theirs, even in the dark.</p>
       </div>
       <div class="cam">
       <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas>
@@ -476,6 +476,23 @@
     video.muted = true; video.playsInline = true; video.setAttribute("playsinline", "");
     let stream = null, facing = "user", still = null, shot = null, raf = 0, last = 0, seed = 1;
     const say = (t) => (msg.textContent = t);
+    const HERE = () => location.hash === "#cam";
+    // NEONCAM's light: while the camera is on (not for a photo), the page turns neon with black type, and so does the phone's
+    // bar, so the screen lights the face like the films. It strikes like a tube, a few uneven flashes then steady; the
+    // view is dark again when the camera stops or the view is left.
+    let lit = false;
+    const light = (on) => {
+      if (on === lit) return;
+      lit = on;
+      const set = (v) => {
+        document.documentElement.classList.toggle("neoncam", v);
+        document.querySelector('meta[name="theme-color"]').content = v ? "#ccff00" : "#000000";
+      };
+      if (!on || matchMedia("(prefers-reduced-motion: reduce)").matches) return set(on);
+      [[0, 1], [50, 0], [110, 1], [150, 0], [330, 1], [380, 0], [440, 1]].forEach(([t, v]) => setTimeout(() => lit && set(!!v), t));
+    };
+    const sync = () => light(HERE() && !document.hidden && !!stream); // the camera only: a photo keeps the page dark
+
 
     // one frame of the source (video or photo) -> the NEONFACES look, drawn on canvas `c` (size x size).
     // The same recipe as the collection (art/neonfaces/photo.py + render.py, Stair Step): levels between the 1st and
@@ -594,6 +611,7 @@
       shot = null;
       buttons(false);
       if (!raf) raf = requestAnimationFrame(loop);
+      sync();
     }
     // the system share sheet (phones: Instagram, X, WhatsApp…) only where it can carry the photo itself
     const canShareFiles = (() => {
@@ -633,7 +651,7 @@
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     }
-    const TEXT = "They don't blink. Neither do I. NEONCAM by NEONFACES", LINK = "https://neonfaces.xyz/#cam";
+    const TEXT = "They don't blink. Neither do I. #NEONCAM by NEONFACES", LINK = "https://neonfaces.xyz/#cam";
     async function share() {
       if (!shot) return;
       const file = new File([shot], "neoncam.png", { type: "image/png" });
@@ -678,12 +696,13 @@
     );
     // leaving the view (or the browser tab) turns the camera off
     const off = () => {
-      if (location.hash === "#cam" && !document.hidden) return;
+      if (HERE() && !document.hidden) return sync();
       const was = !!stream;
       stopCam();
       cancelAnimationFrame(raf);
       raf = 0;
       if (was) { $("cam-idle").hidden = false; $("cam-tools").hidden = true; shot = null; }
+      sync();
     };
     addEventListener("hashchange", off);
     document.addEventListener("visibilitychange", off);
@@ -697,9 +716,6 @@
       const target = document.getElementById(id);
       const view = views.find((v) => v.dataset.view === id) || target?.closest(".view") || views[0];
       views.forEach((v) => (v.hidden = v !== view));
-      const cam = view.dataset.view === "cam"; // NEONCAM's page is neon with black type, always (and so is the phone's bar)
-      document.documentElement.classList.toggle("neoncam", cam);
-      document.querySelector('meta[name="theme-color"]').content = cam ? "#ccff00" : "#000000";
       document.querySelectorAll("[data-tab]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.tab === view.dataset.view));
       if (target && !target.classList.contains("view") && view.dataset.view !== id) target.scrollIntoView();
       else window.scrollTo(0, 0);

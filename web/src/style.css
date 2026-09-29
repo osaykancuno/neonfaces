@@ -461,7 +461,7 @@ body { -webkit-tap-highlight-color: transparent; }
   :root { --tabbar: calc(62px + env(safe-area-inset-bottom)); }
   body { padding-bottom: var(--tabbar); }
   .tabbar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: grid; grid-template-columns: repeat(5, 1fr);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: grid; grid-template-columns: repeat(6, 1fr);
     height: var(--tabbar); padding-bottom: env(safe-area-inset-bottom); background: #000; border-top: 2px solid var(--neon);
   }
   .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--dim); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; }
@@ -653,3 +653,40 @@ html.birth-lit #cursor { border-color: #000; }
   .birth-log { min-height: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .chamber-scan { animation: none; } .mint-panel.flash { animation: none; } }
+
+/* ------------------------------------------------------------------ NEONCAM (the Cam view, from the preview; cam.js) */
+#view-cam .prose { display: grid; gap: 14px; max-width: 760px; margin-bottom: 18px; }
+#view-cam .prose p { margin: 0; }
+.cam { position: relative; width: 100%; max-width: 560px; aspect-ratio: 1; border: 2px solid var(--neon); background: #000; box-sizing: border-box; }
+.cam canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.cam-idle { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; text-align: center; }
+.cam-idle[hidden] { display: none; }
+.cam-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 2px solid var(--neon); background: var(--neon); color: #000; font: 700 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; box-sizing: border-box; }
+.cam-btn.ghost { background: transparent; color: var(--neon); }
+.cam-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; max-width: 560px; }
+.cam-seg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
+.cam-seg > span { font: 600 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); min-width: 56px; }
+.cam-seg button { min-height: 36px; padding: 6px 12px; border: 1px solid var(--line); background: #070900; color: var(--text); font: 600 12px/1 var(--mono); cursor: pointer; }
+.cam-seg button[aria-pressed="true"] { border-color: var(--neon); color: #000; background: var(--neon); }
+.cam-msg { font-size: 14px; color: var(--dim); min-height: 1.4em; margin: 10px 0 6px; }
+
+.cam-btn[hidden], #cam-tools[hidden] { display: none; }
+@media (max-width: 860px) { .cam-seg button { min-height: 44px; min-width: 44px; } }
+/* NEONCAM's light: while its camera is on, the whole page turns neon with black type, so the screen lights a face
+   acid lime even in the dark (like the films). Only the colours swap, never the layout. The camera's own square keeps
+   the dark palette. The CRT lines and the noise step aside (they would dim it). The photo is the canvas, never the page. */
+html.neoncam { --bg: #ccff00; --neon: #000; --ice: #000; --text: #000; --dim: #3d4a0c; --line: rgba(0, 0, 0, .3);
+  --olive: rgba(0, 0, 0, .45); background: var(--bg); }
+html.neoncam .cam { --bg: #000; --neon: #ccff00; --ice: #f2ffc8; --text: #e9f5c4; --dim: #8a9a5a; --line: #2a320a; border-color: #000; }
+html.neoncam .crt, html.neoncam .noise { display: none; }
+html.neoncam #cursor { border-color: #ccff00; }
+html.neoncam .nav { background: linear-gradient(#ccff00 60%, #ccff0000); }
+html.neoncam .tabbar { background: #ccff00; }
+html.neoncam .tabbar a:hover { background: rgba(0, 0, 0, .08); }
+html.neoncam .tabbar a[aria-current] { color: #ccff00; background: #000; }
+html.neoncam .tabbar a[aria-current] svg { filter: none; }
+html.neoncam .btn-neon, html.neoncam .cam-btn { color: var(--bg); }
+html.neoncam .btn-ghost:not(.cam-btn) { background: transparent; }
+html.neoncam .cam-seg button { background: transparent; }
+html.neoncam .cam-seg button[aria-pressed="true"] { background: #000; color: #ccff00; }
+@media (min-width: 1100px) { html.neoncam { background: #ccff00 radial-gradient(rgba(0, 0, 0, .1) 1px, transparent 1.5px) 0 0 / 22px 22px; } }

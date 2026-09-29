@@ -2,11 +2,11 @@ const te = ["#000000", "#1f2504", "#414d12", "#677920", "#94b21d", "#ccff00", "#
 function K(e, { cols: n = 48, rows: t = 24, fade: o = !0 } = {}) {
   const r = e.getContext("2d"), a = e.width, i = e.height, u = a / n, s = i / t, l = { x: 0, y: 0 }, h = { x: 0, y: 0 };
   let m = { x: 0, y: 0, t: 0 }, p = !0;
-  const y = (c) => {
+  const M = (c) => {
     const f = e.getBoundingClientRect(), b = (c.clientX - (f.left + f.width / 2)) / (window.innerWidth / 2), A = (c.clientY - (f.top + f.height / 2)) / (window.innerHeight / 2);
     l.x = Math.max(-1, Math.min(1, b * 1.4)), l.y = Math.max(-1, Math.min(1, A * 1.6));
   };
-  window.addEventListener("pointermove", y, { passive: !0 }), new IntersectionObserver(([c]) => p = c.isIntersecting).observe(e);
+  window.addEventListener("pointermove", M, { passive: !0 }), new IntersectionObserver(([c]) => p = c.isIntersecting).observe(e);
   function k(c, f, b, A, O) {
     let g = 1;
     g -= 0.34 * Math.exp(-((c + 0.05) ** 2 / 0.5 + (f + 0.05) ** 2 / 0.35)), g -= 0.25 * Math.exp(-((c + 0.95) ** 2 / 0.05 + (f - 0.1) ** 2 / 0.3));
@@ -14,17 +14,17 @@ function K(e, { cols: n = 48, rows: t = 24, fade: o = !0 } = {}) {
     Math.abs(f - q) < 0.13 * (1.2 - (c + 1) * 0.25) && c > -0.85 && c < 0.9 && (g *= 0.08);
     const C = 0.36;
     Math.abs(f - (-C - 0.16 + 0.1 * c * c)) < 0.05 && Math.abs(c) < 0.75 && (g -= 0.25);
-    const v = 0.72, E = c / v;
-    if (Math.abs(E) < 1) {
-      const R = -C * Math.pow(1 - E * E, 0.8) - 0.03 * E, D = C * 0.8 * Math.pow(1 - E * E, 0.9) - 0.03 * E;
-      if (f > R && f < D) {
-        g = 0.62 - 0.12 * (1 - Math.abs(E));
-        const j = b * v * 0.5, V = A * C * 0.35, F = Math.hypot((c - j) / 1, (f - V) / 1), N = 0.42;
-        F < N && (g = 0.1 + 0.1 * (F / N) + 0.04 * Math.sin(O * 2 + F * 30)), F < N * 0.45 && (g = 0), Math.hypot(c - j + 0.09, f - V + 0.09) < N * 0.2 && (g = 1);
+    const E = 0.72, v = c / E;
+    if (Math.abs(v) < 1) {
+      const N = -C * Math.pow(1 - v * v, 0.8) - 0.03 * v, D = C * 0.8 * Math.pow(1 - v * v, 0.9) - 0.03 * v;
+      if (f > N && f < D) {
+        g = 0.62 - 0.12 * (1 - Math.abs(v));
+        const j = b * E * 0.5, V = A * C * 0.35, z = Math.hypot((c - j) / 1, (f - V) / 1), F = 0.42;
+        z < F && (g = 0.1 + 0.1 * (z / F) + 0.04 * Math.sin(O * 2 + z * 30)), z < F * 0.45 && (g = 0), Math.hypot(c - j + 0.09, f - V + 0.09) < F * 0.2 && (g = 1);
       }
-      Math.abs(f - R) < 0.08 && f < R + 0.03 && (g = 0), Math.abs(f - D) < 0.03 && (g *= 0.75);
+      Math.abs(f - N) < 0.08 && f < N + 0.03 && (g = 0), Math.abs(f - D) < 0.03 && (g *= 0.75);
     }
-    return c > v - 0.05 && c < v + 0.28 && Math.abs(f - (-0.08 - 0.6 * (c - v))) < 0.06 && (g = 0.02), g -= 0.12 * Math.exp(-((c + 0.05) ** 2 / 0.3 + (f - 0.62) ** 2 / 0.02)), g += Math.sin(c * 37.1 + f * 21.7) * 0.03, g;
+    return c > E - 0.05 && c < E + 0.28 && Math.abs(f - (-0.08 - 0.6 * (c - E))) < 0.06 && (g = 0.02), g -= 0.12 * Math.exp(-((c + 0.05) ** 2 / 0.3 + (f - 0.62) ** 2 / 0.02)), g += Math.sin(c * 37.1 + f * 21.7) * 0.03, g;
   }
   function T(c) {
     if (requestAnimationFrame(T), !!p) {
@@ -35,8 +35,8 @@ function K(e, { cols: n = 48, rows: t = 24, fade: o = !0 } = {}) {
           let g = k(A * 1.25, O * 1.25, h.x, h.y, c);
           const q = ne[f % 4 * 4 + b % 4];
           if ((o ? Math.min(1, (1 - Math.hypot(A * 0.92, O * 0.98)) * 3.4) : 1) + q * 0.9 < 0.5) continue;
-          const v = Math.max(0, Math.min(6, Math.round(Math.max(0, Math.min(1, g)) * 5 + q * 0.7)));
-          r.fillStyle = te[g >= 0.99 ? 6 : Math.min(v, 5)], r.fillRect(Math.floor(b * u), Math.floor(f * s), Math.ceil(u), Math.ceil(s));
+          const E = Math.max(0, Math.min(6, Math.round(Math.max(0, Math.min(1, g)) * 5 + q * 0.7)));
+          r.fillStyle = te[g >= 0.99 ? 6 : Math.min(E, 5)], r.fillRect(Math.floor(b * u), Math.floor(f * s), Math.ceil(u), Math.ceil(s));
         }
     }
   }
@@ -49,19 +49,19 @@ function B(e) {
   return oe(e, { strict: !1 }) ? Math.ceil((e.length - 2) / 2) : e.length;
 }
 const X = "2.56.8";
-let I = {
+let R = {
   getDocsUrl: ({ docsBaseUrl: e, docsPath: n = "", docsSlug: t }) => n ? `${e ?? "https://viem.sh"}${n}${t ? `#${t}` : ""}` : void 0,
   version: `viem@${X}`
 };
 class S extends Error {
   constructor(n, t = {}) {
-    const o = t.cause instanceof S ? t.cause.details : t.cause?.message ? t.cause.message : t.details, r = t.cause instanceof S && t.cause.docsPath || t.docsPath, a = I.getDocsUrl?.({ ...t, docsPath: r }), i = [
+    const o = t.cause instanceof S ? t.cause.details : t.cause?.message ? t.cause.message : t.details, r = t.cause instanceof S && t.cause.docsPath || t.docsPath, a = R.getDocsUrl?.({ ...t, docsPath: r }), i = [
       n || "An error occurred.",
       "",
       ...t.metaMessages ? [...t.metaMessages, ""] : [],
       ...a ? [`Docs: ${a}`] : [],
       ...o ? [`Details: ${o}`] : [],
-      ...I.version ? [`Version: ${I.version}`] : []
+      ...R.version ? [`Version: ${R.version}`] : []
     ].join(`
 `);
     super(i, t.cause ? { cause: t.cause } : void 0), Object.defineProperty(this, "details", {
@@ -252,19 +252,19 @@ function pe(e, n) {
   }
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   function i(s, l, h) {
-    const m = r / l.g, p = (y) => {
-      s.fillStyle = l.palette[l.cells[y]], s.fillRect(Math.floor(y % l.g * m), Math.floor(Math.floor(y / l.g) * m), Math.ceil(m), Math.ceil(m));
+    const m = r / l.g, p = (M) => {
+      s.fillStyle = l.palette[l.cells[M]], s.fillRect(Math.floor(M % l.g * m), Math.floor(Math.floor(M / l.g) * m), Math.ceil(m), Math.ceil(m));
     };
     if (h) h.forEach(p);
-    else for (let y = 0; y < l.cells.length; y++) p(y);
+    else for (let M = 0; M < l.cells.length; M++) p(M);
   }
   setInterval(() => {
     if (document.hidden || !a.length) return;
     const s = a[Math.floor(Math.random() * a.length)], l = U(n[Math.floor(Math.random() * n.length)]), h = [...Array(l.cells.length).keys()].sort(() => Math.random() - 0.5), m = r / l.g;
     let p = 0;
-    const y = Math.ceil(h.length / 14), k = () => {
-      const T = h.slice(p, p + y);
-      p += y, s.ctx.fillStyle = "#ccff00", T.forEach((c) => s.ctx.fillRect(Math.floor(c % l.g * m), Math.floor(Math.floor(c / l.g) * m), Math.ceil(m), Math.ceil(m))), setTimeout(() => i(s.ctx, l, T), 70), p < h.length ? requestAnimationFrame(k) : s.face = l;
+    const M = Math.ceil(h.length / 14), k = () => {
+      const T = h.slice(p, p + M);
+      p += M, s.ctx.fillStyle = "#ccff00", T.forEach((c) => s.ctx.fillRect(Math.floor(c % l.g * m), Math.floor(Math.floor(c / l.g) * m), Math.ceil(m), Math.ceil(m))), setTimeout(() => i(s.ctx, l, T), 70), p < h.length ? requestAnimationFrame(k) : s.face = l;
     };
     k();
   }, 240);
@@ -325,7 +325,7 @@ function H() {
   }
   return d.state === "suspended" && d.resume(), d;
 }
-function M(e, { dur: n = 0.05, type: t = "square", vol: o = 0.05, slide: r = 0, delay: a = 0 } = {}) {
+function y(e, { dur: n = 0.05, type: t = "square", vol: o = 0.05, slide: r = 0, delay: a = 0 } = {}) {
   if (!x || !H()) return;
   const i = d.currentTime + a, u = d.createOscillator(), s = d.createGain();
   u.type = t, u.frequency.setValueAtTime(e, i), r && u.frequency.exponentialRampToValueAtTime(Math.max(40, e + r), i + n), s.gain.setValueAtTime(0, i), s.gain.linearRampToValueAtTime(o, i + 4e-3), s.gain.exponentialRampToValueAtTime(1e-4, i + n), u.connect(s).connect(L), u.start(i), u.stop(i + n + 0.02);
@@ -341,7 +341,7 @@ function we() {
   e.gain.cancelScheduledValues(d.currentTime), e.gain.linearRampToValueAtTime(0, d.currentTime + 0.3), n.forEach((t) => t.stop(d.currentTime + 0.35)), P = null;
 }
 let Y = 0;
-const z = {
+const I = {
   get on() {
     return x;
   },
@@ -351,27 +351,29 @@ const z = {
       localStorage.setItem(_, e ? "on" : "off");
     } catch {
     }
-    e ? (H(), ee(), M(220, { dur: 0.08, slide: 660, vol: 0.05 }), M(880, { dur: 0.06, delay: 0.09, vol: 0.04 })) : we();
+    e ? (H(), ee(), y(220, { dur: 0.08, slide: 660, vol: 0.05 }), y(880, { dur: 0.06, delay: 0.09, vol: 0.04 })) : we();
   },
   hover() {
     const e = performance.now();
-    e - Y < 70 || (Y = e, M(1760, { dur: 0.018, vol: 0.018 }));
+    e - Y < 70 || (Y = e, y(1760, { dur: 0.018, vol: 0.018 }));
   },
-  click: () => (M(660, { dur: 0.03, vol: 0.04 }), M(990, { dur: 0.04, delay: 0.035, vol: 0.035 })),
-  open: () => M(330, { dur: 0.12, slide: 700, vol: 0.04, type: "triangle" }),
-  close: () => M(900, { dur: 0.1, slide: -600, vol: 0.035, type: "triangle" }),
-  success: () => [523, 659, 784, 1047].forEach((e, n) => M(e, { dur: 0.07, delay: n * 0.07, vol: 0.04 })),
-  error: () => (M(140, { dur: 0.18, vol: 0.05, type: "sawtooth" }), M(110, { dur: 0.22, delay: 0.12, vol: 0.05, type: "sawtooth" })),
-  sweep: () => M(180, { dur: 0.45, slide: 1400, vol: 0.025, type: "sawtooth" })
+  click: () => (y(660, { dur: 0.03, vol: 0.04 }), y(990, { dur: 0.04, delay: 0.035, vol: 0.035 })),
+  open: () => y(330, { dur: 0.12, slide: 700, vol: 0.04, type: "triangle" }),
+  close: () => y(900, { dur: 0.1, slide: -600, vol: 0.035, type: "triangle" }),
+  success: () => [523, 659, 784, 1047].forEach((e, n) => y(e, { dur: 0.07, delay: n * 0.07, vol: 0.04 })),
+  error: () => (y(140, { dur: 0.18, vol: 0.05, type: "sawtooth" }), y(110, { dur: 0.22, delay: 0.12, vol: 0.05, type: "sawtooth" })),
+  sweep: () => y(180, { dur: 0.45, slide: 1400, vol: 0.025, type: "sawtooth" }),
   // a Face resolving block by block
+  buzz: (e = 0.06) => (y(120, { dur: e, vol: 0.035, type: "sawtooth" }), y(240, { dur: e, vol: 0.012, type: "square" }))
+  // a neon tube striking
 };
 function xe(e) {
   const n = () => {
     e.setAttribute("aria-pressed", String(x)), e.title = x ? "Sound on" : "Sound off", e.classList.toggle("on", x);
   };
   n(), e.addEventListener("click", () => {
-    z.set(!x), n();
-  }), x && addEventListener("pointerdown", () => ee(), { once: !0 }), document.addEventListener("pointerover", (t) => t.target.closest?.("a, .btn, button, summary") && z.hover()), document.addEventListener("click", (t) => t.target.closest?.("a, .btn, button, summary") && t.target.closest("button") !== e && z.click());
+    I.set(!x), n();
+  }), x && addEventListener("pointerdown", () => ee(), { once: !0 }), document.addEventListener("pointerover", (t) => t.target.closest?.("a, .btn, button, summary") && I.hover()), document.addEventListener("click", (t) => t.target.closest?.("a, .btn, button, summary") && t.target.closest("button") !== e && I.click());
 }
 const $ = (e) => document.querySelector(e);
 ge();
@@ -384,5 +386,5 @@ fetch("data/gallery.json").then((e) => e.json()).then((e) => pe($("#mosaic"), (e
 ye();
 document.querySelectorAll(".hero [data-scramble]").forEach((e) => Q(e, { duration: 1400 }));
 export {
-  z as sound
+  I as sound
 };

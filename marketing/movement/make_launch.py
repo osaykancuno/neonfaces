@@ -4,6 +4,7 @@ the collection's own art and short instrumental beds (gen_music.py). Captions in
     python marketing/movement/make_launch.py              # all -> out/l-*.mp4 (+ -4x5.mp4)
     python marketing/movement/make_launch.py wall cam     # only these
     python marketing/movement/make_launch.py --site announce howto today   # plan B: the mint on neonfaces.xyz -> l-*-site.mp4
+    python marketing/movement/make_launch.py --neutral announce            # no venue: "all at neonfaces.xyz" -> l-*-neutral.mp4
 
 No date in: wall, tiers, chain, facts, cam, list, open, public. Dated (docs/LAUNCH-RUNBOOK.md, moved forward on 28 Sep):
 announce, howto, tomorrow, today. Thu 1 Oct 18:00 UTC on OpenSea, the list first for 24 hours (0.013 ETH, up to 3),
@@ -28,6 +29,7 @@ from export_brand import eye_image, gaze_path  # noqa: E402
 
 ARTS = json.loads((ART / "art.json").read_text())
 SITE = "--site" in sys.argv  # plan B (28 Sep): the mint happens on neonfaces.xyz, through SeaDrop, not on OpenSea's page
+NEUTRAL = "--neutral" in sys.argv  # 29 Sep: announced before the venue is settled; the site says where
 mc.FONT["?"] = ["01110", "10001", "00001", "00010", "00100", "00000", "00100"]
 # everything that matters sits inside the 4:5 crop (y 360 to 1710)
 
@@ -287,7 +289,7 @@ def tiers():
 
 def announce():
     seq = [(2.2, [("THURSDAY", 12, NEON), ("1 OCTOBER", 12, NEON)]),
-           (2.2, [("18:00 UTC", 12, NEON), ("", 4, PALE), ("ON NEONFACES.XYZ" if SITE else "ON OPENSEA", 7, PALE)]),
+           (2.2, [("18:00 UTC", 12, NEON), ("", 4, PALE), ("ALL AT NEONFACES.XYZ" if NEUTRAL else "ON NEONFACES.XYZ" if SITE else "ON OPENSEA", 7, PALE)]),
            (3.0, [("THE LIST FIRST", 9, NEON), ("", 4, PALE), ("24 HOURS", 7, PALE), ("0.013 ETH, UP TO 3", 6, PALE)]),
            (3.0, [("THEN EVERYONE", 9, NEON), ("", 4, PALE), ("FROM FRIDAY", 7, PALE), ("0.018 ETH, UP TO 5", 6, PALE)]),
            (2.8, [("CHECK YOUR WALLET", 8, NEON), ("", 4, PALE), ("NEONFACES.XYZ", 8, PALE)])]
@@ -399,6 +401,6 @@ PIECES = {"public": public, "facts": facts, "chain": chain, "wall": wall, "tiers
 
 if __name__ == "__main__":
     for name in [a for a in sys.argv[1:] if not a.startswith("--")] or list(PIECES):
-        out = f"l-{name}-site" if SITE else f"l-{name}"
+        out = f"l-{name}-neutral" if NEUTRAL else f"l-{name}-site" if SITE else f"l-{name}"
         mc.VIDEOS[out] = PIECES[name]
         mc.render(out)

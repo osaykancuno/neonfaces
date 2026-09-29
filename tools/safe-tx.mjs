@@ -75,7 +75,7 @@ switch (action) {
     const [to, qtyArg] = args;
     const qty = Number(qtyArg);
     // each Face creates its account and receives its seed in the same tx (~190k gas per Face)
-    if (!Number.isInteger(qty) || qty < 1 || qty > 50) throw new Error("team-mint <to> <qty 1..50> — split larger amounts");
+    if (!Number.isInteger(qty) || qty < 1 || qty > 50) throw new Error("team-mint <to> <qty 1..50>: split larger amounts");
     txs = [tx(dep.faces, "teamMint", [getAddress(to), BigInt(qty)])];
     break;
   }

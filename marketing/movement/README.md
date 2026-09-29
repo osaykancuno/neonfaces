@@ -191,7 +191,7 @@ then everyone from **Fri 2 Oct, 18:00 UTC**. The announcement goes out only once
 
 | Day | 10:00 | 16:00 | 20:00 |
 |---|---|---|---|
-| Tue 29 Sep | N1 | **Cam** (the site revealed with NEONCAM: out/l-cam-a.mp4, post "Cam, launch"; posted) | **Announce** (neutral: out/l-announce-neutral.mp4, post "Announce, neutral") |
+| Tue 29 Sep | N1 | **Cam** (the site revealed with NEONCAM: out/l-cam-a.mp4, post "Cam, launch"; posted) | **Announce** (on OpenSea: out/l-announce.mp4, post "Announce") |
 | Wed 30 Sep | Wall | How to mint (venue-neutral cut if the venue is still open) | Tomorrow |
 | Thu 1 Oct | **List** (08:00 UTC sharp: the wallet check opens with this post, the time the announcement gave) | Today | **Open** (the list opens) |
 | Fri 2 Oct | N2 | V3 | **Public** (open to everyone) |
@@ -280,8 +280,8 @@ Every Face is stored on Robinhood Chain, and the contract draws it every time so
 **Story** Someone has to keep watching.
 NEONFACES. neonfaces.xyz
 
-**Safety** (a reply under the Announce, pinned until the sell-out; launch days are when fake mint links and fake support DMs appear):
-The only official site is neonfaces.xyz. The contract on Robinhood Chain is 0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B.
+**Safety** (a reply under the Announce, pinned until the sell-out, with the image marketing/posts/6-safety.png from `python marketing/posts/make_safety.py`; launch days are when fake mint links and fake support DMs appear):
+The only official links: neonfaces.xyz and opensea.io/collection/neonfaces. The contract on Robinhood Chain is 0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B.
 We never DM first, never ask for a seed phrase, and there is no airdrop or claim. A link anywhere else is not us.
 
 **Cam, launch** (Tue 29, 16:00; the founder's call on 29 Sep: the site goes public with NEONCAM, the date follows at 20:00; video out/l-cam-a.mp4 or l-cam-b.mp4, 24 s, a mysterious score, the screen strikes neon on the hit)
@@ -289,11 +289,12 @@ See yourself the way they see you.
 NEONCAM turns your camera into a Face: five tones, from black to neon, the collection's own recipe. It all happens on your phone: nothing is uploaded.
 Take yours on neonfaces.xyz and post it with #NEONFACE.
 
-**Announce, neutral** (Tue 29, 20:00; the venue isn't named: the founder, 29 Sep, "just follow the official site")
-NEONFACES opens Thursday 1 October, 18:00 UTC.
+**Announce** (Tue 29, 20:00; OpenSea confirmed that evening: out/l-announce.mp4, the neutral cut stays unused)
+NEONFACES opens on OpenSea: Thursday 1 October, 18:00 UTC.
 The list goes first: 24 hours, 0.013 ETH, up to 3 Faces per wallet. Then everyone, from Friday 2 October, 18:00 UTC: 0.018 ETH, up to 5 per wallet in total, until every Face is sold.
-Where and how to mint, and the wallet check (Thursday 1 October, 08:00 UTC): follow the official site, neonfaces.xyz
+Is your wallet on the list? Find out on neonfaces.xyz, Thursday 1 October, 08:00 UTC.
 Every Face is a wallet with a small basket of Stock Tokens inside. Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
+opensea.io/collection/neonfaces
 (reply: the Safety post below)
 
 **Plan B wording** (if the mint runs on neonfaces.xyz through SeaDrop, docs/LAUNCH-RUNBOOK.md 7; videos `make_launch.py --site announce howto today` -> out/l-announce-site.mp4, l-howto-site.mp4, l-today-site.mp4; the other pieces don't name the venue). The links go to https://neonfaces.xyz

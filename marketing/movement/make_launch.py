@@ -294,8 +294,8 @@ def announce():
            (2.2, [("18:00 UTC", 12, NEON), ("", 4, PALE), ("ALL AT NEONFACES.XYZ" if NEUTRAL else "ON NEONFACES.XYZ" if SITE else "ON OPENSEA", 7, PALE)]),
            (3.0, [("THE LIST FIRST", 9, NEON), ("", 4, PALE), ("24 HOURS", 7, PALE), ("0.013 ETH, UP TO 3", 6, PALE)]),
            (3.0, [("THEN EVERYONE", 9, NEON), ("", 4, PALE), ("FROM FRIDAY", 7, PALE), ("0.018 ETH, UP TO 5", 6, PALE)]),
-           (2.8, [("ON THE LIST?", 8, NEON), ("", 4, PALE), ("FIND OUT THURSDAY", 6, PALE), ("08:00 UTC", 10, NEON), ("", 3, PALE), ("NEONFACES.XYZ", 8, PALE)])
-           if NEUTRAL else (2.8, [("CHECK YOUR WALLET", 8, NEON), ("", 4, PALE), ("NEONFACES.XYZ", 8, PALE)])]
+           # the wallet check opens Thu 1 Oct 08:00 UTC with the day's first post (29 Sep), whatever the venue
+           (2.8, [("ON THE LIST?", 8, NEON), ("", 4, PALE), ("FIND OUT THURSDAY", 6, PALE), ("08:00 UTC", 10, NEON), ("", 3, PALE), ("NEONFACES.XYZ", 8, PALE)])]
     parts = [(3.8, lambda: real("a-a", 0.1, 3.9, "NEONFACES HAS A DATE.")),
              (13.2, lambda: cards(seq)),
              (3.0, lambda: card("f56", "THEY DON'T BLINK."))]

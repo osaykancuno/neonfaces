@@ -200,7 +200,7 @@ export function setupCam() {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   // "/#cam" works on the preview and on the app (which sends it to /cam)
-  const TEXT = "They don't blink. Neither do I. #NEONCAM by NEONFACES", LINK = "https://neonfaces.xyz/#cam";
+  const TEXT = "They don't blink. Neither do I. #NEONFACE by NEONFACES", LINK = "https://neonfaces.xyz/#cam";
   async function share() {
     if (!shot) return;
     const file = new File([shot], "neoncam.png", { type: "image/png" });

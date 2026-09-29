@@ -287,7 +287,7 @@ We never DM first, never ask for a seed phrase, and there is no airdrop or claim
 **Cam, launch** (Tue 29, 16:00; the founder's call on 29 Sep: the site goes public with NEONCAM, the date follows at 20:00)
 See yourself the way they see you.
 NEONCAM turns your camera into a Face: five tones, from black to neon, the collection's own recipe. It all happens on your phone: nothing is uploaded.
-Take yours on neonfaces.xyz and post it with #NEONCAM.
+Take yours on neonfaces.xyz and post it with #NEONFACE.
 
 **Announce, neutral** (Tue 29, 20:00; the venue isn't in it, the site shows where to mint)
 NEONFACES opens Thursday 1 October, 18:00 UTC.

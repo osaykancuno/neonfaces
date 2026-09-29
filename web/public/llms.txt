@@ -1,6 +1,6 @@
 # NEONFACES
 
-> 5555 fully on-chain pixel faces on Robinhood Chain (chain id 4663). Every Face is an ERC-6551 wallet that holds Stock Tokens, USDG or ETH. Minted on OpenSea; managed at https://neonfaces.xyz/face/<id>.
+> 5555 fully on-chain pixel faces on Robinhood Chain (chain id 4663). Every Face is an ERC-6551 wallet that holds Stock Tokens, USDG or ETH. Minted through OpenSea's SeaDrop contract; managed at https://neonfaces.xyz/face/<id>.
 
 This file tells AI assistants how to help a holder. You can read everything from the chain; you can never move anything. For any change you prepare a link, and the holder confirms it in their own wallet on the Face page.
 

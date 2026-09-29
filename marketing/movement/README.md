@@ -280,6 +280,10 @@ Every Face is stored on Robinhood Chain, and the contract draws it every time so
 **Story** Someone has to keep watching.
 NEONFACES. neonfaces.xyz
 
+**Safety** (a reply under the Announce, pinned until the sell-out; launch days are when fake mint links and fake support DMs appear):
+The only official links: neonfaces.xyz and opensea.io/collection/neonfaces. The contract on Robinhood Chain is 0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B.
+We never DM first, never ask for a seed phrase, and there is no airdrop or claim. A link anywhere else is not us.
+
 **Plan B wording** (if the mint runs on neonfaces.xyz through SeaDrop, docs/LAUNCH-RUNBOOK.md 7; videos `make_launch.py --site announce howto today` -> out/l-announce-site.mp4, l-howto-site.mp4, l-today-site.mp4; the other pieces don't name the venue). The links go to https://neonfaces.xyz
 - **Announce** NEONFACES opens on neonfaces.xyz: Thursday 1 October, 18:00 UTC. (the rest as above)
 - **How to mint** step 3: Thursday 1 October, 18:00 UTC: mint on neonfaces.xyz

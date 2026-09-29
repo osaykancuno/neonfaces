@@ -842,7 +842,7 @@ async function setTotal(el, accounts) {
 function keeperNote(el) {
   const p = document.createElement("p");
   p.className = "fine";
-  p.textContent = "The keeper delivers this within minutes. Still pending after an hour? Deliver it yourself here, in one transaction: if the pool is short, the seed vault buys what is missing in the same transaction.";
+  p.textContent = "The keeper delivers this on its next round, usually within minutes; while stock markets are closed (weekends), when they reopen. Still pending after an hour on a trading day? Deliver it yourself here, in one transaction: if the pool is short, the seed vault buys what is missing in the same transaction.";
   el.appendChild(p);
 }
 

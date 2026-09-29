@@ -11,11 +11,14 @@
 //   reveal-request                       NeonFaces.requestReveal (then anyone calls reveal() after 5 blocks)
 //   lock-seeder                          NeonSeeder.lockConfig (baskets become immutable)
 //   freeze-metadata                      NeonFaces.freezeMetadata (renderer can never change again)
+//   contract-uri [uri]                   NeonFaces.setContractURI: emits ERC-7572 ContractURIUpdated so marketplaces re-read
+//                                        the collection metadata (the renderer serves it; the stored uri, "" by default, is
+//                                        only the fallback if the renderer ever fails)
 //   release                              NeonPayout.releaseAll (push the 55/15/15/15 split; anyone can)
 //   vault-surplus <eth>                  NeonSeedVault.releaseSurplus: leftover seed ETH to the treasury (after lock-seeder)
 //   poll <days> "<question>" "<choice>"... NeonSetVotes.createPoll: ask the assembled sets (2 to 8 choices, opens now)
 //
-// Sale stages, prices and allowlists are configured in OpenSea Studio, not here.
+// Sale stages, prices and allowlists are configured in OpenSea Studio (or, plan B, by tools/configure-drop.mjs), not here.
 // Output: ../safe/<chainId>-<action>.json -> import it in the Safe app (Apps > Transaction Builder).
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -39,6 +42,7 @@ const abi = parseAbi([
   "function requestReveal()",
   "function lockConfig()",
   "function freezeMetadata()",
+  "function setContractURI(string uri)",
   "function releaseAll()",
   "function releaseSurplus(uint256 amount)",
   "function createPoll(string question, string[] choices, uint64 start, uint64 end) returns (uint256)",
@@ -83,6 +87,9 @@ switch (action) {
     break;
   case "freeze-metadata":
     txs = [tx(dep.faces, "freezeMetadata")];
+    break;
+  case "contract-uri":
+    txs = [tx(dep.faces, "setContractURI", [args[0] ?? ""])];
     break;
   case "release":
     txs = [tx(dep.payout, "releaseAll")];

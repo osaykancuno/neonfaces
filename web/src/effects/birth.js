@@ -339,12 +339,12 @@ export async function birth(faces, tx, { share, open, records = [] }) {
   if (n <= 2) {
     for (const f of faces) {
       log.line(`> #${f.id} born · account ${acc(f)} opened`);
-      log.line(got(f) ? `    basket received: ${f.legs.map((l) => `${l.amount} ${l.sym}`).join(" · ")}` : "    basket pending: the keeper delivers it within minutes", got(f) ? "neon" : "dim");
+      log.line(got(f) ? `    basket received: ${f.legs.map((l) => `${l.amount} ${l.sym}`).join(" · ")}` : "    basket pending: the keeper delivers it on its next round (weekends: when stock markets reopen)", got(f) ? "neon" : "dim");
     }
   } else {
     // one line per Face; the baskets in full on each Face's page
     for (const f of faces) log.line(`> #${f.id} born · account ${acc(f)} · basket ${got(f) ? "received" : "pending"}`);
-    if (faces.some((f) => !got(f))) log.line("    pending baskets: the keeper delivers them within minutes", "dim");
+    if (faces.some((f) => !got(f))) log.line("    pending baskets: the keeper delivers them on its next round (weekends: when stock markets reopen)", "dim");
   }
   log.line("> art ........ dealt at the reveal", "dim");
   log.line("> blink reflex ....... NOT FOUND");

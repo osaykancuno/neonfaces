@@ -19,15 +19,16 @@
 <meta property="og:url" content="https://neonfaces.xyz/">
 <meta property="og:title" content="NEONFACES: They don't blink.">
 <meta property="og:description" content="5555 faces. Every one is an account. Fully on-chain on Robinhood Chain.">
-<meta property="og:image" content="https://neonfaces.xyz/og.png">
+<meta property="og:image" content="https://neonfaces.xyz/og.png?v=0929">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="A mosaic of pixel-art NEONFACES in neon yellow and black, with the words: They don't blink.">
+<meta property="og:image:alt" content="A NEONFACES pixel face in a black frame on a neon page, with the words: They don't blink.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="NEONFACES: They don't blink.">
 <meta name="twitter:description" content="5555 faces. Every one is an account. Fully on-chain on Robinhood Chain.">
-<meta name="twitter:image" content="https://neonfaces.xyz/og.png">
+<meta name="twitter:image" content="https://neonfaces.xyz/og.png?v=0929">
+<meta name="twitter:image:alt" content="A NEONFACES pixel face in a black frame on a neon page, with the words: They don't blink.">
 <title>NEONFACES: They don't blink.</title>
 <meta name="description" content="5555 fully on-chain pixel faces on Robinhood Chain. Every Face is a wallet that holds a small basket of Stock Tokens.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -130,6 +131,7 @@
   @media (min-width: 1100px) { html.neoncam { background: #ccff00 radial-gradient(rgba(0, 0, 0, .1) 1px, transparent 1.5px) 0 0 / 22px 22px; } }
 
   .al-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .al-form[hidden] { display: none; }
   .al-label { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); }
   .al-row { display: flex; gap: 8px; }
   .al-row input { flex: 1; width: 0; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 10px 12px; background: #000; color: var(--ice); border: 2px solid var(--olive); font: 400 16px/1.2 var(--mono); }
@@ -174,7 +176,7 @@
         <p class="tagline" data-scramble>They don't blink.</p>
         <p class="sub">5555 close-up faces on Robinhood Chain.<br>Every Face is a wallet that holds a small piece of the market.</p>
         <div class="hero-cta">
-          <a href="#list" class="btn btn-neon">Check your wallet</a>
+          <a href="#cam" class="btn btn-neon">Try NEONCAM</a><!-- back to "Check your wallet" (#list) when the check reopens -->
           <a href="#faces" class="btn btn-ghost">See the Faces</a>
         </div>
         <div class="hero-stats">
@@ -191,7 +193,9 @@
       <div class="label">The list</div>
       <h2>Is your wallet on the list?</h2>
       <p class="lead">Wallets on the list mint first: 24 hours reserved to them, up to 3 Faces each. Then the sale opens to everyone.</p>
-      <form id="al-form" class="al-form" novalidate>
+      <!-- 29 Sep: paused until the last list wallets are in (Wed 30 Sep afternoon); to reopen, remove `hidden` and #al-paused -->
+      <p id="al-paused" class="al-msg">The wallet check opens on Wednesday 30 September in the afternoon, with the complete list.</p>
+      <form id="al-form" class="al-form" novalidate hidden>
       <label class="al-label" for="al-addr">Wallet address</label>
       <div class="al-row">
         <input id="al-addr" type="text" placeholder="0x…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="42">
@@ -199,7 +203,7 @@
       </div>
       <p id="al-msg" class="al-msg" role="status" aria-live="polite"></p>
     </form>
-      <p class="fine">The list comes from a snapshot of NFT holders, one entry per wallet, and is final when the sale is announced. The check runs in your browser: your address is never sent anywhere.</p>
+      <p class="fine">The list comes from a snapshot of NFT holders, one entry per wallet. The check runs in your browser: your address is never sent anywhere.</p>
     </section>
     <section id="idea" class="block reveal">
       <div class="label">The idea</div>

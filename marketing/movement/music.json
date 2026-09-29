@@ -56,6 +56,18 @@
       "id": "day",
       "duration": 20,
       "prompt": "A morning-to-moment cue for the day of a launch: soft rising pads and a gentle pulse from the first beat, like the first light before sunrise; the pulse slowly gets faster and the bass grows; a bright but dark-toned release at 11 seconds with full drums and a shining neon synth lead, then a final hit at 18 seconds."
+    },
+    {
+      "id": "cam-dark-a",
+      "duration": 24,
+      "prompt": "A mysterious, hypnotic dark electronic cue about a face that never blinks, watching you through your own camera: a slow sub-bass pulse like a heartbeat from the first beat, a haunting minor-key synth motif of four notes that repeats and slowly bends, cold glassy pads, the faint electric hum of a neon tube. Tension grows; at 12 seconds a deep low hit and the neon hum swells, as a light switches on; the motif returns an octave lower and darker, closing on a long low ringing tone.",
+      "tail": "Instrumental only: no vocals, no lyrics, no speech, no choir, no claps, no snaps. Mixed for a phone speaker: a clear sub that still reads on small speakers, the first sound on the very first beat, no long silent intro. Dark, mysterious, adult, minimal, electronic: not playful, not bouncy, not happy."
+    },
+    {
+      "id": "cam-dark-b",
+      "duration": 24,
+      "prompt": "A slow, eerie, cinematic electronic cue for a mirror that stares back: deep drone and a muted kick at 80 bpm from the first beat, a sparse, detuned three-note synth phrase in a minor key, breathy dark textures and a distant electric crackle. It builds with quiet menace; at 12 seconds a heavy sub drop and a bright neon buzz as the screen lights up, the pulse doubles, then it thins out to a single low tone and the hum at the end.",
+      "tail": "Instrumental only: no vocals, no lyrics, no speech, no choir, no claps, no snaps. Mixed for a phone speaker: a clear sub that still reads on small speakers, the first sound on the very first beat, no long silent intro. Dark, mysterious, adult, minimal, electronic: not playful, not bouncy, not happy."
     }
   ]
 }

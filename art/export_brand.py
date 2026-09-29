@@ -190,19 +190,30 @@ def icons() -> None:
         (landing / name).write_bytes((WEB / name).read_bytes())
 
 
-def og_card(faces: list[str]) -> None:
-    W, H, tile = 1200, 630, 105
-    og = Image.new("RGB", (W, H), BLACK)
-    k = 0
-    for y in range(0, H, tile):
-        for x in range(0, W, tile):
-            og.paste(face_image(faces[k % len(faces)], tile), (x, y))
-            k += 1
+def og_card(faces: list[str], hero) -> None:
+    """The link preview (29 Sep): NEONCAM's lit page. Neon field with its dot grid, black type, one Face in a black
+    frame with the site's offset shadow, and the NEONCAM photo's black band along the bottom."""
+    W, H = 1200, 630
+    og = Image.new("RGB", (W, H), NEON)
     d = ImageDraw.Draw(og)
-    d.rectangle([270, 225, 930, 405], fill=BLACK, outline=NEON, width=4)
-    draw_centered(d, "NEONFACES", 600, 257, 9, NEON)
-    draw_centered(d, "THEY DON'T BLINK.", 600, 339, 3, ICE)
-    draw_centered(d, "5555 FACES. EVERY ONE IS AN ACCOUNT.", 600, 373, 2, DIM)
+    for y in range(11, H, 22):  # the lit page's dots (html.neoncam on wide screens)
+        for x in range(11, W, 22):
+            d.rectangle([x, y, x + 1, y + 1], fill=(170, 212, 0))
+    x0, y0, S = 70, 60, 450
+    d.rectangle([x0 + 14, y0 + 14, x0 + S + 14 + 16, y0 + S + 14 + 16], fill=BLACK)  # the offset shadow
+    d.rectangle([x0, y0, x0 + S + 16, y0 + S + 16], fill=BLACK)
+    og.paste(hero.resize((S, S), Image.NEAREST) if isinstance(hero, Image.Image) else face_image(hero, S), (x0 + 8, y0 + 8))
+    cx = 870
+    draw_centered(d, "NEONFACES", cx, 150, 8, BLACK)
+    draw_centered(d, "THEY DON'T BLINK.", cx, 250, 4, BLACK)
+    draw_centered(d, "5555 FACES.", cx, 330, 3, (40, 50, 8))
+    draw_centered(d, "EVERY ONE IS AN ACCOUNT.", cx, 365, 3, (40, 50, 8))
+    draw_centered(d, "FULLY ON-CHAIN. ROBINHOOD CHAIN.", cx, 420, 2, (61, 74, 12))
+    d.rectangle([0, H - 62, W, H], fill=BLACK)  # the NEONCAM photo's band
+    d.rectangle([0, H - 66, W, H - 63], fill=BLACK)
+    from neonfaces.pixelfont import draw_text, text_width
+    draw_text(d, "NEONFACES", 40, H - 45, 4, NEON)
+    draw_text(d, "NEONFACES.XYZ", W - 40 - text_width("NEONFACES.XYZ", 3), H - 41, 3, (201, 212, 163))
     og.save(WEB / "og.png", optimize=True)
     (ROOT.parent / "landing" / "og.png").write_bytes((WEB / "og.png").read_bytes())
 
@@ -271,7 +282,7 @@ def main() -> None:
     gallery = json.loads((WEB / "data" / "gallery.json").read_text())
     faces = [f["record"] for f in gallery["faces"]]
     icons()
-    og_card(faces)
+    og_card(faces, Image.open(ROOT.parent / "landing" / "img" / "set-337.png").convert("RGB"))  # a whole face: set #337's four pieces
     logo_gif()
     banner_gif(faces)
     for p in sorted([*WEB.glob("favicon.*"), *WEB.glob("*icon*.png"), WEB / "og.png", *BRAND.iterdir()]):

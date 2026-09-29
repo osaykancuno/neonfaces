@@ -11,6 +11,7 @@ announce, howto, tomorrow, today. Thu 1 Oct 18:00 UTC on OpenSea, the list first
 then everyone from Fri 2 Oct 18:00 UTC (0.018 ETH, up to 5 per wallet in total).
 """
 import json
+import os
 import random
 import sys
 from pathlib import Path
@@ -31,6 +32,7 @@ ARTS = json.loads((ART / "art.json").read_text())
 SITE = "--site" in sys.argv  # plan B (28 Sep): the mint happens on neonfaces.xyz, through SeaDrop, not on OpenSea's page
 NEUTRAL = "--neutral" in sys.argv  # 29 Sep: announced before the venue is settled; the site says where
 mc.FONT["?"] = ["01110", "10001", "00001", "00010", "00100", "00000", "00100"]
+mc.FONT["#"] = ["01010", "01010", "11111", "01010", "11111", "01010", "01010"]
 # everything that matters sits inside the 4:5 crop (y 360 to 1710)
 
 
@@ -292,7 +294,8 @@ def announce():
            (2.2, [("18:00 UTC", 12, NEON), ("", 4, PALE), ("ALL AT NEONFACES.XYZ" if NEUTRAL else "ON NEONFACES.XYZ" if SITE else "ON OPENSEA", 7, PALE)]),
            (3.0, [("THE LIST FIRST", 9, NEON), ("", 4, PALE), ("24 HOURS", 7, PALE), ("0.013 ETH, UP TO 3", 6, PALE)]),
            (3.0, [("THEN EVERYONE", 9, NEON), ("", 4, PALE), ("FROM FRIDAY", 7, PALE), ("0.018 ETH, UP TO 5", 6, PALE)]),
-           (2.8, [("CHECK YOUR WALLET", 8, NEON), ("", 4, PALE), ("NEONFACES.XYZ", 8, PALE)])]
+           (2.8, [("ON THE LIST?", 8, NEON), ("", 4, PALE), ("THE CHECK OPENS TOMORROW", 6, PALE), ("NEONFACES.XYZ", 8, PALE)])
+           if NEUTRAL else (2.8, [("CHECK YOUR WALLET", 8, NEON), ("", 4, PALE), ("NEONFACES.XYZ", 8, PALE)])]
     parts = [(3.8, lambda: real("a-a", 0.1, 3.9, "NEONFACES HAS A DATE.")),
              (13.2, lambda: cards(seq)),
              (3.0, lambda: card("f56", "THEY DON'T BLINK."))]
@@ -313,14 +316,62 @@ def list_():
 
 
 def cam():
+    """29 Sep (the founder): longer, and mysterious rather than playful. His face, its NEONCAM photo in three grids, then
+    the moment the camera turns on and the whole screen strikes neon (as on the site), the photo, the site, his Face.
+    The strike lands on the score's hit; CAM_MUSIC picks the track (cam-dark-a, hit at 10 s; cam-dark-b, at 18.5 s)."""
+    import os
     portrait = Image.open(HERE / "refs" / "cam-539.png")  # his face in the selfie still, as the phone sees it
-    parts = [(3.8, lambda: real("c-a", 0.1, 3.9, "YOUR FACE.")),
-             (3.0, lambda: cam_turn(portrait, 3.0, "THEIR WAY.")),
-             (3.0, lambda: still(cam_photo(portrait), 3.0, "NEONCAM.")),
-             (3.2, lambda: cards([(3.2, [("SEE YOURSELF", 9, NEON), ("THE WAY THEY", 9, NEON), ("SEE YOU", 9, NEON),
-                                         ("", 4, PALE), ("NEONFACES.XYZ", 8, PALE)])], seed=9))]
-    sounds = [(raw("c-a"), 0.1, 3.9, 0.0, 1.0, 0.0, 0.15), score(music("cam"), 0.0, 13.0, 0.9, rise=(1.0, 3.8, 0.45))]
+    photo = cam_photo(portrait)
+    name = os.environ.get("CAM_MUSIC", "cam-dark-a")
+    face = lambda: real("c-a", 0.1, 3.9, "YOUR FACE.")
+    turn_ = lambda: cam_turn(portrait, 3.2, "THEIR WAY.")
+    grids = lambda d: lambda: cam_cells(portrait, d, "FIVE TONES. BLACK TO NEON.")
+    kept = lambda d: lambda: still(photo, d, "NOTHING IS UPLOADED.")
+    on = lambda d, s: lambda: cam_lit(photo, d, s, "CAMERA ON. THE SCREEN GLOWS NEON.")
+    site = lambda d: lambda: cards([(d, [("SEE YOURSELF", 9, NEON), ("THE WAY THEY", 9, NEON), ("SEE YOU", 9, NEON),
+                                         ("", 4, PALE), ("NEONFACES.XYZ", 8, PALE), ("", 2, PALE), ("#NEONFACE", 6, PALE)])], seed=9)
+    end = lambda d: lambda: card("f539", "THEY DON'T BLINK.")
+    if name == "cam-dark-b":  # a loud opening, a long hush, the hit at 18.5 s: the neon comes late, as a climax
+        parts = [(3.8, face), (3.2, turn_), (3.0, grids(3.0)), (3.0, kept(3.0)), (6.0, on(6.0, 5.5)), (2.6, site(2.6)), (2.4, end(2.4))]
+    else:  # cam-dark-a: it grows from the start, the hit at 10 s
+        parts = [(3.8, face), (3.2, turn_), (5.0, on(5.0, 3.0)), (2.4, grids(2.4)), (2.6, kept(2.6)), (3.6, site(3.6)), (3.4, end(3.4))]
+    sounds = [(raw("c-a"), 0.1, 3.9, 0.0, 1.0, 0.0, 0.15), score(music(name), 0.0, 24.0, 0.9, rise=(1.0, 3.8, 0.45))]
     return parts, sounds
+
+
+def cam_cells(face_src: Image.Image, dur, text=None):
+    """The same photo at NEONCAM's three grids, 24, 32 and 48 cells, one cut each with a neon flash."""
+    shots = [cam_photo(face_src, n) for n in (24, 32, 48)]
+    n = int(round(dur * FPS))
+    for i in range(n):
+        k = min(2, i * 3 // n)
+        out = np.zeros((H, W, 3), np.uint8)
+        out[380:380 + 1080] = shots[k]
+        if i in (0, n // 3, 2 * n // 3):
+            out = flash(out)
+        yield with_caption(finish(mc.drift(out, i, n, 0.05), i, art=True), text, y=1500)
+
+
+def cam_lit(photo: np.ndarray, dur, strike, text=None):
+    """The camera on: the photo on a dark screen, then at `strike` seconds the whole screen catches neon like a tube
+    (a few uneven flashes, then steady) with NEONCAM in black, the way the site lights a face in the dark."""
+    n = int(round(dur * FPS))
+    s0 = int(round(strike * FPS))
+    pattern = [1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0]  # frames from the strike: on, off, on, off, then steady on
+    dark = np.zeros((H, W, 3), np.uint8)
+    dark[380:380 + 1080] = photo
+    lit = np.zeros((H, W, 3), np.uint8)
+    lit[:] = NEON
+    inset = cv2.resize(photo, (920, 920), interpolation=cv2.INTER_NEAREST)
+    lit[420:420 + 920, 80:80 + 920] = inset
+    im = Image.fromarray(lit)
+    draw_text(im, "NEONCAM", W // 2, 250, 10, INK, "center")
+    lit = np.asarray(im)
+    for i in range(n):
+        j = i - s0
+        on = j >= 0 and (j >= len(pattern) or pattern[j])
+        fr = lit if on else dark
+        yield with_caption(finish(mc.drift(fr, i, n, 0.04), i, art=not on), text, y=1500)
 
 
 def howto():
@@ -402,5 +453,7 @@ PIECES = {"public": public, "facts": facts, "chain": chain, "wall": wall, "tiers
 if __name__ == "__main__":
     for name in [a for a in sys.argv[1:] if not a.startswith("--")] or list(PIECES):
         out = f"l-{name}-neutral" if NEUTRAL else f"l-{name}-site" if SITE else f"l-{name}"
+        if name == "cam" and os.environ.get("CAM_MUSIC"):
+            out += "-" + os.environ["CAM_MUSIC"].split("-")[-1]  # l-cam-a / l-cam-b
         mc.VIDEOS[out] = PIECES[name]
         mc.render(out)

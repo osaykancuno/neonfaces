@@ -192,8 +192,8 @@ then everyone from **Fri 2 Oct, 18:00 UTC**. The announcement goes out only once
 | Day | 10:00 | 16:00 | 20:00 |
 |---|---|---|---|
 | Tue 29 Sep | N1 | **Cam** (the site revealed with NEONCAM: out/l-cam-a.mp4, post "Cam, launch"; posted) | **Announce** (neutral: out/l-announce-neutral.mp4, post "Announce, neutral") |
-| Wed 30 Sep | Tomorrow | **List** (only once the check has the last wallets, afternoon) | How to mint |
-| Thu 1 Oct | Today | Wall | **Open** (the list opens) |
+| Wed 30 Sep | Wall | How to mint (venue-neutral cut if the venue is still open) | Tomorrow |
+| Thu 1 Oct | **List** (08:00 UTC sharp: the wallet check opens with this post, the time the announcement gave) | Today | **Open** (the list opens) |
 | Fri 2 Oct | N2 | V3 | **Public** (open to everyone) |
 | Sat 3 Oct | N3 | V4 | |
 | Sun 4 Oct | V5 | Tiers | |
@@ -292,7 +292,7 @@ Take yours on neonfaces.xyz and post it with #NEONFACE.
 **Announce, neutral** (Tue 29, 20:00; the venue isn't named: the founder, 29 Sep, "just follow the official site")
 NEONFACES opens Thursday 1 October, 18:00 UTC.
 The list goes first: 24 hours, 0.013 ETH, up to 3 Faces per wallet. Then everyone, from Friday 2 October, 18:00 UTC: 0.018 ETH, up to 5 per wallet in total, until every Face is sold.
-Where and how to mint, and the wallet check (from tomorrow afternoon): follow the official site, neonfaces.xyz
+Where and how to mint, and the wallet check (Thursday 1 October, 08:00 UTC): follow the official site, neonfaces.xyz
 Every Face is a wallet with a small basket of Stock Tokens inside. Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 (reply: the Safety post below)
 

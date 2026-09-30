@@ -63,6 +63,7 @@ What a stolen strategy-agent key could do: only `swapWithNote` on Faces that del
 
 - **MCP kit**: `https://neonfaces.xyz/neonfaces-mcp.mjs` (source `web/public/neonfaces-mcp.mjs`), one file, Node 18+, no dependencies. Add it to Claude Desktop (`"mcpServers": { "neonfaces": { "command": "node", "args": ["/path/neonfaces-mcp.mjs"] } }`) or any MCP client. Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, lock), `prices`, `faces_of`, `prepare_action`. It reads the chain only; `NEONFACES_SITE` and `RPC_URL` override the defaults.
 - **`llms.txt`**: `https://neonfaces.xyz/llms.txt` (source `web/public/llms.txt`), the same guide for any assistant.
+- **Next, after the launch: "What I see"**, a read-only market read for every Face (facts from the chain, never advice), on the Face page and as MCP tools. Design in [ANALYST.md](ANALYST.md).
 - **Action links**: `https://neonfaces.xyz/face/<id>?do=trade|withdraw|lock|strategy|stop-agent&...` (format in `llms.txt` and `web/src/actions.js`). The Face page shows the action in plain words under **Prepared for you**; nothing is sent until the holder confirms. By construction a link can only trade through NeonTrader, withdraw to the connected holder's own wallet, lock, set a strategy for the published strategy agent, or revoke the agent: it can never name a recipient or another agent.
 
 The same page also has **Withdraw or trade what's inside** for holders who act themselves (a holder trade raises the daily cap if needed and says so before signing).

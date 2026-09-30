@@ -56,6 +56,8 @@ Prompts: `frames.json` (stills) and `clips.json` (motion and sound). The starter
 
 30 Sep, Wall, one day (the founder's cap: 25): 5 stills 2.5, 3 clips (d-eye, d-m1, d-w1) 12, the 62 s track 3.9, five voice lines 5.4 (Seed Audio is billed by the prompt's length: keep voice prompts short). 23.8 in all, 50.5 left. The founder's reference song (a commercial track) only gave the structure; it is not in the video.
 
+30 Sep, Sold out (the founder's cap: 20): 2 stills 1, 2 clips (so-dawn 5 s, so-face 4 s) 9, the 40 s track 2.5, the narration in one take 3.1, its last sentence again (the take was cut off inside "together") 1. 16.6 in all, 33.9 left.
+
 ## The five videos (9:16 1080x1920; 4:5 = the middle 1080x1350)
 
 Sound: each real shot keeps its own generated sound (no voice); the over-the-shoulder stills carry the same place's sound, softer; the voice lines come from the teasers (same voice as everything so far): "Look closer." (teaser 1), "Someone has to keep watching." (teaser 2), "The market never closes." (teaser 3), "They don't blink. Neither do I." (teaser 5, landing on the card). A bass hit (teaser 1) opens each turn. Loudness about -16 LUFS.
@@ -175,15 +177,16 @@ take three sections of the story's score (one sound for the series); every new p
 | N3 Snow. Fog. Storm. | out/n3.mp4 | 18.6 | three kinds of weather, nobody blinks; the turn; card |
 | Wall | out/l-wall.mp4 | 12 | 5555 faces flash by with a counter to 5555, then the eye: "one of them is looking at you" |
 | Wall, one day | out/l-wall10.mp4 | 61.6 | the founder's idea (30 Sep): #286 and #198 through an ordinary day while a woman asks a child about a dream job; at 17:59 UTC they sit down, at 18:00 their Faces are on their screens; the details; the check tomorrow. `make_wall10.py` (own track music-wall10, own voices gen_voice.py) |
+| Sold out | out/l-soldout.mp4 | 41.0 | for the sell-out (the founder, 30 Sep): one calm female voice all the way; the eye, the count, SOLD OUT, the tribe, what a Face is, the reveal next; at dawn #198 watches the city light up and the world falls into NEONCAM's cells; #286 turns to us: "Let's NEON the world together."; it ends pushing into the young woman's eye (the signature: our videos open and close on raw/s-eye.mp4, `eye_close()` in make_launch.py). `make_soldout.py` (track music-soldout, voice gen_voice.py so) |
 | Tiers | out/l-tiers.mp4 | 15.6 | Glance 4444, Watch 833, Heavy Stare 278 as walls of their own art; "the art decides, the reveal shows it" |
 | Chain | out/l-chain.mp4 | 15 | a real on-chain record: its bytes scroll, then the Face is drawn from them, row by row |
 | Announce | out/l-announce.mp4 | 20 | a woman on a rooftop looks up: NEONFACES has a date; then Thursday 1 October, 18:00 UTC, OpenSea, the list first, then everyone from Friday, the site |
 | Public | out/l-public.mp4 | 12.6 | nine other people look up together: open to everyone, 0.018 ETH, up to 5 |
-| List | out/l-list.mp4 | 14.2 | she finds out and smiles; the list's own clip; how the check works |
+| List | out/l-list.mp4 | 14.2 | she finds out and smiles; the list's own clip; re-cut 30 Sep: connect your wallet on the drop page on OpenSea (no check on the site), today 18:00 UTC |
 | Cam | out/l-cam.mp4 | 13 | a selfie lit neon, his face into NEONCAM's five tones, the photo, the site |
 | Facts | out/l-facts.mp4 | 17.8 | check it yourself: five facts fixed on the chain |
 | How to mint | out/l-howto.mp4 | 20 | a man at his kitchen table at night, then five steps, plain |
-| Tomorrow | out/l-tomorrow.mp4 | 10.2 | awake in bed the night before; 18:00 UTC, the list goes first |
+| Tomorrow | out/l-tomorrow.mp4 | 14.8 | re-cut 30 Sep: the eye opens it; awake in bed the night before; 18:00 UTC on OpenSea, the list goes first; check your wallet from 08:00 UTC; into the eye, "They don't blink. Neither do we." |
 | Today | out/l-today.mp4 | 13 | sunrise, the turn, the facts |
 | Open | out/l-open.mp4 | 12.6 | nine people of the batch look up together; the list is open |
 
@@ -196,7 +199,7 @@ then everyone from **Fri 2 Oct, 18:00 UTC**. The announcement goes out only once
 |---|---|---|---|
 | Tue 29 Sep | N1 | **Cam** (the site revealed with NEONCAM: out/l-cam-a.mp4, post "Cam, launch"; posted) | **Announce** (on OpenSea: out/l-announce.mp4, post "Announce") |
 | Wed 30 Sep | Wall, one day (out/l-wall10-4x5.mp4, replaces the 12 s Wall) | How to mint (out/l-howto-4x5.mp4, step 1 says the check opens Thursday 08:00 UTC) | Tomorrow |
-| Thu 1 Oct | **List** (08:00 UTC sharp: the wallet check opens with this post, the time the announcement gave) | Today | **Open** (the list opens) |
+| Thu 1 Oct | **List** (08:00 UTC sharp: the list is checked on OpenSea's drop page; the site has no check since 30 Sep) | Today | **Open** (the list opens) |
 | Fri 2 Oct | N2 | V3 | **Public** (open to everyone) |
 | Sat 3 Oct | N3 | V4 | |
 | Sun 4 Oct | V5 | Tiers | |
@@ -229,8 +232,9 @@ Then everyone, from Friday 2 October, 18:00 UTC: 0.018 ETH, up to 5 per wallet i
 Every Face is a wallet with a small basket of Stock Tokens inside. Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
 **List** Is your wallet on the list?
-Paste your address on neonfaces.xyz: the check runs in your browser, and your address is never sent anywhere.
-The list mints first: 24 hours from Thursday 1 October, 18:00 UTC, up to 3 Faces each.
+Open the drop on OpenSea and connect your wallet: it shows whether you can mint in the list stage.
+The list mints first: today from 18:00 UTC, for 24 hours, 0.013 ETH, up to 3 Faces each.
+opensea.io/collection/neonfaces
 
 **How to mint** How to mint a Face, in five steps:
 1. Check your wallet on neonfaces.xyz (the check opens Thursday 1 October, 08:00 UTC)
@@ -285,6 +289,13 @@ Every Face is stored on Robinhood Chain, and the contract draws it every time so
 
 **Facts** Check it yourself.
 5555 Faces, fixed in the contract. 111 for the team, capped. No proxy: the contracts can't be swapped. No pause: transfers can never be stopped. The art sealed against a fingerprint published before the mint.
+
+**Sold out** (the moment 5444 are minted; out/l-soldout-4x5.mp4, pinned until the reveal)
+Sold out. Thank you.
+Every Face has found its holder, and this is only the beginning. Next, the reveal: on-chain, for everyone at once.
+They don't blink. Neither do we. Let's NEON the world together.
+#NEONFACE #NEONFAM
+Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
 **Story** Someone has to keep watching.
 NEONFACES. neonfaces.xyz

@@ -95,6 +95,23 @@ def the_eye(dur, text=None, seed=5555, cell=22, y=None):
         yield with_caption(finish(out, i, art=True), text)
 
 
+def eye_close(dur, a=1.8, b=5.0, z1=2.4, fade=18):
+    """The closing signature (30 Sep, the founder: our videos open and close on the young woman's eye, raw/s-eye.mp4):
+    the camera pushes into the unblinking eye toward the pupil and its neon reflection, then fades to black."""
+    fr = mc.clip_frames("s-eye", a, b).astype(np.float32)
+    n = int(round(dur * FPS))
+    for i in range(n):
+        pos = i * (len(fr) - 1) / max(1, n - 1)
+        k, e = int(pos), pos - int(pos)
+        f = fr[k] * (1 - e) + fr[min(k + 1, len(fr) - 1)] * e
+        z = 1.0 + (z1 - 1.0) * mc.ease(i / max(1, n - 1)) ** 1.6
+        m = np.float32([[z, 0, (1 - z) * W / 2], [0, z, (1 - z) * (H / 2 - 10)]])
+        f = cv2.warpAffine(np.clip(f, 0, 255).astype(np.uint8), m, (W, H), flags=cv2.INTER_LINEAR)
+        if i >= n - fade:
+            f = (f.astype(np.float32) * ((n - 1 - i) / fade)).astype(np.uint8)
+        yield finish(f, i)
+
+
 def cards(seq, seed=11):
     """Text cards on a dim wall: seq = [(seconds, [(text, cell, colour), ...])]; each flickers on."""
     bg = wall_bg(seed)
@@ -307,10 +324,11 @@ def announce():
 def list_():
     parts = [(3.8, lambda: real("l-a", 0.1, 3.9, "IS YOUR WALLET ON THE LIST?")),
              (4.0, lambda: video_square(ROOT / "landing" / "img" / "list-in.mp4", 4.0)),
-             (3.2, lambda: cards([(3.2, [("PASTE YOUR ADDRESS", 7, NEON), ("", 3, PALE), ("THE CHECK RUNS", 6, PALE),
-                                         ("IN YOUR BROWSER", 6, PALE)])], seed=4)),
-             (3.2, lambda: cards([(3.2, [("THE LIST MINTS FIRST", 7, NEON), ("", 3, PALE), ("24 HOURS, UP TO 3", 6, PALE),
-                                         ("", 3, PALE), ("NEONFACES.XYZ", 8, PALE)])], seed=5))]
+             # 30 Sep: the list lives on OpenSea (no check on the site): connect the wallet on the drop page
+             (3.2, lambda: cards([(3.2, [("CONNECT YOUR WALLET", 7, NEON), ("", 3, PALE), ("ON THE DROP PAGE", 6, PALE),
+                                         ("ON OPENSEA", 6, PALE)])], seed=4)),
+             (3.2, lambda: cards([(3.2, [("THE LIST MINTS FIRST", 7, NEON), ("", 3, PALE), ("TODAY 18:00 UTC", 6, PALE),
+                                         ("24 HOURS, UP TO 3", 6, PALE), ("", 3, PALE), ("ON OPENSEA", 8, PALE)])], seed=5))]
     sounds = [(raw("l-a"), 0.1, 3.9, 0.0, 0.8, 0.0, 0.3), score(music("info"), 3.8, 14.2, 0.9)]
     return parts, sounds
 
@@ -389,11 +407,20 @@ def howto():
 
 
 def tomorrow():
-    parts = [(3.8, lambda: real("m-a", 0.1, 3.9, "TOMORROW.")),
-             (3.4, lambda: cards([(3.4, [("18:00 UTC", 12, NEON), ("", 4, PALE), ("THE LIST GOES FIRST", 6, PALE)])], seed=13)),
-             (3.0, lambda: card("f58", "THEY DON'T BLINK."))]
-    sounds = [(raw("m-a"), 0.1, 3.9, 0.0, 0.8, 0.0, 0.3), score(SCORE, 0.0, 10.2, 0.9, ducks=[(6.2, 9.7)], rise=(1.5, 3.8, 0.35)),
-              (T5, 3.3, 7.4, 6.0, 1.0, 0.05, 0.3)]
+    """Wed 30 Sep, 20:00 Italy (re-cut that day with what was settled: OpenSea, the wallet check at 08:00 UTC, and the
+    founder's signature: open and close on the young woman's eye). The last words are the brand voice's
+    "They don't blink. Neither do we." (the sold-out take, gen_voice.py so)."""
+    parts = [(1.6, lambda: real("s-eye", 0.0, 1.6)),
+             (3.6, lambda: real("m-a", 0.3, 3.9, "TOMORROW.")),
+             (3.2, lambda: cards([(3.2, [("18:00 UTC", 12, NEON), ("", 3, PALE), ("ON NEONFACES.XYZ" if SITE else "ON OPENSEA", 7, PALE),
+                                         ("", 4, PALE), ("THE LIST GOES FIRST", 6, PALE)])], seed=13)),
+             (3.0, lambda: cards([(3.0, [("ON THE LIST?", 9, NEON), ("", 4, PALE), ("CHECK YOUR WALLET", 7, PALE),
+                                         ("FROM 08:00 UTC", 8, NEON), ("", 3, PALE), ("NEONFACES.XYZ", 7, PALE)])], seed=14)),
+             (3.4, lambda: eye_close(3.4))]
+    voice = HERE / "raw" / "voice" / "so-c.wav"  # compressed by make_soldout.py
+    sounds = [(raw("s-eye"), 0.0, 1.6, 0.0, 0.6, 0.0, 0.3), (raw("m-a"), 0.3, 3.9, 1.6, 0.8, 0.2, 0.3),
+              score(SCORE, 0.0, 14.8, 0.9, ducks=[(11.5, 14.3)], rise=(1.5, 5.2, 0.35)),
+              (voice, 0.0, 2.85, 11.6, 0.9, 0.03, 0.15)]
     return parts, sounds
 
 

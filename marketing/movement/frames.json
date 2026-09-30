@@ -355,6 +355,20 @@
       "screen": "f198",
       "scene": "Candid cinematic night photograph, vertical, over-the-shoulder shot from just behind and to the side of the woman from the reference image (same face, 30, dark olive jacket hung on the chair). She sits at a small desk by the window of her dark apartment, her hand on the laptop's trackpad, and looks at the laptop's screen. We see her cheek and eyelashes in soft three-quarter profile, and over her shoulder the laptop's screen, large and sharp in the frame.",
       "light": "The laptop's screen shows one plain, uniform, flat, bright acid lime green colour (#CCFF00) filling the whole display edge to edge: no interface, no picture, no icons, no text. It is the only light in the room, glowing on her cheek, her hand and the desk."
+    },
+    {
+      "id": "so-dawn",
+      "set": 198,
+      "kind": "plain",
+      "scene": "Candid cinematic photograph at the first light of dawn, vertical, wide shot from behind and slightly to the side: the woman from the reference image (same hair, same build, 30, dark olive jacket) stands still at the edge of a high rooftop, her back to the camera, a few other people standing further along the rooftop, small and out of focus, all quietly looking at a vast city below. The sky turns from black to deep blue over the horizon.",
+      "light": "Across the city below, many windows already glow acid lime neon, scattered like stars; the rest of the city is dark blue and black, the first cold light on the horizon."
+    },
+    {
+      "id": "so-face",
+      "set": 286,
+      "kind": "plain",
+      "scene": "Candid cinematic photograph at dawn, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 32, bleached curls, black hoodie) stands at the open window of his apartment high above the city, looking out at the city, in soft three-quarter profile.",
+      "light": "The city below throws an acid lime neon glow up onto his face and hoodie; the sky behind is deep blue before sunrise; deep shadows, black and deep olive."
     }
   ],
   "plain": ""

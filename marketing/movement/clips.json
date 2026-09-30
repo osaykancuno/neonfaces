@@ -216,6 +216,18 @@
       "duration": 4,
       "motion": "From the very first frame there is movement: she pulls the chair in, lifts the laptop lid and the lime light rises on her face; she settles, calm and focused, and looks at the screen. Static camera.",
       "sound": "a chair on a wooden floor, a laptop lid opening, a quiet apartment at night, faraway city."
+    },
+    {
+      "id": "so-dawn",
+      "duration": 5,
+      "motion": "From the very first frame there is movement: the camera slowly rises and glides past her shoulder toward the city; across the whole city, window after window and street after street switches on in acid lime neon, spreading like a wave to the horizon, until the city glows; she and the others stand still, watching. No flicker, no cuts.",
+      "sound": "wind on a high rooftop, a distant city waking up, a deep low hum that slowly rises."
+    },
+    {
+      "id": "so-face",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: a soft wind moves his curls, the lime light of the city breathes on his face; he turns from the city and looks straight into the camera with a calm, confident half smile, never blinking. Slow push-in.",
+      "sound": "morning wind at an open window, a distant city, a low neon hum."
     }
   ]
 }

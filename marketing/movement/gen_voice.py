@@ -18,12 +18,18 @@ CLI = shutil.which("higgsfield")
 # descriptions (1.7 credits each); the rest with these short ones.
 ASK = "Soft, warm woman's voice, home video, asking a child: "
 KID = "A little child of seven, sweet and sincere: "
+NARRATOR = "Calm, low, close-mic female voice, English, slow, a pause between sentences: "
 LINES = {
     "q1": ASK + "\"What's your dream job?\"",
     "q2": ASK + "\"What do you wanna do when you grow up?\"",
     "a1": KID + "\"Uh... I'm gonna be a doctor.\"",
     "q3": ASK + "\"How much do you wanna make?\"",
     "a2": KID + "\"I'm gonna make people feel okay.\"",
+    # the sold-out video (30 Sep): the brand voice of the teasers, the whole narration in one take (one voice, split later)
+    "so": NARRATOR + "\"They don't blink... Neither do we... Every Face has found its holder... Welcome to the neon tribe... "
+          "Every Face lives on the chain. Nothing to break... Every Face is a wallet, with a small basket inside... And the longer "
+          "you hold it, the harder it stares... Next, the reveal. Every Face gets its art, for everyone at once... This is only the "
+          "beginning... Let's neon the world together.\"",
 }
 
 

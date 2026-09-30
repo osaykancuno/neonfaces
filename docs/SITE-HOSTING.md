@@ -21,7 +21,7 @@ Since 2026 Cloudflare Pages is part of Cloudflare Workers: `wrangler pages proje
 
 2. `npx --yes wrangler@4.142.0 login` (the founder clicked Allow).
 3. `SITE=https://neonfaces.osaykancuno.workers.dev tools/site.sh deploy preview`: publishes `landing/` and checks every file there.
-4. The founder opens `https://neonfaces.osaykancuno.workers.dev` on a phone and a computer: home, NEONCAM, wallet check.
+4. The founder opens `https://neonfaces.osaykancuno.workers.dev` on a phone and a computer: home, NEONCAM, the sale terms.
 
 ## Phase 2: the DNS moves to Cloudflare (the founder, 15 minutes plus waiting; no downtime)
 

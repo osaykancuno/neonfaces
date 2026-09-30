@@ -16,7 +16,7 @@ very latest, so the Safe can accept before the list opens).
 | Tue 29 Sep, by midday | deploy, upload the art, verify, keeper on; import the contract in OpenSea Studio with the sale-manager account and build the drop as a **Draft** (the list stage and the public stage, the list's CSV, payout), check the preview, publish only when `verify-drop.mjs` passes |
 | Tue 29 Sep, 16:00 Italy | announce the sale, only once the contracts are deployed and verified: Thursday 1 October 18:00 UTC on OpenSea, 24 hours reserved to the list (0.013 ETH, 3 per wallet; wallets check themselves on the preview, neonfaces.xyz), then the public from Friday 2 October 18:00 UTC (0.018 ETH, 5 per wallet in total) until the last Face sells; team Faces and reveal after the sell-out |
 | Thu 1 Oct, morning | the Safe accepts the admin role (2 days after the deploy); the list's CSV is in the presale stage (rebuilt with the extra wallets if any, see section 7), `verify-drop.mjs` passes, then publish the drop in Studio (it opens by itself at the start time) |
-| Thu 1 Oct | 18:00 UTC the list stage opens for 24 hours; neonfaces.xyz stays the preview, so listed wallets can use its wallet check for the whole window |
+| Thu 1 Oct | 18:00 UTC the list stage opens for 24 hours; neonfaces.xyz stays the preview (sale terms and official links); a wallet sees whether it is on the list by connecting on OpenSea's drop page (the site's wallet check was removed on 30 Sep) |
 | Fri 2 Oct | 18:00 UTC the public stage opens, until the last Face sells; at the same time replace the preview with the web app on Cloudflare (`tools/site.sh deploy web`, [SITE-HOSTING.md](SITE-HOSTING.md); the wallet check lives only on the preview and is no longer needed); after the sell-out: team mint and reveal the same day (a sell-out on a weekend only delays the Stare top-ups to Monday's prices) |
 
 ## 0. Accounts
@@ -108,9 +108,8 @@ The list (decided 26 Sep): wallets holding at least one NFT of the listed collec
 node tools/snapshot.mjs config/allowlists/list.json --rules-only           # -> config/allowlists/list.csv (27,902 wallets)
 node tools/allowlist.mjs config/allowlists/list.csv config/allowlists/extra.csv --limit 3
 # -> config/allowlists/opensea/list.csv for Studio (fails above 30,000 wallets: OpenSea's limit per presale stage)
-# -> landing/list/: the preview's check (hashes only); publish it: tools/site.sh deploy preview
 ```
-The wallet check lives only on the preview (neonfaces.xyz until launch), not in the web app; its clips come from `python marketing/list/make_list_clips.py` (landing/img/list-in|out.mp4).
+Since 30 Sep there is no wallet check on the site: the list is checked on OpenSea's drop page, and `allowlist.mjs` writes only the Studio CSV.
 
 The preview has the web app's look: `landing/app.css` and `landing/app.js` are built from `web/src` (stylesheet, eye, mosaic, tape, boot, cursor, sound) by `npm --prefix web run build:preview`, which also copies the gallery the hero mosaic draws from (`landing/data/gallery.json`). Run it after any change to `web/src/style.css` or `web/src/effects/`, then publish it: `tools/site.sh deploy preview`.
 

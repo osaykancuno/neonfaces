@@ -85,6 +85,9 @@
   .facts-table { width: 100%; max-width: 900px; border-collapse: collapse; font: 400 15px/1.45 var(--mono); }
   .facts-table th, .facts-table td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
   .facts-table th { color: var(--dim); font-weight: 600; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+  .facts-table td.addr { font-size: 13px; }
+  #official .facts-table td + td { overflow-wrap: anywhere; word-break: break-all; }
+  .sale-cta { justify-content: flex-start; }
   .facts-table td:first-child { color: var(--neon); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .scroll { overflow-x: auto; }
   .quote { font: 400 clamp(22px, calc(4 * var(--vw)), 36px)/1.25 var(--pixel); color: var(--neon); border-block: 1px solid var(--line); padding-block: 26px; margin: 0 0 34px; }
@@ -130,28 +133,6 @@
   html.neoncam .cam-seg button[aria-pressed="true"] { background: #000; color: #ccff00; }
   @media (min-width: 1100px) { html.neoncam { background: #ccff00 radial-gradient(rgba(0, 0, 0, .1) 1px, transparent 1.5px) 0 0 / 22px 22px; } }
 
-  .al-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .al-form[hidden] { display: none; }
-  .al-label { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); }
-  .al-row { display: flex; gap: 8px; }
-  .al-row input { flex: 1; width: 0; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 10px 12px; background: #000; color: var(--ice); border: 2px solid var(--olive); font: 400 16px/1.2 var(--mono); }
-  .al-row input:focus { outline: none; border-color: var(--neon); }
-  .al-msg { min-height: 1.4em; font-size: 15px; color: var(--dim); }
-  .al-fine { font-size: 14px; color: var(--dim); }
-  .al-banner { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .55); -webkit-backdrop-filter: blur(10px) saturate(.5) brightness(.6); backdrop-filter: blur(10px) saturate(.5) brightness(.6); animation: al-fade .25s steps(4) both; }
-  .al-banner:not([hidden]) .al-box { animation: al-pop .35s steps(5) both; }
-  @keyframes al-fade { from { opacity: 0; } }
-  @keyframes al-pop { from { transform: scale(.82); opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .al-banner, .al-banner:not([hidden]) .al-box { animation: none; } }
-  .al-banner[hidden] { display: none; }
-  .al-box { width: min(420px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 12px; padding: 14px; box-sizing: border-box; background: #000; border: 3px solid var(--neon); box-shadow: 0 0 40px rgba(204, 255, 0, .25); }
-  .al-box video, .al-box img { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; background: #000; }
-  .al-title { font: 700 20px/1.2 var(--pixel); color: var(--neon); letter-spacing: .04em; }
-  .al-box p { font-size: 16px; color: var(--ice); }
-  .al-box .al-addr { font: 400 13px/1.3 var(--mono); color: var(--dim); word-break: break-all; }
-  .al-banner.out .al-box { border-color: var(--olive); box-shadow: none; }
-  .al-banner.out .al-title { color: #aab878; }
-  .al-banner.out .cam-btn { background: transparent; color: #aab878; border-color: var(--olive); }
 </style>
 </head>
 <body>
@@ -176,8 +157,8 @@
         <p class="tagline" data-scramble>They don't blink.</p>
         <p class="sub">5555 close-up faces on Robinhood Chain.<br>Every Face is a wallet that holds a small piece of the market.</p>
         <div class="hero-cta">
-          <a href="#cam" class="btn btn-neon">Try NEONCAM</a><!-- back to "Check your wallet" (#list) when the check reopens -->
-          <a href="#faces" class="btn btn-ghost">See the Faces</a>
+          <a href="https://opensea.io/collection/neonfaces" class="btn btn-neon" target="_blank" rel="noopener">The drop on OpenSea</a>
+          <a href="#cam" class="btn btn-ghost">Try NEONCAM</a>
         </div>
         <div class="hero-stats">
           <div><b>5555</b><span>Faces, fixed</span></div>
@@ -190,20 +171,31 @@
     <div class="tape" aria-hidden="true"><div class="tape-track" id="tape"></div></div>
 
     <section id="list" class="block reveal">
-      <div class="label">The list</div>
-      <h2>Is your wallet on the list?</h2>
-      <p class="lead">Wallets on the list mint first: 24 hours reserved to them, up to 3 Faces each. Then the sale opens to everyone.</p>
-      <!-- 29 Sep: paused until Thu 1 Oct 08:00 UTC, the time the announcement gave; to reopen, remove `hidden` and #al-paused -->
-      <p id="al-paused" class="al-msg">The wallet check opens on Thursday 1 October, 08:00 UTC.</p>
-      <form id="al-form" class="al-form" novalidate hidden>
-      <label class="al-label" for="al-addr">Wallet address</label>
-      <div class="al-row">
-        <input id="al-addr" type="text" placeholder="0x…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="42">
-        <button class="btn btn-neon" type="submit" id="al-go">Check</button>
-      </div>
-      <p id="al-msg" class="al-msg" role="status" aria-live="polite"></p>
-    </form>
-      <p class="fine">The list comes from a snapshot of NFT holders, one entry per wallet. The check runs in your browser: your address is never sent anywhere.</p>
+      <div class="label">The sale</div>
+      <h2>Thursday 1 October, 18:00 UTC, on OpenSea</h2>
+      <div class="scroll"><table class="facts-table">
+        <thead><tr><th>Stage</th><th>Terms</th></tr></thead>
+        <tbody>
+          <tr><td>The list</td><td>From Thursday 1 October, 18:00 UTC, for 24 hours. 0.013 ETH, up to 3 Faces per wallet.</td></tr>
+          <tr><td>Everyone</td><td>From Friday 2 October, 18:00 UTC, until every Face is sold. 0.018 ETH, up to 5 Faces per wallet in total.</td></tr>
+        </tbody>
+      </table></div>
+      <p class="lead">Is your wallet on the list? Open the drop on OpenSea and connect your wallet: OpenSea shows whether it can mint in the list stage.</p>
+      <p class="fine">You pay with ETH on Robinhood Chain, not on Ethereum, plus a few cents of gas. The list comes from a snapshot of NFT holders, one entry per wallet.</p>
+      <div class="hero-cta sale-cta"><a href="https://opensea.io/collection/neonfaces" class="btn btn-neon" target="_blank" rel="noopener">Open the drop on OpenSea</a></div>
+    </section>
+    <section id="official" class="block reveal">
+      <div class="label">Official links</div>
+      <h2>Only these are ours</h2>
+      <div class="scroll"><table class="facts-table">
+        <tbody>
+          <tr><td>Site</td><td><a href="https://neonfaces.xyz">neonfaces.xyz</a></td></tr>
+          <tr><td>Mint</td><td><a href="https://opensea.io/collection/neonfaces" target="_blank" rel="noopener">opensea.io/collection/neonfaces</a></td></tr>
+          <tr><td>X</td><td><a href="https://x.com/osaykancuno" target="_blank" rel="noopener">x.com/osaykancuno</a></td></tr>
+          <tr><td>Contract</td><td class="addr">0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B<br>on Robinhood Chain</td></tr>
+        </tbody>
+      </table></div>
+      <p class="fine">We never DM first. No airdrop, no claim. Never share your seed phrase. Any other link is not us.</p>
     </section>
     <section id="idea" class="block reveal">
       <div class="label">The idea</div>
@@ -216,7 +208,7 @@
       <div class="label">Life of a Face</div>
       <h2>From mint to your wallet</h2>
       <ol class="steps">
-      <li><b>Mint on OpenSea</b>Wallets on the list mint first, for 24 hours, up to 3 Faces each; then the sale opens to everyone, up to 5 Faces per wallet in total, until every Face is sold. The date and the prices are announced before the sale.</li>
+      <li><b>Mint on OpenSea</b>Wallets on the list mint first, for 24 hours, up to 3 Faces each; then the sale opens to everyone, up to 5 Faces per wallet in total, until every Face is sold. The list: Thursday 1 October, 18:00 UTC, 0.013 ETH. Everyone: from Friday 2 October, 18:00 UTC, 0.018 ETH.</li>
       <li><b>Wallet and base basket</b>Your Face gets its wallet in the same transaction and its base basket from the pool.</li>
       <li><b>Reveal and top-up</b>When the mint closes, the chain assigns every Face its art and tier; Watch and Heavy Stare Faces then receive their extra basket.</li>
       <li><b>Complete a set</b>If your Face is a piece, find the other three and assemble the whole face.</li>
@@ -441,20 +433,11 @@
   <footer class="footer">
     <div class="foot-row">
       <span class="brand-sm">NEONFACES</span>
-      <span class="foot-contracts">neonfaces.xyz · Mint: OpenSea, Robinhood Chain</span>
+      <span class="foot-contracts">neonfaces.xyz · Mint: <a href="https://opensea.io/collection/neonfaces" target="_blank" rel="noopener">OpenSea</a> · <a href="https://x.com/osaykancuno" target="_blank" rel="noopener">X @osaykancuno</a> · Robinhood Chain</span>
     </div>
     <p class="disclaimer">Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares. Whether they are available to you depends on where you live and on the issuer's terms. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
   </footer>
 </main>
-<div id="al-banner" class="al-banner" hidden>
-  <div class="al-box" role="dialog" aria-modal="true" aria-labelledby="al-title">
-    <video id="al-video" muted playsinline preload="none" aria-hidden="true"></video>
-    <h3 id="al-title" class="al-title"></h3>
-    <p id="al-text"></p>
-    <p class="al-addr" id="al-who"></p>
-    <button class="btn btn-neon btn-wide" type="button" id="al-close">Close</button>
-  </div>
-</div>
 <nav class="tabbar" aria-label="Sections"><a class="side-brand" href="#home">NEONFACES</a><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#cam" data-tab="cam" aria-label="NEONCAM"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="3" width="6" height="2"/><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="9"/><rect x="2" y="16" width="16" height="2"/><rect x="8" y="8" width="4" height="2"/><rect x="6" y="10" width="2" height="3"/><rect x="12" y="10" width="2" height="3"/><rect x="8" y="13" width="4" height="2"/></svg><span>Cam</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
 <script type="module" src="app.js"></script>
 <script type="module">
@@ -726,55 +709,6 @@
     };
     addEventListener("hashchange", show);
     show();
-  })();
-
-
-  // the list: SHA-256 of the lowercase address, first 20 hex digits, looked up in list/<first digit>.txt (16 small
-  // files written by tools/allowlist.mjs). Only that slice is downloaded; the address itself never leaves the page.
-  (() => {
-    const $ = (id) => document.getElementById(id);
-    const form = $("al-form"), input = $("al-addr"), msg = $("al-msg"), go = $("al-go");
-    const banner = $("al-banner"), video = $("al-video"), still = matchMedia("(prefers-reduced-motion: reduce)");
-    const shards = new Map();
-    const shard = (d) => {
-      if (!shards.has(d)) shards.set(d, fetch(`list/${d}.txt`).then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); }).then((t) => new Set(t.split("\n"))).catch((e) => { shards.delete(d); throw e; }));
-      return shards.get(d);
-    };
-    const hash = async (a) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(a)))].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 20);
-    const show = (inList, addr) => {
-      banner.classList.toggle("out", !inList);
-      $("al-title").textContent = inList ? "You're on the list" : "Not on the list";
-      $("al-text").textContent = inList
-        ? "This wallet can mint up to 3 Faces in the 24 hours reserved to the list, before the sale opens to everyone."
-        : "This wallet isn't on the list. It can mint when the sale opens to everyone, after the 24 hours reserved to the list.";
-      $("al-who").textContent = addr;
-      const name = inList ? "list-in" : "list-out";
-      video.poster = `img/${name}.png`;
-      video.src = `img/${name}.mp4`;
-      banner.hidden = false;
-      if (!still.matches) video.play().catch(() => {}); // muted + playsinline: allowed on iPhone and Android
-      inList ? sound.success() : sound.error();
-      $("al-close").focus();
-    };
-    const close = () => { banner.hidden = true; video.pause(); video.removeAttribute("src"); video.load(); input.focus(); };
-    $("al-close").addEventListener("click", close);
-    banner.addEventListener("click", (e) => { if (e.target === banner) close(); });
-    addEventListener("keydown", (e) => { if (e.key === "Escape" && !banner.hidden) close(); });
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const addr = input.value.trim();
-      if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) { msg.textContent = "Paste a wallet address: 0x followed by 40 letters and digits (names like .eth don't work here)."; return; }
-      if (!crypto.subtle) { msg.textContent = "Your browser can't run the check on this connection. Open the page with https."; return; }
-      msg.textContent = "Checking…"; go.disabled = true;
-      try {
-        const h = await hash(addr.toLowerCase());
-        const inList = (await shard(h[0])).has(h);
-        msg.textContent = "";
-        show(inList, addr);
-      } catch {
-        msg.textContent = "The list couldn't be loaded. Check your connection and try again.";
-      } finally { go.disabled = false; }
-    });
   })();
 </script>
 </body>

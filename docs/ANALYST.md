@@ -1,6 +1,7 @@
-# What I see: a market read for every Face (design, after the launch)
+# What I see: an assistant in every Face (design, after the launch)
 
-Status: design, agreed direction on 30 Sep 2026, to build after the sale. No launch contract changes: everything
+Status: design, agreed direction on 30 Sep 2026 (the founder: "like having a real assistant"), to build after the sale;
+how it fits with the rest is decided when it is built. No launch contract changes: everything
 below reads the chain and runs in the web app and the MCP kit.
 
 ## The idea
@@ -37,6 +38,24 @@ Face's journal (`web/src/journal.js`). No price API, no backend, no model that c
 
 Each section ends with the time of its data. Missing or stale data is said as such, never filled in.
 
+## The scam guard
+
+The same assistant watches for what hurts holders most: scams. Warnings about safety are not investment advice, so
+here the Face speaks plainly ("don't touch this"), still only from what it can check.
+
+| Check | What the Face says | How |
+|---|---|---|
+| Fake tokens | a token in the Face with a listed ticker but another contract is a lookalike; tokens named like a link or a "claim" are bait, never to be opened or traded | the Face's balances vs `config/trader.4663.json` |
+| Approvals | every spender the Face account (and, if the holder asks, their wallet) has approved, flagging unlimited ones and any spender that isn't NeonTrader or another listed contract, with a one-click revoke | `Approval` events, current allowances |
+| Agent | who the agent is, what it may call, until when, how much ETH; flags permissions that can move assets out | `agentConfig`, `isAgentCallAllowed` |
+| Fake collections | an NFT or collection that says NEONFACES but isn't the contract 0x67384d95…1C1B | contract address |
+| Links and addresses | the holder pastes a link or an address: official or not (the official list is the site's), lookalike domains (extra words, swapped letters, punycode), a contract that isn't ours | a fixed official list, domain comparison, `getCode` |
+| Before signing elsewhere | the holder pastes a transaction or a signature request from another site: in plain words what it would allow ("lets 0x... move every Face you hold") | ABI and EIP-712 decoding of the common drainer patterns: `setApprovalForAll`, `approve`, `permit`, Seaport orders |
+| The usual tricks | short notes when relevant: nobody from the team DMs first, no airdrop or claim, no "stealth mint", never share a seed phrase | fixed text, the same as the safety post |
+
+Limits are said every time: a clean check is not a guarantee, and a new scam can look clean. Public blocklists can be
+added later as an extra source, always named as such.
+
 ## How it reads
 
 Sentences are built from templates filled with the numbers above, in the Face's own voice, for example:
@@ -58,8 +77,9 @@ short Stock Token sentence when the Face holds Stock Tokens.
 1. **Face page, web app**: a "What I see" panel under the holdings, open to anyone (the chain is public), with
    the reads cached for a few minutes. Holders see their own Face's activity section first.
 2. **Market watch page**: the same moves, swings and market status for every token a basket can hold, one screen.
-3. **MCP kit** (`web/public/neonfaces-mcp.mjs`): two new read-only tools, `analysis` (one Face, the table above as
-   JSON with timestamps) and `market` (every basket token). A holder can run it in the same AI client as other MCP
+3. **MCP kit** (`web/public/neonfaces-mcp.mjs`): new read-only tools, `analysis` (one Face, the table above as
+   JSON with timestamps), `market` (every basket token) and `check` (a link, an address, a transaction or a signature
+   request, answered with the scam guard's facts). A holder can run it in the same AI client as other MCP
    servers they use (Claude, ChatGPT, others) and ask their own assistant questions about their Face. The tool
    descriptions say the data is factual and carries no recommendation; the kit itself never prepares a trade unless
    the holder asks through `prepare_action`, which already needs their confirmation on the site.
@@ -84,7 +104,8 @@ rules. A future option: strategies (Accumulate, Keep liquid, Trim) could show th
 ## Plan
 
 1. Module `web/src/analysis.js` with tests on fixed data (returns, volatility, drawdown, correlation, concentration,
-   staleness) and the wording rule test.
+   staleness) and the wording rule test; module `web/src/guard.js` with tests on known drainer requests, lookalike
+   domains and fake tokens.
 2. Face page panel and Market watch page; phone and tablet layouts like the rest of the app.
 3. MCP tools `analysis` and `market`; llms.txt.
 4. Fork check on real feeds and pools; copy review against the content rules; then deploy the web app.

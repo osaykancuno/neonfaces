@@ -369,6 +369,28 @@
       "kind": "plain",
       "scene": "Candid cinematic photograph at dawn, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 32, bleached curls, black hoodie) stands at the open window of his apartment high above the city, looking out at the city, in soft three-quarter profile.",
       "light": "The city below throws an acid lime neon glow up onto his face and hoodie; the sky behind is deep blue before sunrise; deep shadows, black and deep olive."
+    },
+    {
+      "id": "st-table",
+      "set": 419,
+      "kind": "plain",
+      "scene": "Candid cinematic evening photograph, vertical, eye level, medium shot. The woman from the reference image (same face, same age, 31, shoulder-length brown hair, black sweater) sits at a small wooden table in a dim, cosy neighbourhood bar with three friends of about 30: a woman with short dark hair, a woman with long red hair and a bearded man. Glasses of wine and small plates on the table. She leans in and tells them something with bright, excited eyes, her phone face down on the table under her hand; the friends listen, curious, one of them smiling. No logos, no brand names, no readable signs or labels anywhere.",
+      "light": "Evening: warm, dim bar light and deep shadows, a thin acid lime neon strip glowing behind the bar; the palette stays black, deep olive and acid lime."
+    },
+    {
+      "id": "st-ots",
+      "set": 419,
+      "kind": "ots",
+      "screen": "f419",
+      "scene": "Candid cinematic evening photograph, vertical, over-the-shoulder shot from just behind a friend's shoulder (short dark hair, out of focus in the foreground) across a small wooden bar table: the woman from the reference image (same face, 31, black sweater) holds her smartphone out toward the camera with both hands to show its screen, a small proud smile. The phone's screen is large and sharp in the frame, her face softly focused behind it. No logos, no brand names, no readable signs or labels anywhere.",
+      "light": "Warm, dim bar light; the screen glows acid lime on her fingers, her face and the table."
+    },
+    {
+      "id": "st-phones",
+      "set": 419,
+      "kind": "front",
+      "scene": "Candid cinematic evening photograph, vertical, eye level, close-up. The woman from the reference image (same face, same age, 31, black sweater) sits at a small wooden bar table and looks down at her phone, calm and still, waiting. Behind her, softly out of focus, her three friends lean over the table and talk to each other, their hands empty, glasses of wine between them. No logos, no brand names, no readable signs or labels anywhere.",
+      "light": "Her phone's screen is the main light: acid lime on her face and hands; the bar behind is warm, dim and dark."
     }
   ],
   "plain": ""

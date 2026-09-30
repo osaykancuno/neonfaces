@@ -228,6 +228,18 @@
       "duration": 4,
       "motion": "From the very first frame there is movement: a soft wind moves his curls, the lime light of the city breathes on his face; he turns from the city and looks straight into the camera with a calm, confident half smile, never blinking. Slow push-in.",
       "sound": "morning wind at an open window, a distant city, a low neon hum."
+    },
+    {
+      "id": "st-table",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: she lifts her phone from the table and turns it around to show her friends; its screen faces them, away from the camera, and its acid lime light spreads across their faces as they lean in; one friend's eyebrows lift, another breaks into a smile. Nobody blinks. Static camera, a slight handheld feel.",
+      "sound": "a quiet bar in the evening: a soft murmur far away, glasses touching, a chair creaking; no words."
+    },
+    {
+      "id": "st-phones",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: behind her, one after another, her three friends pull out their own phones and the acid lime light rises on each face; she stays still, then lifts her eyes from her phone straight into the camera and holds the gaze, not blinking. Slow push-in toward her eyes.",
+      "sound": "a quiet bar in the evening: a soft murmur, phones sliding out of pockets; no words."
     }
   ]
 }

@@ -188,6 +188,7 @@ take three sections of the story's score (one sound for the series); every new p
 | How to mint | out/l-howto.mp4 | 20 | a man at his kitchen table at night, then five steps, plain |
 | Tomorrow | out/l-tomorrow.mp4 | 14.8 | re-cut 30 Sep: the eye opens it; awake in bed the night before; 18:00 UTC on OpenSea, the list goes first; check your wallet from 08:00 UTC; into the eye, "They don't blink. Neither do we." |
 | Today | out/l-today.mp4 | 13 | sunrise, the turn, the facts |
+| Friends | out/l-friends.mp4 | 38.1 | the mint day as a story (the founder, 30 Sep, 10 credits: spent 9.5): #419, the young woman of the eye, at her window in the morning (TODAY.), then in a bar with her friends at 17:30 UTC: she turns her phone to us, her Face on it (the blank screen tracked frame by frame and the exact Face drawn in), the camera rushes into the screen on the lift and through the Face into the NEON world (the table in NEONCAM cells, reality coming back from the top), her friends' phones light up one by one, the city at 17:59, 17:59:57 in near silence, 18:00 UTC as the city falls into NEON on the drop, the details, into her eye with "They don't blink. Neither do we." (the voice already recorded). People always move (no still pictures of people, the founder 1 Oct); no new words; the Wall's track (music-wall10). `make_friends.py` (new: stills st-table, st-ots, st-phones; clips st-table, st-phones) |
 | Open | out/l-open.mp4 | 12.6 | nine people of the batch look up together; the list is open |
 
 ### Calendar (videos only, 10:00 and 16:00 Italy, plus the two openings at 20:00)
@@ -199,7 +200,7 @@ then everyone from **Fri 2 Oct, 18:00 UTC**. The announcement goes out only once
 |---|---|---|---|
 | Tue 29 Sep | N1 | **Cam** (the site revealed with NEONCAM: out/l-cam-a.mp4, post "Cam, launch"; posted) | **Announce** (on OpenSea: out/l-announce.mp4, post "Announce") |
 | Wed 30 Sep | Wall, one day (out/l-wall10-4x5.mp4, replaces the 12 s Wall) | How to mint (out/l-howto-4x5.mp4, step 1 says the check opens Thursday 08:00 UTC) | Tomorrow |
-| Thu 1 Oct | **List** (08:00 UTC sharp: the list is checked on OpenSea's drop page; the site has no check since 30 Sep) | Today | **Open** (the list opens) |
+| Thu 1 Oct | **List** (08:00 UTC sharp: the list is checked on OpenSea's drop page; the site has no check since 30 Sep) | **Friends** (out/l-friends-4x5.mp4, the story of the day, with the Today post) | **Open** (the list opens) |
 | Fri 2 Oct | N2 | V3 | **Public** (open to everyone) |
 | Sat 3 Oct | N3 | V4 | |
 | Sun 4 Oct | V5 | Tiers | |

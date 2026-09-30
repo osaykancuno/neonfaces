@@ -192,6 +192,30 @@
       "duration": 4,
       "motion": "From the very first frame there is movement: the lime light flickers softly on his face as he reads. He does not blink; slowly he turns his eyes from the phone to the camera and holds the gaze, wide awake in the dark. Very slow push-in.",
       "sound": "a silent bedroom at night, a clock far away, his slow breathing, a low hum."
+    },
+    {
+      "id": "d-eye",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: the pupil slowly widens as the lime reflection on the eye flickers once, the eye stays wide open and never blinks, not once; a very slow push-in toward the pupil.",
+      "sound": "a close, very quiet room tone, almost silence, a faint low neon hum."
+    },
+    {
+      "id": "d-m1",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: steam rises from the moka pot, he sips his coffee, glances down at the phone on the counter and a small calm smile appears; then he looks up into the camera. Slight handheld drift.",
+      "sound": "a moka pot gurgling softly, a spoon against a mug, early morning quiet."
+    },
+    {
+      "id": "d-m2",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: he spins the wheel slowly in his hands, stops it, glances at his phone on the bench, then goes back to work, calm. Slow push-in.",
+      "sound": "the soft ticking of a bicycle wheel spinning, a tool set down on a metal bench, a quiet workshop."
+    },
+    {
+      "id": "d-w1",
+      "duration": 4,
+      "motion": "From the very first frame there is movement: she pulls the chair in, lifts the laptop lid and the lime light rises on her face; she settles, calm and focused, and looks at the screen. Static camera.",
+      "sound": "a chair on a wooden floor, a laptop lid opening, a quiet apartment at night, faraway city."
     }
   ]
 }

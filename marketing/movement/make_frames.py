@@ -30,9 +30,9 @@ def screen_mask(rgb: np.ndarray) -> np.ndarray:
     return (lab == big).astype(np.uint8)
 
 
-def corners(mask: np.ndarray) -> np.ndarray:
+def corners(mask: np.ndarray, wide: bool = False) -> np.ndarray:
     """Four corners of the screen, ordered top-left, top-right, bottom-right, bottom-left in the screen's own frame
-    (its top is the short edge higher in the picture)."""
+    (its top is the short edge higher in the picture; the long one for a laptop, wide=True)."""
     hull = cv2.convexHull(cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0][0]).reshape(-1, 2)
     # each corner of the smallest enclosing rectangle pulls the screen's own nearest point: robust to a thumb
     # cutting into the screen (a polygon fit would take the notch for a corner) and it keeps the perspective
@@ -43,6 +43,8 @@ def corners(mask: np.ndarray) -> np.ndarray:
     quad = quad[np.argsort(np.arctan2(quad[:, 1] - c[1], quad[:, 0] - c[0]))]
     edges = [np.linalg.norm(quad[(i + 1) % 4] - quad[i]) for i in range(4)]
     short = 0 if edges[0] + edges[2] < edges[1] + edges[3] else 1
+    if wide:
+        short = 1 - short
     cand = [short, short + 2]
     top = min(cand, key=lambda i: (quad[i][1] + quad[(i + 1) % 4][1]))
     return np.roll(quad, -top, axis=0)
@@ -50,16 +52,19 @@ def corners(mask: np.ndarray) -> np.ndarray:
 
 def screen_image(face: Image.Image, w: int, h: int) -> np.ndarray:
     scr = Image.new("RGB", (w, h), (0, 0, 0))
+    if w > h:  # a laptop: the square Face at full height, centred
+        scr.paste(face.convert("RGB").resize((h, h), Image.NEAREST), ((w - h) // 2, 0))
+        return np.asarray(scr, np.float32)
     side = w
     f = face.convert("RGB").resize((side, side), Image.NEAREST)
     scr.paste(f, (0, int(h * 0.44 - side / 2)))
     return np.asarray(scr, np.float32)
 
 
-def paste(frame: Image.Image, face: Image.Image) -> Image.Image:
+def paste(frame: Image.Image, face: Image.Image, wide: bool = False) -> Image.Image:
     rgb = np.asarray(frame.convert("RGB"))
     mask = screen_mask(rgb)
-    q = corners(mask)
+    q = corners(mask, wide)
     wpx = int(np.linalg.norm(q[1] - q[0]))
     hpx = int(np.linalg.norm(q[3] - q[0]))
     k = 4  # draw the screen larger, then let the warp average it down: crisp cells, no jaggies

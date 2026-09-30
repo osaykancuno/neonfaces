@@ -68,6 +68,12 @@
       "duration": 24,
       "prompt": "A slow, eerie, cinematic electronic cue for a mirror that stares back: deep drone and a muted kick at 80 bpm from the first beat, a sparse, detuned three-note synth phrase in a minor key, breathy dark textures and a distant electric crackle. It builds with quiet menace; at 12 seconds a heavy sub drop and a bright neon buzz as the screen lights up, the pulse doubles, then it thins out to a single low tone and the hum at the end.",
       "tail": "Instrumental only: no vocals, no lyrics, no speech, no choir, no claps, no snaps. Mixed for a phone speaker: a clear sub that still reads on small speakers, the first sound on the very first beat, no long silent intro. Dark, mysterious, adult, minimal, electronic: not playful, not bouncy, not happy."
+    },
+    {
+      "id": "wall10",
+      "duration": 62,
+      "prompt": "A dark, emotional, cinematic electronic hip-hop track at 86 bpm about two ordinary people living an ordinary day, both quietly waiting for the same moment in the evening. From 0 to 26 seconds, sparse, intimate and nostalgic, leaving room for spoken voices: a soft, melancholic minor-key motif on a muted felt piano and a warm synth, room air, and a deep sub-bass boom with a short reversed swell every two bars, almost nothing in between. At 26 seconds soft half-time drums and a pulsing bass come in under the same motif, and the track builds tension for 21 seconds with slow risers and filtered synths, tighter and tighter, then one beat of near silence at 47.5 seconds. At 48 seconds the drop: a heavy, driving beat with deep 808 bass, crisp hats and a bright acid neon synth lead playing the motif, full energy until 61 seconds, then the last bar rings out.",
+      "tail": "Instrumental only: no vocals, no lyrics, no speech, no choir, no chants, no vocal chops. Mixed for a phone speaker: a clear sub that still reads on small speakers, the first sound on the very first beat. Dark, emotional, adult, cinematic: not playful, not bouncy, not happy."
     }
   ]
 }

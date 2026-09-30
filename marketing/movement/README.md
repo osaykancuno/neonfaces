@@ -54,6 +54,8 @@ Prompts: `frames.json` (stills) and `clips.json` (motion and sound). The starter
 | Clips (seedance_2_0_mini 720p, 11 x 5 s + 4 x 4 s) | 15 | 71 |
 | **Total** | | **100** (280 → 180 left) |
 
+30 Sep, Wall, one day (the founder's cap: 25): 5 stills 2.5, 3 clips (d-eye, d-m1, d-w1) 12, the 62 s track 3.9, five voice lines 5.4 (Seed Audio is billed by the prompt's length: keep voice prompts short). 23.8 in all, 50.5 left. The founder's reference song (a commercial track) only gave the structure; it is not in the video.
+
 ## The five videos (9:16 1080x1920; 4:5 = the middle 1080x1350)
 
 Sound: each real shot keeps its own generated sound (no voice); the over-the-shoulder stills carry the same place's sound, softer; the voice lines come from the teasers (same voice as everything so far): "Look closer." (teaser 1), "Someone has to keep watching." (teaser 2), "The market never closes." (teaser 3), "They don't blink. Neither do I." (teaser 5, landing on the card). A bass hit (teaser 1) opens each turn. Loudness about -16 LUFS.
@@ -172,6 +174,7 @@ take three sections of the story's score (one sound for the series); every new p
 | N2 Lights out | out/n2.mp4 | 18.6 | a blackout: elevator, garage, stairwell; her Face in the dark; the turn; card |
 | N3 Snow. Fog. Storm. | out/n3.mp4 | 18.6 | three kinds of weather, nobody blinks; the turn; card |
 | Wall | out/l-wall.mp4 | 12 | 5555 faces flash by with a counter to 5555, then the eye: "one of them is looking at you" |
+| Wall, one day | out/l-wall10.mp4 | 61.6 | the founder's idea (30 Sep): #286 and #198 through an ordinary day while a woman asks a child about a dream job; at 17:59 UTC they sit down, at 18:00 their Faces are on their screens; the details; the check tomorrow. `make_wall10.py` (own track music-wall10, own voices gen_voice.py) |
 | Tiers | out/l-tiers.mp4 | 15.6 | Glance 4444, Watch 833, Heavy Stare 278 as walls of their own art; "the art decides, the reveal shows it" |
 | Chain | out/l-chain.mp4 | 15 | a real on-chain record: its bytes scroll, then the Face is drawn from them, row by row |
 | Announce | out/l-announce.mp4 | 20 | a woman on a rooftop looks up: NEONFACES has a date; then Thursday 1 October, 18:00 UTC, OpenSea, the list first, then everyone from Friday, the site |
@@ -180,7 +183,7 @@ take three sections of the story's score (one sound for the series); every new p
 | Cam | out/l-cam.mp4 | 13 | a selfie lit neon, his face into NEONCAM's five tones, the photo, the site |
 | Facts | out/l-facts.mp4 | 17.8 | check it yourself: five facts fixed on the chain |
 | How to mint | out/l-howto.mp4 | 20 | a man at his kitchen table at night, then five steps, plain |
-| Tomorrow | out/l-tomorrow.mp4 | 10.2 | awake in bed the night before; 14:00 UTC, the list goes first |
+| Tomorrow | out/l-tomorrow.mp4 | 10.2 | awake in bed the night before; 18:00 UTC, the list goes first |
 | Today | out/l-today.mp4 | 13 | sunrise, the turn, the facts |
 | Open | out/l-open.mp4 | 12.6 | nine people of the batch look up together; the list is open |
 
@@ -192,7 +195,7 @@ then everyone from **Fri 2 Oct, 18:00 UTC**. The announcement goes out only once
 | Day | 10:00 | 16:00 | 20:00 |
 |---|---|---|---|
 | Tue 29 Sep | N1 | **Cam** (the site revealed with NEONCAM: out/l-cam-a.mp4, post "Cam, launch"; posted) | **Announce** (on OpenSea: out/l-announce.mp4, post "Announce") |
-| Wed 30 Sep | Wall | How to mint (venue-neutral cut if the venue is still open) | Tomorrow |
+| Wed 30 Sep | Wall, one day (out/l-wall10-4x5.mp4, replaces the 12 s Wall) | How to mint (out/l-howto-4x5.mp4, step 1 says the check opens Thursday 08:00 UTC) | Tomorrow |
 | Thu 1 Oct | **List** (08:00 UTC sharp: the wallet check opens with this post, the time the announcement gave) | Today | **Open** (the list opens) |
 | Fri 2 Oct | N2 | V3 | **Public** (open to everyone) |
 | Sat 3 Oct | N3 | V4 | |
@@ -230,15 +233,16 @@ Paste your address on neonfaces.xyz: the check runs in your browser, and your ad
 The list mints first: 24 hours from Thursday 1 October, 18:00 UTC, up to 3 Faces each.
 
 **How to mint** How to mint a Face, in five steps:
-1. Check your wallet on neonfaces.xyz
+1. Check your wallet on neonfaces.xyz (the check opens Thursday 1 October, 08:00 UTC)
 2. Put ETH on Robinhood Chain, in the wallet you mint with
 3. Thursday 1 October, 18:00 UTC: open the drop on OpenSea
 4. The list mints first: 24 hours, up to 3 each
 5. Your Face arrives with its own wallet
 The public sale follows on Friday 2 October, 18:00 UTC.
+opensea.io/collection/neonfaces
 
-**Tomorrow** Tomorrow, 18:00 UTC. The list goes first.
-neonfaces.xyz
+**Tomorrow** Tomorrow, 18:00 UTC, on OpenSea. The list goes first.
+Is your wallet on it? The check opens on neonfaces.xyz at 08:00 UTC.
 
 **Today** Today, 18:00 UTC, on OpenSea. The list goes first, for 24 hours.
 (the drop's OpenSea link)
@@ -270,6 +274,11 @@ Nothing makes them blink.
 
 **Wall** 5555 faces. One of them is looking at you.
 Every one drawn by the chain itself.
+
+**Wall, one day** (Wed 30, 10:00, out/l-wall10-4x5.mp4)
+What's your dream job?
+Two ordinary days, one moment: tomorrow, Thursday 1 October, 18:00 UTC, NEONFACES opens on OpenSea. 5555 faces. One of them is looking at you.
+On the list? Check your wallet tomorrow from 08:00 UTC on neonfaces.xyz
 
 **Chain** 190 bytes.
 Every Face is stored on Robinhood Chain, and the contract draws it every time someone asks. No server, no link that can break.

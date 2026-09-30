@@ -319,6 +319,42 @@
       "kind": "front",
       "scene": "Candid cinematic night photograph, vertical, close-up from slightly above. The man from the reference image (same face, same age, 54, shaved head, grey t-shirt) lies in bed in a dark bedroom, head on the pillow, holding his phone above his face, wide awake, looking at it.",
       "light": "The phone's screen is the only light: a strong acid lime neon glow falling on his face and the pillow, while the rest of the bedroom is black; the camera sees only the dark back of the phone at the top edge of the frame, never the screen."
+    },
+    {
+      "id": "d-eye",
+      "set": 286,
+      "kind": "plain",
+      "scene": "Extreme macro close-up photograph of one human eye of the man from the reference image, vertical, the eye filling most of the frame, wide open and looking straight into the camera: real skin texture, fine eyelashes, a few fine lines at the corner, the iris with every fibre visible, wet glint on the cornea. On the curved surface of the eye, over the pupil, the small bright reflection of a phone screen he is looking at: a soft acid lime rectangle.",
+      "light": "That screen is the only light: a soft acid lime glow from below on the lower lid, the lashes and the skin around the eye; everything else falls into black. Bright enough to read in the first second."
+    },
+    {
+      "id": "d-m1",
+      "set": 286,
+      "kind": "plain",
+      "scene": "Candid cinematic photograph at dawn, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 32, bleached curls, grey t-shirt) stands in his small dark kitchen making coffee, a moka pot on the stove, a mug in his hand, still half asleep. His phone lies on the counter beside him, screen up, and he glances down at it.",
+      "light": "Cold blue dawn light through the window behind him; the phone on the counter throws a soft acid lime glow up onto his face and hand. Deep shadows, black and deep olive."
+    },
+    {
+      "id": "d-m2",
+      "set": 286,
+      "kind": "plain",
+      "scene": "Candid cinematic photograph in the late afternoon, vertical, eye level, medium close-up. The man from the reference image (same face, same age, 32, bleached curls, dark work apron over a black t-shirt) works at the bench of a small bicycle repair workshop, a wheel in his hands, grease on his fingers. His phone leans against a toolbox on the bench, its screen turned toward him, and he glances at it between one turn of the spoke key and the next.",
+      "light": "Low warm-grey light from a roller door half open behind him, the workshop mostly in shadow; the phone's acid lime glow touches his face and hands."
+    },
+    {
+      "id": "d-w1",
+      "set": 198,
+      "kind": "plain",
+      "scene": "Candid cinematic night photograph, vertical, eye level, medium close-up. The woman from the reference image (same face, same age, 30, dark olive jacket just taken off and hung on the chair) sits down at a small desk by the window of her dark apartment and opens a laptop; the camera faces her and sees only the dark back of the laptop lid, never the screen. Her phone lies next to the laptop.",
+      "light": "The laptop screen is the only light: acid lime on her face, her hands and the edge of the desk; the city at night soft and out of focus in the window behind her."
+    },
+    {
+      "id": "d-w1o",
+      "set": 198,
+      "kind": "plain",
+      "screen": "f198",
+      "scene": "Candid cinematic night photograph, vertical, over-the-shoulder shot from just behind and to the side of the woman from the reference image (same face, 30, dark olive jacket hung on the chair). She sits at a small desk by the window of her dark apartment, her hand on the laptop's trackpad, and looks at the laptop's screen. We see her cheek and eyelashes in soft three-quarter profile, and over her shoulder the laptop's screen, large and sharp in the frame.",
+      "light": "The laptop's screen shows one plain, uniform, flat, bright acid lime green colour (#CCFF00) filling the whole display edge to edge: no interface, no picture, no icons, no text. It is the only light in the room, glowing on her cheek, her hand and the desk."
     }
   ],
   "plain": ""

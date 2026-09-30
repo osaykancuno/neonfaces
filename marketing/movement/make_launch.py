@@ -375,7 +375,8 @@ def cam_lit(photo: np.ndarray, dur, strike, text=None):
 
 
 def howto():
-    steps = [("1", "CHECK YOUR WALLET", "ON NEONFACES.XYZ"),
+    # posted Wed 30 Sep, before the check opens (Thu 1 Oct 08:00 UTC): step 1 says when
+    steps = [("1", "CHECK YOUR WALLET", "THURSDAY 08:00 UTC, NEONFACES.XYZ"),
              ("2", "PUT ETH ON", "ROBINHOOD CHAIN"),
              ("3", "THURSDAY 18:00 UTC", "MINT ON NEONFACES.XYZ" if SITE else "OPEN THE DROP ON OPENSEA"),
              ("4", "THE LIST MINTS FIRST", "24 HOURS, UP TO 3 EACH"),

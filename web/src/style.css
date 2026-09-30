@@ -659,6 +659,14 @@ html.birth-lit #cursor { border-color: #000; }
 #view-cam .prose p { margin: 0; }
 .cam { position: relative; width: 100%; max-width: 560px; aspect-ratio: 1; border: 2px solid var(--neon); background: #000; box-sizing: border-box; }
 .cam canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.cam-clip { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; background: #000; }
+.cam-clip[hidden], .cam-rec-on[hidden] { display: none; }
+/* recording: a small neon REC with the seconds left, in the square's corner */
+.cam-rec-on { position: absolute; top: 10px; left: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; background: #000; border: 1px solid #ccff00; color: #ccff00; font: 700 12px/1 var(--mono); letter-spacing: .12em; }
+.cam-rec-on::before { content: ""; width: 8px; height: 8px; background: #ccff00; animation: cam-rec 1s steps(2) infinite; }
+@keyframes cam-rec { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cam-rec-on::before { animation: none; } }
+.cam-btn:disabled { opacity: .5; cursor: progress; }
 .cam-idle { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; text-align: center; }
 .cam-idle[hidden] { display: none; }
 .cam-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 2px solid var(--neon); background: var(--neon); color: #000; font: 700 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; box-sizing: border-box; }
@@ -671,6 +679,14 @@ html.birth-lit #cursor { border-color: #000; }
 .cam-msg { font-size: 14px; color: var(--dim); min-height: 1.4em; margin: 10px 0 6px; }
 
 .cam-btn[hidden], #cam-tools[hidden] { display: none; }
+/* phones: the actions two by two (an odd last one takes the whole row), each option row on one line under its name */
+@media (max-width: 600px) {
+  .cam-row > .cam-btn { flex: 1 1 calc(50% - 4px); padding-inline: 8px; }
+  .cam-seg { gap: 6px; }
+  .cam-seg > span { flex-basis: 100%; min-width: 0; }
+  .cam-seg button { flex: 1 1 0; min-width: 0; padding: 6px 2px; white-space: nowrap; }
+}
+@media (max-width: 360px) { .cam-seg button { font-size: 11px; } .cam-row > .cam-btn { font-size: 12px; letter-spacing: .04em; } }
 @media (max-width: 860px) { .cam-seg button { min-height: 44px; min-width: 44px; } }
 /* NEONCAM's light: while its camera is on, the whole page turns neon with black type, so the screen lights a face
    acid lime even in the dark (like the films). Only the colours swap, never the layout. The camera's own square keeps

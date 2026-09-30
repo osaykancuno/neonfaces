@@ -7,6 +7,7 @@ import { boot, cursor, mosaic, reveals, scramble, tape } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 
 export { sound };
+export { camRecorder } from "./effects/rec.js";
 
 const $ = (s) => document.querySelector(s);
 boot();

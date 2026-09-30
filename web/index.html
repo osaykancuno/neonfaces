@@ -155,10 +155,10 @@
         <div class="label">NEONCAM</div>
         <h2>See yourself the way they see you</h2>
         <div class="prose">
-          <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it. When the camera is on, the page itself glows neon, so your face is lit like theirs, even in the dark.</p>
+          <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. Take a photo, or a clip of up to 5 seconds to save as a video or a GIF. It all happens in this page: nothing is uploaded, and nothing leaves your device unless you save or share it. When the camera is on, the page itself glows neon, so your face is lit like theirs, even in the dark.</p>
         </div>
         <div class="cam">
-        <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas>
+        <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas><video class="cam-clip" id="cam-clip" muted playsinline loop hidden aria-label="Your NEONCAM clip"></video><span class="cam-rec-on" id="cam-rec-on" hidden aria-live="polite">REC 5</span>
         <div class="cam-idle" id="cam-idle">
           <button class="btn btn-neon cam-btn" id="cam-start" type="button">Turn the camera on</button>
           <label class="btn btn-ghost cam-btn">Use a photo<input type="file" accept="image/*" id="cam-file" hidden></label>
@@ -168,8 +168,10 @@
       <div id="cam-tools" hidden>
         <div class="cam-row">
           <button class="btn btn-neon cam-btn" id="cam-shot" type="button">Take the photo</button>
+          <button class="btn btn-ghost cam-btn" id="cam-rec" type="button" hidden>Rec</button>
           <button class="btn btn-ghost cam-btn" id="cam-flip" type="button" hidden>Switch camera</button>
           <button class="btn btn-neon cam-btn" id="cam-save" type="button" hidden>Save</button>
+          <button class="btn btn-neon cam-btn" id="cam-save-gif" type="button" hidden>Save GIF</button>
           <button class="btn btn-neon cam-btn" id="cam-share" type="button" hidden>Share</button>
           <button class="btn btn-neon cam-btn" id="cam-x" type="button" hidden>Post on X</button>
           <button class="btn btn-ghost cam-btn" id="cam-again" type="button" hidden>Again</button>

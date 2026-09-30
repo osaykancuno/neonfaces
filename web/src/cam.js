@@ -1,4 +1,5 @@
 // NEONCAM, the camera tab (moved from the preview on 29 Sep so the links people share keep working after the launch).
+import { camRecorder } from "./effects/rec.js";
 
 let started = false;
 /** Wire the Cam view once; main.js calls it the first time /cam opens. */
@@ -23,6 +24,8 @@ export function setupCam() {
   const video = document.createElement("video");
   video.muted = true; video.playsInline = true; video.setAttribute("playsinline", "");
   let stream = null, facing = "user", still = null, shot = null, raf = 0, last = 0, seed = 1;
+  const recr = camRecorder(out);
+  let clip = null, clipUrl = "", gifBlob = null;
   const say = (t) => (msg.textContent = t);
   const HERE = () => location.pathname === "/cam";
   // NEONCAM's light: while the camera is on (not for a photo), the page turns neon with black type, and so does the phone's
@@ -127,6 +130,7 @@ export function setupCam() {
     if (t - last < 66) return; // about 15 frames a second: enough for the look, kind to phones
     last = t;
     frame();
+    recr.frame();
   }
 
   async function startCam() {
@@ -157,19 +161,98 @@ export function setupCam() {
     $("cam-tools").hidden = false;
     seed = (Math.random() * 1e6) | 0;
     shot = null;
+    dropClip();
     buttons(false);
     if (!raf) raf = requestAnimationFrame(loop);
     sync();
   }
-  // the system share sheet (phones: Instagram, X, WhatsApp…) only where it can carry the photo itself
-  const canShareFiles = (() => {
-    try { return !!navigator.canShare?.({ files: [new File([""], "neoncam.png", { type: "image/png" })] }); } catch { return false; }
-  })();
+  // the system share sheet (phones: Instagram, X, WhatsApp…) only where it can carry the photo or the clip itself
+  const canShare = (name, type) => {
+    try { return !!navigator.canShare?.({ files: [new File([""], name, { type })] }); } catch { return false; }
+  };
+  const canShareFiles = canShare("neoncam.png", "image/png");
+  // taken: false (live), true (a photo), "clip" (a recorded clip)
   function buttons(taken) {
-    $("cam-shot").hidden = taken;
-    $("cam-save").hidden = $("cam-x").hidden = $("cam-again").hidden = !taken;
-    $("cam-share").hidden = !taken || !canShareFiles;
-    if (taken) $("cam-flip").hidden = true;
+    const mode = taken === "clip" ? "clip" : taken ? "photo" : "live";
+    const live = mode === "live";
+    $("cam-shot").hidden = !live;
+    $("cam-rec").hidden = !live || !stream; // clips come from the live camera only
+    $("cam-rec").textContent = "Rec";
+    $("cam-save").hidden = live || (mode === "clip" && !clip?.video);
+    $("cam-save").textContent = mode === "clip" ? "Save video" : "Save";
+    $("cam-save-gif").hidden = mode !== "clip";
+    $("cam-x").hidden = $("cam-again").hidden = live;
+    $("cam-share").hidden = live || !(mode === "clip" ? clip?.video && canShare(`neoncam.${clip.ext}`, clip.video.type) : canShareFiles);
+    if (!live) $("cam-flip").hidden = true;
+  }
+
+  // a clip: up to 5 seconds of the live camera, then a video or a GIF (effects/rec.js); the GIF plays it forward
+  // and back, so it loops without a jump
+  function record() {
+    if (recr.recording) return recr.stop();
+    if (!stream) return;
+    $("cam-shot").hidden = $("cam-flip").hidden = true;
+    $("cam-rec").textContent = "Stop";
+    const dot = $("cam-rec-on");
+    dot.hidden = false;
+    say("");
+    recr.start({
+      seconds: 5,
+      onTick: (left) => (dot.textContent = `REC ${left}`),
+      onDone: (c) => {
+        dot.hidden = true;
+        cancelAnimationFrame(raf);
+        raf = 0;
+        clip = c;
+        gifBlob = null;
+        if (c.video) { // the clip plays in the square, on a loop, until it is saved or dropped
+          const v = $("cam-clip");
+          clipUrl = URL.createObjectURL(c.video);
+          v.src = clipUrl;
+          v.hidden = false;
+          v.play().catch(() => {});
+        }
+        buttons("clip");
+        say(c.video ? "Got it. Save it as a video or as a GIF." : "Got it. Save it as a GIF.");
+      },
+    });
+  }
+  function dropClip() {
+    recr.cancel();
+    $("cam-rec-on").hidden = true;
+    const v = $("cam-clip");
+    v.pause();
+    v.hidden = true;
+    v.removeAttribute("src");
+    v.load();
+    if (clipUrl) URL.revokeObjectURL(clipUrl);
+    clip = null;
+    clipUrl = "";
+    gifBlob = null;
+  }
+  function download(blob, name) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  async function gif() {
+    if (!gifBlob) {
+      say("Making the GIF…");
+      $("cam-save-gif").disabled = true;
+      try { gifBlob = await recr.gif(); } finally { $("cam-save-gif").disabled = false; }
+    }
+    return gifBlob;
+  }
+  async function saveGif() {
+    if (!clip) return;
+    try {
+      download(await gif(), "neoncam.gif");
+      say("The GIF is saved.");
+    } catch {
+      say("The GIF couldn't be made on this device. Save the video instead.");
+    }
   }
 
   // the photo: 1080 x 1080, the face, then a thin band with the name and the site
@@ -192,18 +275,16 @@ export function setupCam() {
   }
 
   function save() {
-    if (!shot) return;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(shot);
-    a.download = "neoncam.png";
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    if (clip?.video) return download(clip.video, `neoncam.${clip.ext}`);
+    if (shot) download(shot, "neoncam.png");
   }
   // "/#cam" works on the preview and on the app (which sends it to /cam)
   const TEXT = "They don't blink. Neither do I. #NEONFACE by NEONFACES", LINK = "https://neonfaces.xyz/#cam";
   async function share() {
-    if (!shot) return;
-    const file = new File([shot], "neoncam.png", { type: "image/png" });
+    if (!shot && !clip?.video) return;
+    const file = clip?.video
+      ? new File([clip.video], `neoncam.${clip.ext}`, { type: clip.video.type })
+      : new File([shot], "neoncam.png", { type: "image/png" });
     try {
       await navigator.share({ files: [file], text: TEXT, url: LINK });
     } catch (e) {
@@ -212,10 +293,25 @@ export function setupCam() {
   }
   // X can't receive a photo through a link: save it first, then open the post, ready to attach it
   function postX() {
+    if (clip) return postClipX();
     if (!shot) return;
     save();
     open(`https://x.com/intent/post?text=${encodeURIComponent(TEXT)}&url=${encodeURIComponent(LINK)}`, "_blank", "noopener");
     say("The photo is saved: attach it to the post that just opened.");
+  }
+
+  // a clip on X: the MP4 where the browser made one, otherwise the GIF (X takes both, not WebM); the post opens at
+  // once (while the tap still counts) and the file is saved next to it
+  async function postClipX() {
+    const url = `https://x.com/intent/post?text=${encodeURIComponent(TEXT)}&url=${encodeURIComponent(LINK)}`;
+    const mp4 = clip.ext === "mp4";
+    open(url, "_blank", "noopener");
+    try {
+      download(mp4 ? clip.video : await gif(), mp4 ? "neoncam.mp4" : "neoncam.gif");
+      say(`The ${mp4 ? "video" : "GIF"} is saved: attach it to the post that just opened.`);
+    } catch {
+      say("The clip couldn't be saved on this device.");
+    }
   }
 
   $("cam-start").addEventListener("click", startCam);
@@ -230,6 +326,8 @@ export function setupCam() {
   });
   $("cam-flip").addEventListener("click", () => { facing = facing === "user" ? "environment" : "user"; startCam(); });
   $("cam-shot").addEventListener("click", takePhoto);
+  $("cam-rec").addEventListener("click", record);
+  $("cam-save-gif").addEventListener("click", saveGif);
   $("cam-save").addEventListener("click", save);
   $("cam-share").addEventListener("click", share);
   $("cam-x").addEventListener("click", postX);
@@ -240,13 +338,14 @@ export function setupCam() {
       if (!b) return;
       seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
       opt[seg.dataset.opt] = Number(b.dataset.v);
-      if (shot) { say(""); ready(); } else if (!raf) frame();
+      if (shot || clip) { say(""); ready(); } else if (!raf) frame();
     }),
   );
   // leaving the view (or the browser tab) turns the camera off
   const off = () => {
     if (HERE() && !document.hidden) return sync();
     const was = !!stream;
+    dropClip();
     stopCam();
     cancelAnimationFrame(raf);
     raf = 0;

@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="app.css?v=1005">
 <style>
   /* preview only: its own views and tools; the look (nav, sidebar, tab bar, hero, blocks, buttons, frame) is app.css */
   :root { --panel: #070900; --olive: var(--olive-2); --watch: var(--olive-4); }
@@ -86,8 +86,8 @@
   .facts-table th, .facts-table td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
   .facts-table th { color: var(--dim); font-weight: 600; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
   .facts-table td.addr { font-size: 13px; }
+  .foot-contracts > span { display: inline-flex; align-items: center; min-height: 44px; }
   #official .facts-table td + td { overflow-wrap: anywhere; word-break: break-all; }
-  .sale-cta { justify-content: flex-start; }
   .facts-table td:first-child { color: var(--neon); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .scroll { overflow-x: auto; }
   .quote { font: 400 clamp(22px, calc(4 * var(--vw)), 36px)/1.25 var(--pixel); color: var(--neon); border-block: 1px solid var(--line); padding-block: 26px; margin: 0 0 34px; }
@@ -114,6 +114,13 @@
 
   .cam-btn[hidden], #cam-tools[hidden] { display: none; }
   @media (max-width: 860px) { .cam-seg button { min-height: 44px; min-width: 44px; } }
+  /* phones: the actions two by two (an odd last one takes the whole row), each option row on one line under its name */
+  @media (max-width: 600px) {
+    .cam-row > .cam-btn { flex: 1 1 calc(50% - 4px); padding-inline: 8px; }
+    .cam-seg > span { flex-basis: 100%; min-width: 0; }
+    .cam-seg button { flex: 1 1 0; min-width: 0; padding: 6px 2px; white-space: nowrap; }
+  }
+  @media (max-width: 360px) { .cam-seg button { font-size: 11px; } .cam-row > .cam-btn { font-size: 12px; letter-spacing: .04em; } }
   /* NEONCAM's light: while its camera is on, the whole page turns neon with black type, so the screen lights a face
      acid lime even in the dark (like the films). Only the colours swap, never the layout. The camera's own square keeps
      the dark palette. The CRT lines and the noise step aside (they would dim it). The photo is the canvas, never the page. */
@@ -164,7 +171,7 @@
           <div><b>5555</b><span>Faces, fixed</span></div>
           <div><b>100%</b><span>on-chain art</span></div>
           <div><b>1</b><span>wallet per Face</span></div>
-          <div><b>55%</b><span>of the mint fills them</span></div>
+          <div><b>55%</b><span>of our share fills them</span></div>
         </div>
       </div>
     </section>
@@ -177,19 +184,17 @@
         <thead><tr><th>Stage</th><th>Terms</th></tr></thead>
         <tbody>
           <tr><td>The list</td><td>From Thursday 1 October, 18:00 UTC, for 24 hours. 0.013 ETH, up to 3 Faces per wallet.</td></tr>
-          <tr><td>Everyone</td><td>From Friday 2 October, 18:00 UTC, until every Face is sold. 0.018 ETH, up to 5 Faces per wallet in total.</td></tr>
+          <tr><td>Everyone</td><td>From Friday 2 October, 18:00 UTC, until every Face is sold (10 January 2027 at the latest). 0.018 ETH, up to 5 Faces per wallet in total.</td></tr>
         </tbody>
       </table></div>
       <p class="lead">Is your wallet on the list? Open the drop on OpenSea and connect your wallet: OpenSea shows whether it can mint in the list stage.</p>
       <p class="fine">You pay with ETH on Robinhood Chain, not on Ethereum, plus a few cents of gas. The list comes from a snapshot of NFT holders, one entry per wallet.</p>
-      <div class="hero-cta sale-cta"><a href="https://opensea.io/collection/neonfaces" class="btn btn-neon" target="_blank" rel="noopener">Open the drop on OpenSea</a></div>
     </section>
     <section id="official" class="block reveal">
       <div class="label">Official links</div>
       <h2>Only these are ours</h2>
       <div class="scroll"><table class="facts-table">
         <tbody>
-          <tr><td>Site</td><td><a href="https://neonfaces.xyz">neonfaces.xyz</a></td></tr>
           <tr><td>Mint</td><td><a href="https://opensea.io/collection/neonfaces" target="_blank" rel="noopener">opensea.io/collection/neonfaces</a></td></tr>
           <tr><td>X</td><td><a href="https://x.com/osaykancuno" target="_blank" rel="noopener">x.com/osaykancuno</a></td></tr>
           <tr><td>Contract</td><td class="addr">0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B<br>on Robinhood Chain</td></tr>
@@ -208,7 +213,7 @@
       <div class="label">Life of a Face</div>
       <h2>From mint to your wallet</h2>
       <ol class="steps">
-      <li><b>Mint on OpenSea</b>Wallets on the list mint first, for 24 hours, up to 3 Faces each; then the sale opens to everyone, up to 5 Faces per wallet in total, until every Face is sold. The list: Thursday 1 October, 18:00 UTC, 0.013 ETH. Everyone: from Friday 2 October, 18:00 UTC, 0.018 ETH.</li>
+      <li><b>Mint on OpenSea</b>Wallets on the list mint first, for 24 hours, up to 3 Faces each; then the sale opens to everyone, up to 5 Faces per wallet in total, until every Face is sold (10 January 2027 at the latest). The list: Thursday 1 October, 18:00 UTC, 0.013 ETH. Everyone: from Friday 2 October, 18:00 UTC, 0.018 ETH.</li>
       <li><b>Wallet and base basket</b>Your Face gets its wallet in the same transaction and its base basket from the pool.</li>
       <li><b>Reveal and top-up</b>When the mint closes, the chain assigns every Face its art and tier; Watch and Heavy Stare Faces then receive their extra basket.</li>
       <li><b>Complete a set</b>If your Face is a piece, find the other three and assemble the whole face.</li>
@@ -257,7 +262,7 @@
       <div class="share-bar" role="img" aria-label="Tier shares: Glance 4444 (80%), Watch 833 (15%), Heavy Stare 278 (5%)">
       <span style="width:80%;background:var(--olive)"></span><span style="width:15%;background:var(--watch)"></span><span style="width:5%;background:var(--neon)"></span>
     </div>
-      <p class="note">Nothing valuable is decided inside the mint transaction, so bots can't mint, peek at the tier and cancel until they land a rare one. Basket values are set from live prices right before launch.</p>
+      <p class="note">Nothing valuable is decided inside the mint transaction, so bots can't mint, peek at the tier and cancel until they land a rare one. Basket values were set from live prices when the contracts were deployed, on 28 September.</p>
     </section>
     <section id="gaze" class="block reveal">
       <div class="label">The Gaze</div>
@@ -338,7 +343,7 @@
       <div><i style="background:#677920"></i><b>15%</b><span>Team: released slowly over 6 months, so no dumping on the floor</span></div>
       <div><i style="background:var(--olive)"></i><b>15%</b><span>Growth and collaborations</span></div>
     </div>
-      <p class="note">Most Faces are born with their basket. A Face minted in the first minutes, before the pool is restocked, gets it shortly after; anyone can deliver a pending basket with one click from the Face's page.</p>
+      <p class="note">Most Faces are born with their basket. A Face minted in the first minutes, before the pool is restocked, gets it shortly after; anyone can deliver a pending basket with one click from the Face's page. Stock prices pause at weekends: a basket due then waits until the markets reopen.</p>
       <p class="note">Resale royalties are 5%, suggested and optional: transfers are never restricted.</p>
     </section>
     <section id="agents" class="block reveal">
@@ -376,10 +381,10 @@
       <div class="label">NEONCAM</div>
       <h2>See yourself the way they see you</h2>
       <div class="prose">
-        <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. It all happens in this page: nothing is uploaded, and a photo only leaves your device if you save or share it. When the camera is on, the page itself glows neon, so your face is lit like theirs, even in the dark.</p>
+        <p>Your camera through the collection's pipeline: a close-up of 24 cells in five tones, from black to neon, with its grain and its Gaze. Take a photo, or a clip of up to 5 seconds to save as a video or a GIF. It all happens in this page: nothing is uploaded, and nothing leaves your device unless you save or share it. When the camera is on, the page itself glows neon, so your face is lit like theirs, even in the dark.</p>
       </div>
       <div class="cam">
-      <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas>
+      <canvas id="cam-out" width="768" height="768" aria-label="NEONCAM"></canvas><video class="cam-clip" id="cam-clip" muted playsinline loop hidden aria-label="Your NEONCAM clip"></video><span class="cam-rec-on" id="cam-rec-on" hidden aria-live="polite">REC 5</span>
       <div class="cam-idle" id="cam-idle">
         <button class="btn btn-neon cam-btn" id="cam-start" type="button">Turn the camera on</button>
         <label class="btn btn-ghost cam-btn">Use a photo<input type="file" accept="image/*" id="cam-file" hidden></label>
@@ -389,8 +394,10 @@
     <div id="cam-tools" hidden>
       <div class="cam-row">
         <button class="btn btn-neon cam-btn" id="cam-shot" type="button">Take the photo</button>
+        <button class="btn btn-ghost cam-btn" id="cam-rec" type="button" hidden>Rec</button>
         <button class="btn btn-ghost cam-btn" id="cam-flip" type="button" hidden>Switch camera</button>
         <button class="btn btn-neon cam-btn" id="cam-save" type="button" hidden>Save</button>
+        <button class="btn btn-neon cam-btn" id="cam-save-gif" type="button" hidden>Save GIF</button>
         <button class="btn btn-neon cam-btn" id="cam-share" type="button" hidden>Share</button>
         <button class="btn btn-neon cam-btn" id="cam-x" type="button" hidden>Post on X</button>
         <button class="btn btn-ghost cam-btn" id="cam-again" type="button" hidden>Again</button>
@@ -433,15 +440,15 @@
   <footer class="footer">
     <div class="foot-row">
       <span class="brand-sm">NEONFACES</span>
-      <span class="foot-contracts">neonfaces.xyz · Mint: <a href="https://opensea.io/collection/neonfaces" target="_blank" rel="noopener">OpenSea</a> · <a href="https://x.com/osaykancuno" target="_blank" rel="noopener">X @osaykancuno</a> · Robinhood Chain</span>
+      <span class="foot-contracts"><a href="https://opensea.io/collection/neonfaces" target="_blank" rel="noopener">Mint on OpenSea</a><a href="https://x.com/osaykancuno" target="_blank" rel="noopener">X @osaykancuno</a><span>Robinhood Chain</span></span>
     </div>
     <p class="disclaimer">Stock Tokens are tokenized instruments that give economic exposure to the underlying security; they do not give legal ownership of shares. Whether they are available to you depends on where you live and on the issuer's terms. NEONFACES is an art project; nothing here is investment advice. Robinhood Chain is operated by third parties; NEONFACES is not affiliated with or endorsed by Robinhood Markets, Inc.</p>
   </footer>
 </main>
 <nav class="tabbar" aria-label="Sections"><a class="side-brand" href="#home">NEONFACES</a><a href="#home" data-tab="home" aria-label="Home"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="4" width="6" height="2"/><rect x="4" y="6" width="3" height="2"/><rect x="13" y="6" width="3" height="2"/><rect x="2" y="8" width="2" height="4"/><rect x="16" y="8" width="2" height="4"/><rect x="4" y="12" width="3" height="2"/><rect x="13" y="12" width="3" height="2"/><rect x="7" y="14" width="6" height="2"/><rect x="8" y="8" width="4" height="4"/></svg><span>Home</span></a><a href="#cam" data-tab="cam" aria-label="NEONCAM"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="7" y="3" width="6" height="2"/><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="9"/><rect x="2" y="16" width="16" height="2"/><rect x="8" y="8" width="4" height="2"/><rect x="6" y="10" width="2" height="3"/><rect x="12" y="10" width="2" height="3"/><rect x="8" y="13" width="4" height="2"/></svg><span>Cam</span></a><a href="#faces" data-tab="faces" aria-label="Faces"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg><span>Faces</span></a><a href="#sets" data-tab="sets" aria-label="Sets"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7" fill-opacity=".35"/><rect x="2" y="11" width="7" height="7" fill-opacity=".35"/><rect x="11" y="11" width="7" height="7"/></svg><span>Sets</span></a><a href="#wallet" data-tab="wallet" aria-label="Wallet"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="2" y="5" width="16" height="2"/><rect x="2" y="7" width="2" height="9"/><rect x="16" y="7" width="2" height="3"/><rect x="16" y="13" width="2" height="3"/><rect x="2" y="16" width="16" height="2"/><rect x="11" y="10" width="7" height="3"/><rect x="4" y="3" width="10" height="2"/></svg><span>Wallet</span></a><a href="#facts" data-tab="facts" aria-label="Facts"><svg viewBox="0 0 20 20" shape-rendering="crispEdges" aria-hidden="true" fill="currentColor"><rect x="3" y="3" width="2" height="14"/><rect x="5" y="3" width="11" height="2"/><rect x="15" y="5" width="2" height="12"/><rect x="5" y="15" width="10" height="2"/><rect x="7" y="7" width="6" height="2"/><rect x="7" y="11" width="6" height="2"/></svg><span>Facts</span></a></nav>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=1005"></script>
 <script type="module">
-  import { sound } from "./app.js";
+  import { sound, camRecorder } from "./app.js?v=1005";
 
   // NEONCAM: camera (or a photo) -> center square -> luminance, auto-levels -> 5 tones on a 24/32/48 grid (five, the
   // collection's number: the art's build_palette formula in render.py with 5 steps instead of 6),
@@ -462,6 +469,8 @@
     const video = document.createElement("video");
     video.muted = true; video.playsInline = true; video.setAttribute("playsinline", "");
     let stream = null, facing = "user", still = null, shot = null, raf = 0, last = 0, seed = 1;
+    const recr = camRecorder(out);
+    let clip = null, clipUrl = "", gifBlob = null;
     const say = (t) => (msg.textContent = t);
     const HERE = () => location.hash === "#cam";
     // NEONCAM's light: while the camera is on (not for a photo), the page turns neon with black type, and so does the phone's
@@ -566,6 +575,7 @@
       if (t - last < 66) return; // about 15 frames a second: enough for the look, kind to phones
       last = t;
       frame();
+      recr.frame();
     }
 
     async function startCam() {
@@ -596,19 +606,98 @@
       $("cam-tools").hidden = false;
       seed = (Math.random() * 1e6) | 0;
       shot = null;
+      dropClip();
       buttons(false);
       if (!raf) raf = requestAnimationFrame(loop);
       sync();
     }
-    // the system share sheet (phones: Instagram, X, WhatsApp…) only where it can carry the photo itself
-    const canShareFiles = (() => {
-      try { return !!navigator.canShare?.({ files: [new File([""], "neoncam.png", { type: "image/png" })] }); } catch { return false; }
-    })();
+    // the system share sheet (phones: Instagram, X, WhatsApp…) only where it can carry the photo or the clip itself
+    const canShare = (name, type) => {
+      try { return !!navigator.canShare?.({ files: [new File([""], name, { type })] }); } catch { return false; }
+    };
+    const canShareFiles = canShare("neoncam.png", "image/png");
+    // taken: false (live), true (a photo), "clip" (a recorded clip)
     function buttons(taken) {
-      $("cam-shot").hidden = taken;
-      $("cam-save").hidden = $("cam-x").hidden = $("cam-again").hidden = !taken;
-      $("cam-share").hidden = !taken || !canShareFiles;
-      if (taken) $("cam-flip").hidden = true;
+      const mode = taken === "clip" ? "clip" : taken ? "photo" : "live";
+      const live = mode === "live";
+      $("cam-shot").hidden = !live;
+      $("cam-rec").hidden = !live || !stream; // clips come from the live camera only
+      $("cam-rec").textContent = "Rec";
+      $("cam-save").hidden = live || (mode === "clip" && !clip?.video);
+      $("cam-save").textContent = mode === "clip" ? "Save video" : "Save";
+      $("cam-save-gif").hidden = mode !== "clip";
+      $("cam-x").hidden = $("cam-again").hidden = live;
+      $("cam-share").hidden = live || !(mode === "clip" ? clip?.video && canShare(`neoncam.${clip.ext}`, clip.video.type) : canShareFiles);
+      if (!live) $("cam-flip").hidden = true;
+    }
+
+    // a clip: up to 5 seconds of the live camera, then a video or a GIF (effects/rec.js); the GIF plays it forward
+    // and back, so it loops without a jump
+    function record() {
+      if (recr.recording) return recr.stop();
+      if (!stream) return;
+      $("cam-shot").hidden = $("cam-flip").hidden = true;
+      $("cam-rec").textContent = "Stop";
+      const dot = $("cam-rec-on");
+      dot.hidden = false;
+      say("");
+      recr.start({
+        seconds: 5,
+        onTick: (left) => (dot.textContent = `REC ${left}`),
+        onDone: (c) => {
+          dot.hidden = true;
+          cancelAnimationFrame(raf);
+          raf = 0;
+          clip = c;
+          gifBlob = null;
+          if (c.video) { // the clip plays in the square, on a loop, until it is saved or dropped
+            const v = $("cam-clip");
+            clipUrl = URL.createObjectURL(c.video);
+            v.src = clipUrl;
+            v.hidden = false;
+            v.play().catch(() => {});
+          }
+          buttons("clip");
+          say(c.video ? "Got it. Save it as a video or as a GIF." : "Got it. Save it as a GIF.");
+        },
+      });
+    }
+    function dropClip() {
+      recr.cancel();
+      $("cam-rec-on").hidden = true;
+      const v = $("cam-clip");
+      v.pause();
+      v.hidden = true;
+      v.removeAttribute("src");
+      v.load();
+      if (clipUrl) URL.revokeObjectURL(clipUrl);
+      clip = null;
+      clipUrl = "";
+      gifBlob = null;
+    }
+    function download(blob, name) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    async function gif() {
+      if (!gifBlob) {
+        say("Making the GIF…");
+        $("cam-save-gif").disabled = true;
+        try { gifBlob = await recr.gif(); } finally { $("cam-save-gif").disabled = false; }
+      }
+      return gifBlob;
+    }
+    async function saveGif() {
+      if (!clip) return;
+      try {
+        download(await gif(), "neoncam.gif");
+        say("The GIF is saved.");
+      } catch {
+        say("The GIF couldn't be made on this device. Save the video instead.");
+      }
     }
 
     // the photo: 1080 x 1080, the face, then a thin band with the name and the site
@@ -631,17 +720,15 @@
     }
 
     function save() {
-      if (!shot) return;
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(shot);
-      a.download = "neoncam.png";
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      if (clip?.video) return download(clip.video, `neoncam.${clip.ext}`);
+      if (shot) download(shot, "neoncam.png");
     }
     const TEXT = "They don't blink. Neither do I. #NEONFACE by NEONFACES", LINK = "https://neonfaces.xyz/#cam";
     async function share() {
-      if (!shot) return;
-      const file = new File([shot], "neoncam.png", { type: "image/png" });
+      if (!shot && !clip?.video) return;
+      const file = clip?.video
+        ? new File([clip.video], `neoncam.${clip.ext}`, { type: clip.video.type })
+        : new File([shot], "neoncam.png", { type: "image/png" });
       try {
         await navigator.share({ files: [file], text: TEXT, url: LINK });
       } catch (e) {
@@ -650,10 +737,25 @@
     }
     // X can't receive a photo through a link: save it first, then open the post, ready to attach it
     function postX() {
+      if (clip) return postClipX();
       if (!shot) return;
       save();
       open(`https://x.com/intent/post?text=${encodeURIComponent(TEXT)}&url=${encodeURIComponent(LINK)}`, "_blank", "noopener");
       say("The photo is saved: attach it to the post that just opened.");
+    }
+
+    // a clip on X: the MP4 where the browser made one, otherwise the GIF (X takes both, not WebM); the post opens at
+    // once (while the tap still counts) and the file is saved next to it
+    async function postClipX() {
+      const url = `https://x.com/intent/post?text=${encodeURIComponent(TEXT)}&url=${encodeURIComponent(LINK)}`;
+      const mp4 = clip.ext === "mp4";
+      open(url, "_blank", "noopener");
+      try {
+        download(mp4 ? clip.video : await gif(), mp4 ? "neoncam.mp4" : "neoncam.gif");
+        say(`The ${mp4 ? "video" : "GIF"} is saved: attach it to the post that just opened.`);
+      } catch {
+        say("The clip couldn't be saved on this device.");
+      }
     }
 
     $("cam-start").addEventListener("click", startCam);
@@ -668,6 +770,8 @@
     });
     $("cam-flip").addEventListener("click", () => { facing = facing === "user" ? "environment" : "user"; startCam(); });
     $("cam-shot").addEventListener("click", takePhoto);
+    $("cam-rec").addEventListener("click", record);
+    $("cam-save-gif").addEventListener("click", saveGif);
     $("cam-save").addEventListener("click", save);
     $("cam-share").addEventListener("click", share);
     $("cam-x").addEventListener("click", postX);
@@ -678,13 +782,14 @@
         if (!b) return;
         seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
         opt[seg.dataset.opt] = Number(b.dataset.v);
-        if (shot) { say(""); ready(); } else if (!raf) frame();
+        if (shot || clip) { say(""); ready(); } else if (!raf) frame();
       }),
     );
     // leaving the view (or the browser tab) turns the camera off
     const off = () => {
       if (HERE() && !document.hidden) return sync();
       const was = !!stream;
+      dropClip();
       stopCam();
       cancelAnimationFrame(raf);
       raf = 0;

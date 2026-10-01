@@ -49,6 +49,9 @@ case "${1:-}" in
       node -e 'process.exit(require("./web/public/deployment.json").chain?.id === 4663 ? 0 : 1)' ||
         { echo "web/public/deployment.json is not the mainnet deployment (4663)"; exit 1; }
       npm --prefix web run build
+      # Netlify's SPA rule: Cloudflare's API now refuses it ("infinite loop", 1 Oct; it used to be a warning) and the
+      # config's single-page mode does its job, so it is not published here
+      rm -f web/dist/_redirects
     fi
     $WRANGLER deploy -c "tools/cloudflare/$what.jsonc"
     echo "published; checking the live site in 20 s"

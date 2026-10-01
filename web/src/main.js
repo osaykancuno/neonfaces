@@ -58,6 +58,10 @@ setupMint();
 renderMyFaces();
 renderWatch();
 setupHunter();
+// Faces and Sets stay dark until the reveal (the founder, 1 Oct): their art and traits are only known then. The views
+// come back by themselves once the chain has a reveal seed. Each Face's own page stays open.
+document.documentElement.classList.add("until-reveal");
+if (!state.preview) read("faces", "revealSeed").then((s) => s > 0n && (document.documentElement.classList.remove("until-reveal"), route())).catch(() => {});
 route();
 
 window.addEventListener("popstate", route);
@@ -79,7 +83,11 @@ function route() {
   // the preview's NEONCAM link (/#cam), shared before the launch, opens the Cam view
   if (location.pathname === "/" && location.hash === "#cam") history.replaceState({}, "", "/cam");
   const m = location.pathname.match(/^\/face\/(\d+)/) || location.hash.match(/^#\/face\/(\d+)/);
-  const tab = m ? "faces" : location.pathname.split("/")[1] ?? "";
+  let tab = m ? "faces" : location.pathname.split("/")[1] ?? "";
+  if (!m && (tab === "faces" || tab === "sets") && document.documentElement.classList.contains("until-reveal")) {
+    history.replaceState({}, "", "/");
+    tab = "";
+  }
   const view = m ? "face-page" : VIEWS[tab] ?? "view-home";
   document.querySelectorAll("#app > .page").forEach((p) => (p.hidden = p.id !== view));
   document.querySelectorAll("[data-tab]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.tab === (VIEWS[tab] ? tab : "")));
@@ -517,6 +525,15 @@ async function renderMyFaces() {
   }
   el.innerHTML = `<span class="fine">Looking…</span>`;
   const ids = await facesOf(state.account).catch(() => []);
+  if (document.documentElement.classList.contains("until-reveal")) {
+    // before the reveal every Face looks the same, the collection's sealed image: what it is, nobody knows yet
+    const img = placeholder ? svgDataURI(5555, placeholder) : "";
+    el.innerHTML = ids.length
+      ? ids.map((id) => `<figure class="sealed"><img src="${img}" alt="NEONFACES #${id}, before the reveal"><figcaption>#${id}</figcaption></figure>`).join("") +
+        `<p class="fine sealed-note">${ids.length === 1 ? "It stays sealed" : `All ${ids.length} stay sealed`} until the reveal: on-chain, for everyone at once, after the last Face is minted.</p>`
+      : `<span class="fine">No Face in ${short(state.account)} yet.</span>`;
+    return;
+  }
   el.innerHTML = ids.length
     ? ids.map((id) => `<a href="/face/${id}" data-link>#${id} →</a>`).join("")
     : `<span class="fine">No Face found for ${short(state.account)}. Know the number? Open it: <a href="/face/1" data-link>/face/&lt;number&gt;</a></span>`;

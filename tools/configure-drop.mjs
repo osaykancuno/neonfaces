@@ -86,6 +86,13 @@ const PLAN = ${JSON.stringify({ chainId, rpc: RPC, to: plan.to, data: plan.data,
 const log = (t, c = "") => { const d = document.createElement("div"); d.className = c; d.textContent = t; document.getElementById("log").appendChild(d); };
 const rpc = async (method, params) => { const r = await fetch(PLAN.rpc, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) }); const j = await r.json(); if (j.error) throw new Error(j.error.message + (j.error.data ? " " + j.error.data : "")); return j.result; };
 let account = null;
+// the wallet: MetaMask by name when the browser announces several (EIP-6963: Brave puts its own wallet in front),
+// else whatever window.ethereum is
+const found = [];
+window.addEventListener("eip6963:announceProvider", (e) => found.push(e.detail));
+window.dispatchEvent(new Event("eip6963:requestProvider"));
+const pick = () => (found.find((w) => w.info.rdns === "io.metamask") ?? found[0])?.provider ?? window.ethereum;
+let wallet = null;
 async function check() {
   let all = true;
   for (const c of PLAN.checks) {
@@ -100,10 +107,13 @@ async function check() {
 document.getElementById("check").onclick = () => check().catch((e) => log(e.message, "bad"));
 document.getElementById("connect").onclick = async () => {
   try {
-    if (!window.ethereum) return log("No browser wallet found.", "bad");
-    [account] = await ethereum.request({ method: "eth_requestAccounts" });
+    wallet = pick();
+    if (!wallet) return log("No browser wallet found.", "bad");
+    const name = found.find((w) => w.provider === wallet)?.info.name ?? "the browser wallet";
+    log("Asking " + name + " to connect: approve it in the wallet (its window or side panel).");
+    [account] = await wallet.request({ method: "eth_requestAccounts" });
     const want = "0x" + PLAN.chainId.toString(16);
-    if ((await ethereum.request({ method: "eth_chainId" })).toLowerCase() !== want) await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: want }] });
+    if ((await wallet.request({ method: "eth_chainId" })).toLowerCase() !== want) { log("Switching the wallet to Robinhood Chain…"); await wallet.request({ method: "wallet_switchEthereumChain", params: [{ chainId: want }] }); }
     const manager = "0x" + (await rpc("eth_call", [{ to: PLAN.to, data: PLAN.saleManagerCall }, "latest"])).slice(-40);
     if (manager.toLowerCase() !== account.toLowerCase()) return log("Connected " + account + ", but the sale manager is " + manager + ". Switch account in the wallet and connect again.", "bad");
     log("Connected: the sale manager " + account, "ok");
@@ -116,7 +126,8 @@ document.getElementById("send").onclick = async () => {
   const b = document.getElementById("send");
   b.disabled = true;
   try {
-    const hash = await ethereum.request({ method: "eth_sendTransaction", params: [{ from: account, to: PLAN.to, data: PLAN.data, value: "0x0" }] });
+    log("Confirm the transaction in the wallet…");
+    const hash = await wallet.request({ method: "eth_sendTransaction", params: [{ from: account, to: PLAN.to, data: PLAN.data, value: "0x0" }] });
     log("Sent " + hash + ". Waiting for the chain…");
     let r = null;
     while (!r) { await new Promise((ok) => setTimeout(ok, 1500)); r = await rpc("eth_getTransactionReceipt", [hash]); }

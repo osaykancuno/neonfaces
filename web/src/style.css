@@ -137,6 +137,10 @@ img { image-rendering: pixelated; }
 .tagline { font-family: var(--pixel); font-size: clamp(18px, calc(3 * var(--vw)), 30px); color: var(--ice); margin: 18px 0 6px; }
 .sub { color: var(--dim); font-family: var(--mono); font-size: 15px; margin: 0 0 28px; }
 .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.hero-count { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 18px; padding: 10px 18px; border: 1px solid var(--line); color: var(--ice); text-decoration: none; }
+.hero-count span { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.hero-count b { font-family: var(--pixel); font-size: clamp(28px, 6vw, 42px); color: var(--neon); letter-spacing: 2px; font-variant-numeric: tabular-nums; text-shadow: 0 0 18px rgba(204, 255, 0, .45); }
+.hero-count:hover { border-color: var(--neon); }
 .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 44px; background: var(--line); border: 1px solid var(--line); }
 .hero-stats div { background: rgba(0,0,0,.8); padding: 14px 8px; }
 .hero-stats b { display: block; font-family: var(--pixel); color: var(--neon); font-size: 24px; }
@@ -239,7 +243,7 @@ h3 { font-family: var(--pixel); font-size: 18px; color: var(--neon); margin: 0 0
 .split { display: grid; grid-template-columns: 280px 1fr; gap: 40px; align-items: center; margin-bottom: 24px; }
 #donut { width: 100%; max-width: 280px; }
 .split-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.split-list li { display: grid; grid-template-columns: 70px 1fr; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.split-list li { display: grid; grid-template-columns: minmax(70px, max-content) 1fr; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
 .split-list b { font-family: var(--pixel); font-size: 30px; color: var(--neon); }
 .split-list span { color: #c7d49a; }
 .split-list small { display: block; font-family: var(--mono); color: var(--dim); font-size: 11px; word-break: break-all; }
@@ -440,7 +444,7 @@ body { -webkit-tap-highlight-color: transparent; }
 /* chips: links into the guide, the guide's own table of contents */
 .guide-links, .guide-toc { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--mono); font-size: 12px; }
 .guide-links span { color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-right: 4px; }
-.guide-links a, .guide-toc a { border: 1px solid var(--line); padding: 6px 10px; color: var(--text); white-space: nowrap; }
+.guide-links a, .guide-toc a { flex: none; border: 1px solid var(--line); padding: 6px 10px; color: var(--text); white-space: nowrap; }
 .guide-links a:hover, .guide-toc a:hover { border-color: var(--neon); color: var(--neon); }
 .guide-head { padding-bottom: 0; }
 .guide-head h2 { margin-bottom: 20px; }
@@ -494,8 +498,8 @@ body { -webkit-tap-highlight-color: transparent; }
   .face-wrap { padding-top: 84px; }
   .face-info h1 { font-size: 28px; }
   #donut { max-width: 200px; margin: 0 auto; display: block; }
-  .guide-toc { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter) 4px; }
-  .guide-toc::-webkit-scrollbar { display: none; }
+  /* the section index wraps on phones: every chip whole and readable (a squeezed row overlapped its labels) */
+  .guide-toc a { flex: none; }
 }
 
 /* every view starts clear of the fixed header */
@@ -714,3 +718,14 @@ html.neoncam .cam-seg button[aria-pressed="true"] { background: #000; color: #cc
 .facts-table td:first-child { color: var(--neon); white-space: nowrap; font-variant-numeric: tabular-nums; }
 #official .facts-table td + td { overflow-wrap: anywhere; word-break: break-all; }
 .scroll { overflow-x: auto; }
+
+/* until the reveal: Faces and Sets stay dark (main.js lifts the class once the chain has a reveal seed) */
+.until-reveal [data-tab="faces"], .until-reveal [data-tab="sets"], .until-reveal a[href="/faces"], .until-reveal a[href^="/sets"] { display: none !important; }
+@media (max-width: 860px) { .until-reveal .tabbar { grid-template-columns: repeat(4, 1fr); } }
+[data-before-reveal] { display: none; }
+.until-reveal [data-before-reveal] { display: block; }
+.until-reveal [data-after-reveal] { display: none !important; }
+.mint-result .sealed { margin: 0; border: 1px solid var(--line); }
+.mint-result .sealed img { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; }
+.mint-result .sealed figcaption { font-family: var(--mono); font-size: 11px; padding: 6px; color: var(--text); }
+.mint-result .sealed-note { grid-column: 1 / -1; }

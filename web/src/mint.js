@@ -323,9 +323,29 @@ export function setupSiteMint(helpers) {
   window.addEventListener("neon:account", () => { qty = 1; $("#mint-result") && ($("#mint-result").innerHTML = ""); refresh(); });
   refresh();
   setInterval(() => !busy && refresh(), 10_000);
+  // the hero's countdown: the first thing a visitor sees, a tap away from the panel
+  let hero = $("#hero-count");
+  if (!hero) {
+    hero = document.createElement("a");
+    hero.id = "hero-count";
+    hero.className = "hero-count";
+    hero.href = "/#mint";
+    hero.dataset.link = "";
+    $(".hero-cta")?.after(hero);
+  }
+  const heroTick = () => {
+    const t = nowChain();
+    const s = stageAt(t);
+    hero.hidden = !(s === "before" || s === "list" || s === "public");
+    if (s === "before") hero.innerHTML = `<span>The list opens in</span><b>${countdown(Number(P.list.startTime) - t)}</b>`;
+    else if (s === "list") hero.innerHTML = `<span>The list is open · everyone in</span><b>${countdown(Number(P.public.startTime) - t)}</b>`;
+    else if (s === "public") hero.innerHTML = `<span>Open to everyone</span><b>Mint now</b>`;
+  };
+  heroTick();
   // the countdown and the stage change on time, between reads
   let last = null;
   setInterval(() => {
+    heroTick();
     if (!view) return;
     const s = stageAt(nowChain());
     if (s !== last && last !== null) {

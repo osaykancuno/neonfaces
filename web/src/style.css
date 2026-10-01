@@ -261,7 +261,8 @@ h3 { font-family: var(--pixel); font-size: 18px; color: var(--neon); margin: 0 0
 @keyframes pulse { 50% { opacity: .6; } }
 .progress { height: 18px; border: 1px solid var(--neon); padding: 2px; }
 #progress-bar { height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--neon) 0 8px, transparent 8px 10px); transition: width .8s steps(20); }
-.progress-label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--dim); margin: 6px 0 18px; }
+.progress-label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--dim); margin: 6px 0 4px; }
+.progress-note { margin: 0 0 18px; }
 .msg { font-family: var(--mono); font-size: 13px; margin-top: 12px; min-height: 18px; word-break: break-word; }
 .msg.err { color: #ff5d7a; }
 .msg.ok { color: var(--neon); }

@@ -1,11 +1,12 @@
 # Response headers for the web app (read by Cloudflare, like Netlify before). No other site may frame it (a framed page could trick a click
-# before a wallet prompt); browsers must not guess file types; other sites see only the origin in the referrer.
+# before a wallet prompt); browsers must not guess file types; other sites see only the origin in the referrer. The camera
+# is allowed for this origin only: NEONCAM (/cam) needs it.
 /*
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Permissions-Policy: camera=(self), microphone=(), geolocation=()
   Strict-Transport-Security: max-age=31536000
 
 # Vite names every built file after its content (assets/index-<hash>.js): a new build gets new names, so browsers

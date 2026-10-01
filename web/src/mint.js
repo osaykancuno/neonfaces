@@ -99,7 +99,7 @@ function stageAt(t) {
 async function proofOf(address) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(address.toLowerCase()));
   const h = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  const r = await fetch(`/drop/proofs/${h.slice(0, 2)}.json`);
+  const r = await fetch(`/drop/proofs/${h.slice(0, 2)}.json`, { cache: "no-cache" });
   if (!r.ok) throw new Error("The list couldn't be loaded. Check your connection and reload.");
   return (await r.json())[h.slice(0, 20)] ?? null;
 }
@@ -119,6 +119,9 @@ async function readChain() {
   // block can itself be a few seconds old on a quiet chain, so it only corrects big gaps
   const gap = Number(block.timestamp) - Date.now() / 1000;
   skew = Math.abs(gap) > 120 ? gap : 0;
+  // a page left open across a list update holds the old root and proofs: fetch the drop's parameters again (the proof
+  // shards follow, read with cache revalidation), so a visitor watching the countdown never gets stuck on "Opening"
+  if (root.toLowerCase() !== P.root.toLowerCase()) await loadDrop();
   const configured = root.toLowerCase() === P.root.toLowerCase() && BigInt(drop.startTime) === P.public.startTime && drop.mintPrice === P.public.mintPrice;
   const v = {
     configured,
@@ -177,7 +180,7 @@ function paint() {
   } else if (o.stage === "waiting") {
     html = `<p class="mint-line">Opening in a moment: the stage is being set on-chain.</p><p class="fine">This page checks every few seconds. No need to reload.</p>${who}`;
   } else if (o.stage === "soldout" || o.stage === "ended") {
-    html = `<p class="mint-line">${o.stage === "soldout" ? "All Faces are minted." : "The mint is over."} They now trade on OpenSea.</p>`;
+    html = `<p class="mint-line">${o.stage === "soldout" ? "Sold out: all 5444 Faces of the sale are minted." : "The mint is over."} They now trade on OpenSea.</p>`;
   } else {
     const stageName = o.stage === "list" ? "List stage" : "Public stage";
     const until = o.stage === "list" ? `Everyone can mint from ${esc(when(P.public.startTime))}.` : "";

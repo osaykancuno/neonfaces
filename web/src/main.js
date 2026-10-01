@@ -507,8 +507,15 @@ async function refreshMint() {
     if (!siteMint) $("#phase-pill").textContent = done ? "Mint over · trade on OpenSea" : "Minting on OpenSea";
     if (!siteMint) $("#phase-pill").classList.toggle("live", !done);
     if (done && state.dep?.opensea?.collection) $("#opensea-btn").textContent = "View on OpenSea ↗";
-    $("#progress-text").textContent = `${supply} / 5555`;
-    $("#progress-bar").style.width = `${(Number(supply) / 5555) * 100}%`;
+    // the bar counts the sale: 5444 Faces; the team's 111 are minted only after the sell-out (then the reveal)
+    const sold = closed || supply >= 5444n;
+    $("#progress-text").innerHTML = sold ? `<b class="neon">SOLD OUT</b> · 5444 / 5444` : `${supply} / 5444`;
+    $("#progress-bar").style.width = `${Math.min(1, Number(supply) / 5444) * 100}%`;
+    $("#progress-note").textContent = !sold
+      ? "5444 Faces in the sale. The team's 111 are minted after the sell-out: 5555 in all."
+      : supply >= 5555n || closed
+        ? "Sold out. The team's 111 are minted too: 5555 Faces in all."
+        : "Sold out. The team's 111 come next, then the reveal.";
     $("#seeded-text").textContent = `${funded} seeded`;
     document.querySelectorAll('[data-stat="minted"]').forEach((e) => (e.textContent = supply.toString()));
     document.querySelectorAll('[data-stat="seeded"]').forEach((e) => (e.textContent = funded.toString()));

@@ -706,3 +706,11 @@ html.neoncam .btn-ghost:not(.cam-btn) { background: transparent; }
 html.neoncam .cam-seg button { background: transparent; }
 html.neoncam .cam-seg button[aria-pressed="true"] { background: #000; color: #ccff00; }
 @media (min-width: 1100px) { html.neoncam { background: #ccff00 radial-gradient(rgba(0, 0, 0, .1) 1px, transparent 1.5px) 0 0 / 22px 22px; } }
+
+/* official links (Home), the same table as the preview's */
+.facts-table { width: 100%; max-width: 900px; border-collapse: collapse; font: 400 15px/1.45 var(--mono); }
+.facts-table th, .facts-table td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.facts-table td.addr { font-size: 13px; }
+.facts-table td:first-child { color: var(--neon); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#official .facts-table td + td { overflow-wrap: anywhere; word-break: break-all; }
+.scroll { overflow-x: auto; }

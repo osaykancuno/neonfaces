@@ -1,7 +1,7 @@
 // Plan B for the sale (28 Sep): configure the OpenSea SeaDrop stages on-chain from the sale manager, without Studio,
 // and give neonfaces.xyz what it needs to mint through SeaDrop directly. Nothing is sent: this writes files.
 //
-//   node tools/seadrop-drop.mjs 4663 [--fee-bps 1000] [--fee-recipient 0x…]
+//   node tools/seadrop-drop.mjs 4663 [--fee-bps 1000] [--fee-recipient 0x…] [--rpc URL]
 //
 // -> config/allowlists/opensea/drop.4663.json (git-ignored folder): the list stage's MintParams, the public drop, the
 //    Merkle root, the fee recipient, and the multiConfigure calldata the sale manager sends to NeonFaces
@@ -14,7 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { encodeAbiParameters, keccak256, encodeFunctionData, parseEther, getAddress } from "viem";
+import { encodeAbiParameters, keccak256, encodeFunctionData, parseEther, getAddress, createPublicClient, http, parseAbi } from "viem";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const chain = process.argv[2] ?? "4663";
@@ -29,7 +29,7 @@ const FEE_RECIPIENT = getAddress(arg("--fee-recipient", "0x0000a26b00c1F0DF00300
 // the sale (docs/LAUNCH-RUNBOOK.md): the list Thu 1 Oct 18:00 UTC for 24 h, then everyone from Fri 2 Oct 18:00 UTC
 const LIST_START = 1790877600;
 const PUBLIC_START = 1790964000;
-const PUBLIC_END = 1798826400; // 1 Jan 2027, more than 90 days (minting really closes with the reveal request)
+const PUBLIC_END = 1791655200; // Sat 10 Oct 2026 18:00 UTC, as Studio set it on 1 Oct (the sale manager can extend it)
 const CAP = 5444;
 const LIST = {
   mintPrice: parseEther("0.013"),
@@ -119,7 +119,15 @@ const str = (o) => JSON.parse(JSON.stringify(o, (_, v) => (typeof v === "bigint"
 const params = { seaDrop: dep.seaDrop, faces: dep.faces, feeRecipient: FEE_RECIPIENT, list: str(LIST), public: str(PUBLIC), root };
 fs.writeFileSync(path.join(out, "params.json"), JSON.stringify(params, null, 2) + "\n");
 
-// what the sale manager sends to NeonFaces: one multiConfigure (the same call Studio makes)
+// what the sale manager sends to NeonFaces: one multiConfigure (the same call Studio makes). SeaDrop refuses to allow a
+// fee recipient twice (DuplicateFeeRecipient), and Studio already allowed OpenSea's: read it live and add it only if missing.
+const RPC = arg("--rpc", { 4663: "https://rpc.mainnet.chain.robinhood.com", 46630: "https://rpc.testnet.chain.robinhood.com" }[chain]);
+const feeAllowed = await createPublicClient({ transport: http(RPC) }).readContract({
+  address: dep.seaDrop,
+  abi: parseAbi(["function getFeeRecipientIsAllowed(address,address) view returns (bool)"]),
+  functionName: "getFeeRecipientIsAllowed",
+  args: [dep.faces, FEE_RECIPIENT],
+});
 const abi = JSON.parse(fs.readFileSync(path.join(ROOT, "contracts/out/NeonFaces.sol/NeonFaces.json"), "utf8")).abi;
 const z = "0x0000000000000000000000000000000000000000000000000000000000000000";
 const data = encodeFunctionData({
@@ -130,7 +138,7 @@ const data = encodeFunctionData({
     publicDrop: PUBLIC, dropURI: "",
     allowListData: { merkleRoot: root, publicKeyURIs: [], allowListURI: "" },
     creatorPayoutAddress: dep.payout, provenanceHash: z,
-    allowedFeeRecipients: [FEE_RECIPIENT], disallowedFeeRecipients: [], allowedPayers: [], disallowedPayers: [],
+    allowedFeeRecipients: feeAllowed ? [] : [FEE_RECIPIENT], disallowedFeeRecipients: [], allowedPayers: [], disallowedPayers: [],
     tokenGatedAllowedNftTokens: [], tokenGatedDropStages: [], disallowedTokenGatedAllowedNftTokens: [],
     signers: [], signedMintValidationParams: [], disallowedSigners: [],
   }],
@@ -139,5 +147,5 @@ const plan = { ...params, wallets: addrs.length, shards: Object.keys(shards).len
 fs.writeFileSync(path.join(ROOT, `config/allowlists/opensea/drop.${chain}.json`), JSON.stringify(plan, null, 2) + "\n");
 console.log(`root ${root}`);
 console.log(`${addrs.length} wallets, ${Object.keys(shards).length} proof files in web/public/drop/proofs, every proof verified`);
-console.log(`list ${LIST_START} -> ${PUBLIC_START}, public ${PUBLIC_START} -> ${PUBLIC_END}, fee ${FEE_BPS} bps to ${FEE_RECIPIENT}`);
+console.log(`list ${LIST_START} -> ${PUBLIC_START}, public ${PUBLIC_START} -> ${PUBLIC_END}, fee ${FEE_BPS} bps to ${FEE_RECIPIENT} (${feeAllowed ? "already allowed on SeaDrop" : "added by this call"})`);
 console.log(`multiConfigure calldata ${data.length / 2 - 1} bytes -> config/allowlists/opensea/drop.${chain}.json`);

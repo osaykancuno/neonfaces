@@ -171,7 +171,7 @@ function paint() {
   if (o.stage === "before") {
     html = `<p class="mint-line">The list stage opens ${esc(when(P.list.startTime))}.</p>
       <p class="mint-count" id="mint-count" aria-label="Time until the list opens">${countdown(Number(P.list.startTime) - nowChain())}</p>
-      <p class="fine">Wallets on the list mint first, for 24 hours, up to ${P.list.maxTotalMintableByWallet} Faces each at ${ethFmt(P.list.mintPrice)}. Then everyone, from ${esc(when(P.public.startTime))}, up to ${P.public.maxTotalMintableByWallet} per wallet in total at ${ethFmt(P.public.mintPrice)}.</p>
+      <p class="fine">Wallets on the list mint first, for 24 hours, up to ${P.list.maxTotalMintableByWallet} Faces each at ${ethFmt(P.list.mintPrice)}. Then everyone, from ${esc(when(P.public.startTime))} until every Face is sold (${esc(when(P.public.endTime))} at the latest), up to ${P.public.maxTotalMintableByWallet} per wallet in total at ${ethFmt(P.public.mintPrice)}. You pay with ETH on Robinhood Chain, not on Ethereum, plus a few cents of gas.</p>
       ${view.account ? (view.proof ? `<p class="msg ok">This wallet is on the list: come back when it opens.</p>` : `<p class="msg">This wallet isn't on the list: you can mint from ${esc(when(P.public.startTime))}.</p>`) : `<button class="btn btn-ghost btn-wide" data-mint="connect">Connect to check your wallet</button>`}
       ${who}`;
   } else if (o.stage === "waiting") {

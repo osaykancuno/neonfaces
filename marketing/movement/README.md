@@ -282,8 +282,9 @@ When the city goes dark, the stare stays on.
 **V3** as in "Posts" above (with the Stock Token line).
 
 **Public** Now, everyone.
-The sale is open to all: 0.018 ETH, up to 5 Faces per wallet, until the last one is sold.
-(the drop's OpenSea link)
+The sale is open to all on neonfaces.xyz: 0.018 ETH, up to 5 Faces per wallet in total, until the last one is sold (10 October at the latest).
+neonfaces.xyz
+(video out/l-public-4x5.mp4, whose last card says NEONFACES.XYZ; if OpenSea's page sells again by then, add the collection link too)
 
 **N3** Snow. Fog. Storm.
 Nothing makes them blink.

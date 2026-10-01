@@ -434,13 +434,119 @@ def today():
     return parts, sounds
 
 
+SR = 48000
+
+
+def _wav(sig, out, level=0.6):
+    import wave
+    pcm = (np.clip(sig, -1, 1) * level * 32767).astype("<i2")
+    with wave.open(str(out), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes(pcm.tobytes())
+    return out
+
+
+def _lowpass(x, k):
+    return np.convolve(x, np.ones(k) / k, mode="same")
+
+
+def neon_track(length, on, off, strikes, dim, out):
+    """No music (the founder, 1 Oct): the sound of the tubes. A mains hum from `on` that grows while the wall lights
+    up, gone at `off` (a beat of silence), then a strike (crackle, a glass tick, a low thump) each time a card flickers
+    on, the hum steady under the cards, dimming out from `dim`. Deterministic: the same file every render."""
+    rng = np.random.default_rng(7)
+    t = np.arange(int(length * SR)) / SR
+    hum = sum(a * np.sin(2 * np.pi * f * t + p) for f, a, p in [(100, 1.0, 0), (200, 0.45, 1.1), (300, 0.22, 2.3),
+                                                                  (400, 0.12, 0.4), (600, 0.05, 1.7)])
+    hum += 0.35 * _lowpass(rng.standard_normal(t.size), 24)  # the ballast's hiss, dark
+    hum *= 1 + 3.2 * _lowpass(rng.standard_normal(t.size), 4000)  # the tube's slow unsteadiness
+    first = strikes[0][0]
+    env = np.interp(t, [0, on, on + 0.4, off - 0.05, off, first - 0.01, first + 0.26, dim, dim + 1.0, length],
+                    [0, 0, 0.05, 0.3, 0.0, 0.0, 0.3, 0.22, 0.0, 0.0])
+    sig = hum * env
+    for at, gain in strikes:
+        i0, n = int(at * SR), int(0.5 * SR)
+        k = np.arange(n) / SR
+        crack = np.zeros(n)
+        hits = rng.choice(int(0.09 * SR), 70, replace=False)
+        crack[hits] = rng.uniform(-1, 1, hits.size)
+        crack = _lowpass(crack, 3) * np.exp(-k / 0.05) * 3.5
+        tick = np.sin(2 * np.pi * 2350 * k) * np.exp(-k / 0.018) * 0.5
+        thump = np.sin(2 * np.pi * (52 - 14 * k) * k) * np.exp(-k / 0.28) * 1.2
+        j = min(sig.size, i0 + n)
+        sig[i0:j] += ((crack + tick + thump) * gain)[:j - i0]
+    return _wav(np.tanh(sig * 1.2) / np.tanh(1.2), out)
+
+
+def heart_track(length, bpm, gain, out):
+    """Her heartbeat, lub-dub: a low thump with harmonics a phone speaker can play. bpm and gain are (time, value)
+    points, interpolated; the beat speeds up with the wall and slows down into her eye."""
+    t = np.arange(int(length * SR)) / SR
+    sig = np.zeros(t.size)
+    rng = np.random.default_rng(11)
+    tb = [p[0] for p in bpm]
+    vb = [p[1] for p in bpm]
+    tg = [p[0] for p in gain]
+    vg = [p[1] for p in gain]
+
+    def thump(at, amp, f0):
+        i0, n = int(at * SR), int(0.22 * SR)
+        k = np.arange(n) / SR
+        env = (1 - np.exp(-k / 0.004)) * np.exp(-k / 0.06)
+        x = sum(a * np.sin(2 * np.pi * f0 * h * k * (1 - 0.25 * k)) for h, a in [(1, 1.0), (2, 0.55), (3, 0.25)])
+        x += 0.15 * _lowpass(rng.standard_normal(n), 30)
+        j = min(t.size, i0 + n)
+        sig[i0:j] += (x * env * amp)[:j - i0]
+
+    beat = 0.15
+    while beat < length - 0.2:
+        b = float(np.interp(beat, tb, vb))
+        g = float(np.interp(beat, tg, vg))
+        if g > 0:
+            thump(beat, g, 58)  # lub
+            thump(beat + min(0.3, 0.33 * 60 / b), g * 0.7, 66)  # dub
+        beat += 60 / b
+    return _wav(np.tanh(sig * 1.5) / np.tanh(1.5), out, 0.7)
+
+
 def open_():
+    """Thu 1 Oct 18:00 UTC: the list opens. No music (the founder, 1 Oct): her eye opens on a held breath and her
+    heartbeat; each person's own sound arrives with their tile while the heart speeds up; a quarter second where only
+    the heart is left; the tubes strike on the cards and she breathes out; back into her eye as the heart slows. The
+    venue follows the sale: OpenSea, or neonfaces.xyz with --site (plan B)."""
     people = ["n1-a", "n2-a", "n3-a", "n1-b", "t-a", "n2-c", "n3-b", "c-a", "n3-c"]
-    parts = [(6.0, lambda: tiles(people, 6.0, "THEY DON'T BLINK.")),
+    T0 = 1.6  # the tiles start after her eye opens
+    C1, C2, END = T0 + 6.0, T0 + 9.2, T0 + 12.6
+    parts = [(T0, lambda: real("s-eye", 0.0, T0)),
+             (6.0, lambda: tiles(people, 6.0, "THEY DON'T BLINK.")),
              (3.2, lambda: cards([(3.2, [("THE LIST", 12, NEON), ("IS OPEN", 12, NEON)])], seed=19)),
              (3.4, lambda: cards([(3.4, [("24 HOURS", 9, NEON), ("", 4, PALE), ("THEN EVERYONE", 7, PALE), ("", 3, PALE),
-                                         ("NEONFACES.XYZ", 7, PALE)])], seed=23))]
-    sounds = [score(music("day"), 0.0, 12.6, 0.9)]
+                                         ("NEONFACES.XYZ" if SITE else "ON OPENSEA", 7, PALE)])], seed=23)),
+             (3.4, lambda: eye_close(3.4))]
+    length = END + 3.4
+    hush = C1 - 0.25  # everything but the heart stops here
+    # the cards light on their 2nd and 4th frame (cards(): frames 0 and 2 dark)
+    strikes = [(C1 + 1 / FPS, 1.0), (C1 + 3 / FPS, 0.55), (C2 + 1 / FPS, 0.7), (C2 + 3 / FPS, 0.4)]
+    tubes = neon_track(length, T0, hush, strikes, END, HERE / "raw" / "sfx-open-tubes.wav")
+    heart = heart_track(length, [(0, 66), (T0, 70), (hush, 112), (C1, 112), (END, 86), (length, 60)],
+                        [(0, 0.55), (T0, 0.45), (hush - 0.3, 0.8), (hush, 1.0), (C1 + 0.3, 0.5), (END, 0.4),
+                         (END + 0.5, 0.75), (length - 0.6, 0.6), (length, 0)], HERE / "raw" / "sfx-open-heart.wav")
+    breath = HERE / "raw" / "sfx-breath-take.wav"  # Seed Audio, 1 Oct: close-mic breathing (the take's first 8 s)
+    sounds = [(tubes, 0.0, length, 0.0, 1.0, 0.0, 0.05), (heart, 0.0, length, 0.0, 1.0, 0.0, 0.3),
+              (raw("s-eye"), 0.0, T0, 0.0, 0.5, 0.0, 0.3),
+              (breath, 1.6, 2.7, 0.1, 45.0, 0.1, 0.4),  # she breathes in as her eye opens
+              (breath, 3.3, 4.9, C1 + 0.15, 45.0, 0.05, 0.6),  # and out when the list opens
+              (breath, 5.9, 7.1, END + 0.4, 45.0, 0.2, 0.6),  # softly, back in her eye
+              (raw("s-eye"), 1.8, 5.0, END, 0.35, 0.3, 0.8)]
+    # tiles(): the j-th tile lights at j * 0.4 s, in this order; its person's sound comes in with it. A clip has 4 s of
+    # sound: the first ones fade as the later ones pile in, and whatever still plays stops at the hush
+    order = [4, 0, 8, 2, 6, 1, 7, 3, 5]
+    for j, k in enumerate(order):
+        at = T0 + j * 0.4
+        d = min(3.9, hush - at)
+        sounds.append((raw(people[k]), 0.1, 0.1 + d, at, 0.5, 0.04, 0.6 if d == 3.9 else 0.06))
     return parts, sounds
 
 

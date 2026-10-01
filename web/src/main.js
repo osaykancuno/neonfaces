@@ -346,6 +346,27 @@ function renderFooter() {
 // =====================================================================================
 async function pickWallet() {
   const list = wallets();
+  if (!list.length && matchMedia("(pointer: coarse)").matches) {
+    // a phone outside a wallet app (the link opened from X, Safari, Chrome): the wallet lives in its own app, so offer
+    // to reopen this very page in its browser
+    const here = location.href.replace(/^https?:\/\//, "");
+    const m = document.createElement("div");
+    m.className = "modal";
+    m.innerHTML = `<div class="picker"><h3>Open this page in your wallet</h3>
+      <p class="fine">On a phone the wallet lives in its own app. Open neonfaces.xyz in its browser, then connect.</p>
+      <a class="btn btn-neon btn-wide" href="https://metamask.app.link/dapp/${esc(here)}">Open in MetaMask</a>
+      <a class="btn btn-ghost btn-wide" href="https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(location.href)}">Open in Coinbase Wallet</a>
+      <a class="btn btn-ghost btn-wide" href="#" role="button" data-copy>Copy the link for another wallet</a>
+      <p class="fine">You pay with ETH on Robinhood Chain, not on Ethereum.</p></div>`;
+    document.body.appendChild(m);
+    m.addEventListener("click", (e) => {
+      if (e.target.closest("[data-copy]")) {
+        e.preventDefault();
+        navigator.clipboard?.writeText(location.href).then(() => toast("Link copied: paste it in your wallet's browser."), () => toast(location.href));
+      } else if (e.target === m) m.remove();
+    });
+    throw new Error("cancelled");
+  }
   if (!list.length) {
     toast("No wallet found. Install a browser wallet (MetaMask, Rabby, Coinbase Wallet…)");
     throw new Error("no wallet");

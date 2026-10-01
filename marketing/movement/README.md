@@ -189,7 +189,7 @@ take three sections of the story's score (one sound for the series); every new p
 | Tomorrow | out/l-tomorrow.mp4 | 14.8 | re-cut 30 Sep: the eye opens it; awake in bed the night before; 18:00 UTC on OpenSea, the list goes first; check your wallet from 08:00 UTC; into the eye, "They don't blink. Neither do we." |
 | Today | out/l-today.mp4 | 13 | sunrise, the turn, the facts |
 | Friends | out/l-friends.mp4 | 38.1 | the mint day as a story (the founder, 30 Sep, 10 credits: spent 9.5): #419, the young woman of the eye, at her window in the morning (TODAY.), then in a bar with her friends at 17:30 UTC: she turns her phone to us, her Face on it (the blank screen tracked frame by frame and the exact Face drawn in), the camera rushes into the screen on the lift and through the Face into the NEON world (the table in NEONCAM cells, reality coming back from the top), her friends' phones light up one by one, the city at 17:59, 17:59:57 in near silence, 18:00 UTC as the city falls into NEON on the drop, the details, into her eye with "They don't blink. Neither do we." (the voice already recorded). People always move (no still pictures of people, the founder 1 Oct); no new words; the Wall's track (music-wall10). `make_friends.py` (new: stills st-table, st-ots, st-phones; clips st-table, st-phones) |
-| Open | out/l-open.mp4 | 12.6 | nine people of the batch look up together; the list is open |
+| Open | out/l-open.mp4 (plan B: l-open-site.mp4, `--site`) | 17.6 | re-cut 1 Oct, **no music** (the founder): her eye opens on a breath and her heartbeat; nine people of the batch light up one by one, each with their own sound, while the heart speeds up; a quarter second where only the heart is left; the tubes strike on THE LIST IS OPEN and she breathes out; 24 HOURS, THEN EVERYONE, ON OPENSEA (or NEONFACES.XYZ); back into her eye as the heart slows. Hum, strikes and heart synthesized in make_launch.py (raw/sfx-open-*.wav); the breath is one Seed Audio take (raw/sfx-breath-take.wav, 1 credit) |
 
 ### Calendar (videos only, 10:00 and 16:00 Italy, plus the two openings at 20:00)
 
@@ -260,6 +260,22 @@ neonfaces.xyz, Cam
 24 hours for wallets on the list, up to 3 Faces each. Then everyone, from tomorrow at 18:00 UTC.
 (the drop's OpenSea link)
 
+Plan B (1 Oct: the mint on neonfaces.xyz if OpenSea's drop page still shows 0 available):
+
+**Site** (when plan B goes live, before 18:00 UTC; image out/l-site-mint-4x5.png, after 18:00 l-site-mint-any-4x5.png; pin it until the sell-out)
+The mint is on neonfaces.xyz.
+Same list, same terms: from today at 18:00 UTC, 24 hours for wallets on the list, 0.013 ETH, up to 3 Faces each. Then everyone, from tomorrow at 18:00 UTC.
+OpenSea's drop page shows 0 available because of an indexing issue on their side. The site mints through OpenSea's own SeaDrop contract, and your Faces show up on OpenSea as usual.
+Connect your wallet on neonfaces.xyz: it shows whether it's on the list. On a phone, open the site in your wallet app's browser.
+You pay with ETH on Robinhood Chain, not on Ethereum. Only neonfaces.xyz: check the address bar.
+
+**Open, plan B** (20:00 Italy, out/l-open-site-4x5.mp4) The list is open.
+Mint on neonfaces.xyz: connect your wallet and the page tells you if it's on the list. 24 hours, up to 3 Faces each. Then everyone, from tomorrow at 18:00 UTC.
+neonfaces.xyz
+
+**OpenSea page, plan B** (Studio, while the page shows 0: banner out/opensea-banner-site.png, 2800 x 800, from make_site_post.py; put the usual banner back when OpenSea fixes the count or at the sell-out). First lines of the description:
+The mint is on neonfaces.xyz. This page shows 0 available because of an indexing issue: the contract holds 5444 for sale. The site mints through OpenSea's SeaDrop contract, with the same list, price and limits, and your Faces appear here.
+
 **N2** Lights out. Eyes open.
 When the city goes dark, the stare stays on.
 
@@ -295,6 +311,7 @@ Every Face is stored on Robinhood Chain, and the contract draws it every time so
 Sold out. Thank you.
 Every Face has found its holder, and this is only the beginning. Next, the reveal: on-chain, for everyone at once.
 They don't blink. Neither do we. Let's NEON the world together.
+They now trade on OpenSea: opensea.io/collection/neonfaces
 #NEONFACE #NEONFAM
 Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 

@@ -281,10 +281,26 @@ When the city goes dark, the stare stays on.
 
 **V3** as in "Posts" above (with the Stock Token line).
 
-**Public** Now, everyone.
-The sale is open to all on neonfaces.xyz: 0.018 ETH, up to 5 Faces per wallet in total, until the last one is sold (10 October at the latest).
+**Day 2 (Fri 2 Oct; post them only after the sale manager signed the new public terms)**
+
+**Split** (10:00 Italy, image out/l-split-4x5.png) Where 0.013 ETH goes.
+49.5% buys the Faces' baskets: a vault that can only buy them, at Chainlink-checked prices.
+10% is OpenSea's fee on SeaDrop. 13.5% treasury, 13.5% team (streamed over 6 months), 13.5% growth.
+Fixed in the contracts: nobody can change the split.
+Every Face minted so far already holds its basket. Open yours on neonfaces.xyz, in Mine.
+Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
+
+**Communities** (16:00 Italy, image out/l-list-names-4x5.png; the founder made the list public on 2 Oct) On the list until 18:00 UTC today: holders of StonkBrokers, NORMIES, Normies Yacht Club, CryptoPunks, Bored Ape Yacht Club, Pudgy Penguins, Nakamigos, Meebits, Chimpers, ON THE WALL and JPEG Frens, plus the friends who asked to join. 3 Faces each at 0.013 ETH.
+From 18:00 UTC everyone mints at the same price: 0.013 ETH, up to 15 Faces per wallet, until 31 October.
+A snapshot of holders, no partnership implied.
 neonfaces.xyz
-(video out/l-public-4x5.mp4, whose last card says NEONFACES.XYZ; if OpenSea's page sells again by then, add the collection link too)
+
+**Public** (20:00 Italy, video out/l-public-4x5.mp4) Now, everyone.
+0.013 ETH, up to 15 Faces per wallet, until 31 October.
+Every Face is born with its own wallet and a small basket inside. Holders can already open theirs on neonfaces.xyz: see what's inside, withdraw it, lock it before a sale.
+The art is revealed for everyone at once when the mint closes.
+neonfaces.xyz
+Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
 **N3** Snow. Fog. Storm.
 Nothing makes them blink.

@@ -29,7 +29,7 @@ const FEE_RECIPIENT = getAddress(arg("--fee-recipient", "0x0000a26b00c1F0DF00300
 // the sale (docs/LAUNCH-RUNBOOK.md): the list Thu 1 Oct 18:00 UTC for 24 h, then everyone from Fri 2 Oct 18:00 UTC
 const LIST_START = 1790877600;
 const PUBLIC_START = 1790964000;
-const PUBLIC_END = 1791655200; // Sat 10 Oct 2026 18:00 UTC, as Studio set it on 1 Oct (the sale manager can extend it)
+const PUBLIC_END = 1793469600; // Sat 31 Oct 2026 18:00 UTC (the founder, 2 Oct: the public stage stays open to the end of the month)
 const CAP = 5444;
 const LIST = {
   mintPrice: parseEther("0.013"),
@@ -41,11 +41,12 @@ const LIST = {
   feeBps: BigInt(FEE_BPS),
   restrictFeeRecipients: true,
 };
+// 2 Oct (the founder): the public stage at the list's price, up to 15 Faces per wallet in total (list mints included)
 const PUBLIC = {
-  mintPrice: parseEther("0.018"),
+  mintPrice: parseEther("0.013"),
   startTime: PUBLIC_START,
   endTime: PUBLIC_END,
-  maxTotalMintableByWallet: 5,
+  maxTotalMintableByWallet: 15,
   feeBps: FEE_BPS,
   restrictFeeRecipients: true,
 };

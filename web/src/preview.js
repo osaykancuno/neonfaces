@@ -3,14 +3,13 @@
 // (wallet check, NEONCAM) and imports `sound` from here. No wallet, no chain reads: the preview stays static.
 import "./style.css";
 import { pixelEye } from "./effects/eye.js";
-import { boot, cursor, mosaic, reveals, scramble, tape } from "./effects/fx.js";
+import { cursor, mosaic, reveals, scramble, tape } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 
 export { sound };
 export { camRecorder } from "./effects/rec.js";
 
 const $ = (s) => document.querySelector(s);
-boot();
 cursor();
 soundToggle($("#sound-btn"));
 tape($("#tape"));

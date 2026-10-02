@@ -127,10 +127,12 @@ export const state = {
  */
 function transport(chain) {
   const opts = { retryCount: 2, retryDelay: 500 };
-  const nodes = [
-    http(chain.rpcUrl, { ...opts, batch: true }),
-    ...(chain.rpcFallbacks ?? []).map((u) => http(u, { ...opts, batch: !u.includes("drpc.org") })),
-  ];
+  // since 2 Oct the official node answers browsers with a doubled CORS header ("*,*"), which every browser refuses:
+  // the site reads from the fallbacks first and keeps the official node behind them (wallets still add the chain with
+  // the official URL, where CORS doesn't apply)
+  const fallbacks = chain.rpcFallbacks ?? [];
+  const urls = [...fallbacks.filter((u) => !u.includes("drpc.org")), chain.rpcUrl, ...fallbacks.filter((u) => u.includes("drpc.org"))];
+  const nodes = urls.map((u) => http(u, { ...opts, batch: !u.includes("drpc.org") }));
   return nodes.length > 1 ? sticky(nodes) : nodes[0];
 }
 
@@ -253,22 +255,18 @@ export function short(a) {
   return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "";
 }
 
-/** Faces held by `owner`, from the explorer's index (a convenience: [] when the explorer is unreachable). */
+/** Faces held by `owner`, read from the chain: token ids run 1..totalSupply, so its balance tells how many to find and
+ * ownerOf is asked in batches until they are all found (the explorer's API refuses the site's requests: 403, 2 Oct). */
 export async function facesOf(owner) {
-  const base = state.dep?.chain?.explorer;
-  if (!base) return [];
-  const want = state.dep.faces.toLowerCase();
+  const [total, balance] = await Promise.all([read("faces", "totalSupply"), read("faces", "balanceOf", [owner])]);
+  const want = Number(balance), last = Number(total), me = owner.toLowerCase();
   const ids = [];
-  let params = "";
-  for (let page = 0; page < 20; page++) {
-    const r = await fetch(`${base}/api/v2/addresses/${owner}/nft?type=ERC-721${params}`);
-    if (!r.ok) break;
-    const j = await r.json();
-    for (const it of j.items ?? []) if (it.token?.address?.toLowerCase() === want) ids.push(Number(it.id));
-    if (!j.next_page_params) break;
-    params = "&" + new URLSearchParams(j.next_page_params).toString();
+  for (let from = 1; from <= last && ids.length < want; from += 200) {
+    const batch = Array.from({ length: Math.min(200, last - from + 1) }, (_, i) => from + i);
+    const owners = await Promise.all(batch.map((id) => read("faces", "ownerOf", [BigInt(id)]).catch(() => null)));
+    owners.forEach((o, i) => o && o.toLowerCase() === me && ids.push(batch[i]));
   }
-  return ids.sort((a, b) => a - b);
+  return ids;
 }
 
 /** tokenURI -> parsed JSON (data:application/json;base64,...) */

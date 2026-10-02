@@ -119,10 +119,15 @@ async function readChain() {
   // block can itself be a few seconds old on a quiet chain, so it only corrects big gaps
   const gap = Number(block.timestamp) - Date.now() / 1000;
   skew = Math.abs(gap) > 120 ? gap : 0;
-  // a page left open across a list update holds the old root and proofs: fetch the drop's parameters again (the proof
-  // shards follow, read with cache revalidation), so a visitor watching the countdown never gets stuck on "Opening"
-  if (root.toLowerCase() !== P.root.toLowerCase()) await loadDrop();
-  const configured = root.toLowerCase() === P.root.toLowerCase() && BigInt(drop.startTime) === P.public.startTime && drop.mintPrice === P.public.mintPrice;
+  // a page left open across a drop update holds the old parameters: fetch them again (the proof shards follow, read
+  // with cache revalidation), so a visitor watching the countdown never gets stuck on "Opening"
+  // each stage is checked on its own: a change to the public terms never pauses a list stage in progress
+  const listOk = () => root.toLowerCase() === P.root.toLowerCase();
+  const publicOk = () =>
+    BigInt(drop.startTime) === P.public.startTime && drop.mintPrice === P.public.mintPrice &&
+    BigInt(drop.endTime) === P.public.endTime && BigInt(drop.maxTotalMintableByWallet) === P.public.maxTotalMintableByWallet;
+  if (!listOk() || !publicOk()) await loadDrop(); // the stages changed on-chain since this page loaded
+  const configured = { list: listOk(), public: publicOk() };
   const v = {
     configured,
     closed,
@@ -150,7 +155,7 @@ function offer(v) {
   const remaining = v.max > v.supply ? v.max - v.supply : 0n;
   if (v.closed || remaining === 0n) return { stage: "soldout" };
   if (stage === "before" || stage === "ended") return { stage };
-  if (!v.configured) return { stage: "waiting" };
+  if (!v.configured[stage]) return { stage: "waiting" };
   const s = stage === "list" ? P.list : P.public;
   const price = s.mintPrice;
   const limit = s.maxTotalMintableByWallet;

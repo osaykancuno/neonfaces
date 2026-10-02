@@ -7,7 +7,7 @@ import { holderPanel, knownTokens } from "./agent-ui.js";
 import { hunt } from "./hunter.js";
 import { route as tradeRoute } from "./actions.js";
 import { liveValue, valueHistory, sparkline } from "./value.js";
-import { boot, mosaic, reveals, cursor, tape, scramble, toast } from "./effects/fx.js";
+import { mosaic, reveals, cursor, tape, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 import { loadDrop, setupSiteMint, MINT_ERRORS } from "./mint.js";
 import { setupCam } from "./cam.js";
@@ -26,9 +26,8 @@ let siteMint = false; // plan B: the mint happens on this page, through SeaDrop 
 const faceURI = (f) => svgDataURI(f.artId, f.record);
 
 // =====================================================================================
-// boot
+// start (no intro sequence since 2 Oct: the site opens straight on Home, the founder's call)
 // =====================================================================================
-boot();
 cursor();
 soundToggle($("#sound-btn"));
 tape($("#tape"));
@@ -53,7 +52,6 @@ renderTraits();
 renderSplit();
 renderFooter();
 reveals();
-document.querySelectorAll(".hero [data-scramble]").forEach((el) => scramble(el, { duration: 1400 }));
 setupMint();
 renderMyFaces();
 renderWatch();
@@ -534,11 +532,25 @@ async function renderMyFaces() {
   const ids = await facesOf(state.account).catch(() => []);
   if (document.documentElement.classList.contains("until-reveal")) {
     // before the reveal every Face looks the same, the collection's sealed image: what it is, nobody knows yet
+    // only the art waits: each Face's page (account, basket, withdraw, trade, lock, agent, strategy) works now
     const img = placeholder ? svgDataURI(5555, placeholder) : "";
     el.innerHTML = ids.length
-      ? ids.map((id) => `<figure class="sealed"><img src="${img}" alt="NEONFACES #${id}, before the reveal"><figcaption>#${id}</figcaption></figure>`).join("") +
-        `<p class="fine sealed-note">${ids.length === 1 ? "It stays sealed" : `All ${ids.length} stay sealed`} until the reveal: on-chain, for everyone at once, after the last Face is minted.</p>`
+      ? ids.map((id) => `<a class="sealed" href="/face/${id}" data-link><img src="${img}" alt="NEONFACES #${id}, art sealed until the reveal"><span><b>#${id}</b><small id="mine-basket-${id}">reading its basket…</small><i>Open it →</i></span></a>`).join("") +
+        `<p class="fine sealed-note">The art of ${ids.length === 1 ? "this Face" : `these ${ids.length} Faces`} is sealed until the reveal, on-chain and for everyone at once when the mint closes. Everything inside already works: open a Face.</p>`
       : `<span class="fine">No Face in ${short(state.account)} yet.</span>`;
+    ids.forEach(async (id) => {
+      // the NFT itself, as every marketplace shows it: the token's own on-chain image (sealed until the reveal)
+      metadata(id).then((m) => { const im = $(`#my-faces a[href="/face/${id}"] img`); if (im && m?.image) im.src = m.image; }).catch(() => {});
+      try {
+        const seed = await read("seeder", "seedOf", [BigInt(id)]);
+        const syms = seed.funded ? seed.legs.map((l) => (state.dep.tradeTokens ?? []).find((t) => t.address.toLowerCase() === l.token.toLowerCase())?.symbol).filter(Boolean) : [];
+        const box = $(`#mine-basket-${id}`);
+        if (box) box.textContent = seed.funded ? `Holds ${syms.join(", ") || "its basket"}` : "Basket on its way (the keeper's next round)";
+      } catch {
+        const box = $(`#mine-basket-${id}`);
+        if (box) box.textContent = "";
+      }
+    });
     return;
   }
   el.innerHTML = ids.length

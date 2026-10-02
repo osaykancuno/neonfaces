@@ -55,7 +55,62 @@ def banner(out, bw=2800, bh=800):
     print(f"out/{out} {bw}x{bh}")
 
 
+ml.mc.FONT["%"] = ["11001", "11010", "00010", "00100", "01000", "01011", "10011"]
+
+
+def split_still(out):
+    """2 Oct: where 0.013 ETH goes, as the contracts split it (NeonPayout is immutable; OpenSea's fee is SeaDrop's)."""
+    bg = Image.fromarray(ml.wall_bg(31, dim=0.09))
+    d = ImageDraw.Draw(bg)
+    for k in range(6):
+        d.rectangle([60 + k, TOP + 60 + k, W - 61 - k, TOP + H45 - 61 - k], outline=NEON)
+    y = TOP + 130
+    draw_text(bg, "WHERE 0.013 ETH GOES", W // 2, y, 7, NEON, "center")
+    rows = [("49.5%", "THE FACES' BASKETS", "A VAULT THAT CAN ONLY BUY THEM", NEON),
+            ("10%", "OPENSEA", "ITS FEE ON SEADROP", PALE),
+            ("13.5%", "TREASURY", "THE MULTISIG: ART, SITE, AUDIT", PALE),
+            ("13.5%", "TEAM", "STREAMED OVER 6 MONTHS", PALE),
+            ("13.5%", "GROWTH", "COLLABS AND REACH", PALE)]
+    y += 130
+    bar_x0, bar_w = 120, W - 240
+    for pct, name, note, col in rows:
+        v = float(pct.rstrip("%")) / 100
+        d.rectangle([bar_x0, y, bar_x0 + int(bar_w * v / 0.5), y + 34], fill=col)
+        draw_text(bg, pct, bar_x0, y + 50, 5, col, "left")
+        draw_text(bg, name, bar_x0 + 210, y + 50, 5, col, "left")
+        draw_text(bg, note, bar_x0, y + 100, 3, PALE, "left")
+        y += 170
+    draw_text(bg, "FIXED IN THE CONTRACTS. CHECK IT ON CHAIN.", W // 2, TOP + H45 - 150, 4, PALE, "center")
+    bg.crop((0, TOP, W, TOP + H45)).save(HERE / "out" / out)
+    print(f"out/{out}")
+
+
+def list_still(out, names):
+    """2 Oct: the communities on the list (the founder made them public), and the public stage's new terms."""
+    bg = Image.fromarray(ml.wall_bg(37, dim=0.09))
+    d = ImageDraw.Draw(bg)
+    for k in range(6):
+        d.rectangle([60 + k, TOP + 60 + k, W - 61 - k, TOP + H45 - 61 - k], outline=NEON)
+    y = TOP + 120
+    draw_text(bg, "ON THE LIST", W // 2, y, 9, NEON, "center")
+    y += 130
+    for n in names:
+        draw_text(bg, n, W // 2, y, 5, PALE, "center")
+        y += 68
+    y += 30
+    draw_text(bg, "UNTIL 18:00 UTC TODAY", W // 2, y, 5, NEON, "center")
+    draw_text(bg, "THEN EVERYONE: 0.013 ETH", W // 2, y + 80, 6, NEON, "center")
+    draw_text(bg, "UP TO 15 PER WALLET. NEONFACES.XYZ", W // 2, y + 160, 4, PALE, "center")
+    bg.crop((0, TOP, W, TOP + H45)).save(HERE / "out" / out)
+    print(f"out/{out}")
+
+
 if __name__ == "__main__":
+    if "--day2" in sys.argv:
+        split_still("l-split-4x5.png")
+        list_still("l-list-names-4x5.png", ["STONKBROKERS", "NORMIES", "NORMIES YACHT CLUB", "CRYPTOPUNKS", "BORED APE YACHT CLUB",
+                                            "PUDGY PENGUINS", "NAKAMIGOS", "MEEBITS", "CHIMPERS", "ON THE WALL", "JPEG FRENS"])
+        sys.exit()
     banner("opensea-banner-site.png")
     still([("THE MINT IS ON", 7, PALE), ("NEONFACES.XYZ", 11, NEON), ("", 3, PALE), ("TODAY 18:00 UTC", 7, NEON),
            ("SAME TERMS. CONNECT YOUR WALLET.", 5, PALE)], "l-site-mint-4x5.png")

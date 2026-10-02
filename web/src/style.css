@@ -59,14 +59,6 @@ img { image-rendering: pixelated; }
 }
 #cursor.hover { width: 34px; height: 34px; background: rgba(204,255,0,.25); }
 
-/* ------------------------------------------------------------------ boot */
-#boot {
-  position: fixed; inset: 0; z-index: 200; background: #000; display: grid; place-items: center;
-  transition: opacity .5s steps(5), visibility .5s;
-}
-#boot.done { opacity: 0; visibility: hidden; }
-#boot-log { font-family: var(--mono); color: var(--neon); font-size: 14px; min-width: min(560px, 90vw); white-space: pre-wrap; }
-
 /* ------------------------------------------------------------------ nav */
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; gap: 24px;
@@ -726,7 +718,11 @@ html.neoncam .cam-seg button[aria-pressed="true"] { background: #000; color: #cc
 [data-before-reveal] { display: none; }
 .until-reveal [data-before-reveal] { display: block; }
 .until-reveal [data-after-reveal] { display: none !important; }
-.mint-result .sealed { margin: 0; border: 1px solid var(--line); }
+#my-faces { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.mint-result a.sealed { display: flex; flex-direction: column; padding: 0; color: var(--text); text-decoration: none; }
 .mint-result .sealed img { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; }
-.mint-result .sealed figcaption { font-family: var(--mono); font-size: 11px; padding: 6px; color: var(--text); }
+.mint-result .sealed span { display: grid; gap: 4px; padding: 8px; }
+.mint-result .sealed b { font-family: var(--pixel); color: var(--neon); font-size: 14px; }
+.mint-result .sealed small { color: var(--dim); font-size: 11px; line-height: 1.35; }
+.mint-result .sealed i { font-style: normal; color: var(--ice); font-size: 11px; }
 .mint-result .sealed-note { grid-column: 1 / -1; }

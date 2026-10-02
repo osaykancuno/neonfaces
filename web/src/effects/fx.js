@@ -1,42 +1,7 @@
-// Site-wide effects: boot log, block-dissolve mosaic, text scramble, pixel reveals, cursor.
+// Site-wide effects: block-dissolve mosaic, text scramble, pixel reveals, cursor.
 import { decode } from "../render.js";
 
-// ------------------------------------------------------------------ boot sequence
-export function boot() {
-  const el = document.getElementById("boot");
-  const log = document.getElementById("boot-log");
-  const skip = () => el.classList.add("done");
-  let seen = false;
-  try { seen = sessionStorage.getItem("nf-boot") === "1"; sessionStorage.setItem("nf-boot", "1"); } catch {}
-  if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) return skip();
-  el.addEventListener("click", skip);
-  const lines = [
-    "> NEONFACES OS v1.0",
-    "> connecting to robinhood chain ........ ok",
-    "> market status ........................ OPEN (it never closes)",
-    "> mounting 5555 faces from chain storage  ok",
-    "> binding accounts (ERC-6551) .......... ok",
-    "> blink reflex ......................... NOT FOUND",
-    "",
-    "  they don't blink.",
-  ];
-  let i = 0;
-  let c = 0;
-  const tick = () => {
-    if (i >= lines.length) return setTimeout(skip, 350);
-    const line = lines[i];
-    c = Math.min(line.length, c + 4);
-    log.textContent = lines.slice(0, i).join("\n") + (i ? "\n" : "") + line.slice(0, c) + "█";
-    if (c >= line.length) { i++; c = 0; }
-    setTimeout(tick, 14);
-  };
-  tick();
-  setTimeout(skip, 4000); // never block the page
-}
-
 // ------------------------------------------------------------------ mosaic
-// Faces drawn from on-chain records; every so often one tile dissolves block by block into another.
-
 export function mosaic(root, records) {
   if (!records.length) return;
   const cols = window.innerWidth < 700 ? 5 : window.innerWidth < 1200 ? 8 : 11;

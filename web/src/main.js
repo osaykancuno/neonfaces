@@ -500,20 +500,21 @@ function startSiteMint(drop) {
 async function refreshMint() {
   if (state.preview) return;
   try {
-    const [supply, funded, closed] = await Promise.all([read("faces", "totalSupply"), read("seeder", "fundedCount"), read("faces", "mintClosed")]);
+    const [supply, funded, closed, sale] = await Promise.all([read("faces", "totalSupply"), read("seeder", "fundedCount"), read("faces", "mintClosed"), read("faces", "publicMinted")]);
     const done = closed || supply >= 5555n;
     if (!siteMint) $("#phase-pill").textContent = done ? "Mint over · trade on OpenSea" : "Minting on OpenSea";
     if (!siteMint) $("#phase-pill").classList.toggle("live", !done);
     if (done && state.dep?.opensea?.collection) $("#opensea-btn").textContent = "View on OpenSea ↗";
     // the bar counts the sale: 5444 Faces; the team's 111 are minted only after the sell-out (then the reveal)
-    const sold = closed || supply >= 5444n;
-    $("#progress-text").innerHTML = sold ? `<b class="neon">SOLD OUT</b> · 5444 / 5444` : `${supply} / 5444`;
-    $("#progress-bar").style.width = `${Math.min(1, Number(supply) / 5444) * 100}%`;
+    // the sale's count is publicMinted (team Faces, minted to compensate early minters or after the sell-out, are not sold)
+    const sold = closed || sale >= 5444n;
+    $("#progress-text").innerHTML = sold ? `<b class="neon">SOLD OUT</b> · 5444 / 5444` : `${sale} / 5444`;
+    $("#progress-bar").style.width = `${Math.min(1, Number(sale) / 5444) * 100}%`;
     $("#progress-note").textContent = !sold
-      ? "5444 Faces in the sale. The team's 111 are minted after the sell-out: 5555 in all."
-      : supply >= 5555n || closed
+      ? "5444 Faces in the sale, and 111 for the team (some go to the first minters): 5555 in all."
+      : supply - sale >= 111n || closed
         ? "Sold out. The team's 111 are minted too: 5555 Faces in all."
-        : "Sold out. The team's 111 come next, then the reveal.";
+        : "Sold out. The team's last Faces come next, then the reveal.";
     $("#seeded-text").textContent = `${funded} seeded`;
     document.querySelectorAll('[data-stat="minted"]').forEach((e) => (e.textContent = supply.toString()));
     document.querySelectorAll('[data-stat="seeded"]').forEach((e) => (e.textContent = funded.toString()));

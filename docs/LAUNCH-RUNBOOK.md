@@ -118,7 +118,7 @@ In OpenSea Studio, connected with the sale manager: create the drop from the exi
 | Stage | Allowlist | Start / end (UTC) | Price | Per wallet | Supply |
 |---|---|---|---|---|---|
 | 1. The list | `config/allowlists/opensea/list.csv` | Thu 1 Oct 18:00 / Fri 2 Oct 18:00 | 0.013 ETH | from CSV (3) | 5444 |
-| 2. Public | none | Fri 2 Oct 18:00 / Sat 31 Oct 18:00 (set on 2 Oct; minting really closes with the reveal request after the sell-out) | 0.013 ETH (from 0.018, 2 Oct) | 15 (from 5, 2 Oct) | 5444 |
+| 2. Public | none | Fri 2 Oct 13:00 / Sat 31 Oct 18:00 (set on 2 Oct; minting really closes with the reveal request after the sell-out) | 0.009 ETH (0.018, then 0.013, 2 Oct) | 15 (from 5, 2 Oct) | 5444 |
 
 Never below the self-funding floor (≈ 0.009 ETH at ETH $2,687, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
 

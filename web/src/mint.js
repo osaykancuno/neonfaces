@@ -121,13 +121,23 @@ async function readChain() {
   skew = Math.abs(gap) > 120 ? gap : 0;
   // a page left open across a drop update holds the old parameters: fetch them again (the proof shards follow, read
   // with cache revalidation), so a visitor watching the countdown never gets stuck on "Opening"
-  // each stage is checked on its own: a change to the public terms never pauses a list stage in progress
+  // the list's terms live in its Merkle leaves, so they must match params.json exactly; the public stage's terms are
+  // whatever SeaDrop holds right now (price, limit, window): read from the chain, so a change by the sale manager
+  // reaches every open page within one read, with no deploy and no pause
   const listOk = () => root.toLowerCase() === P.root.toLowerCase();
-  const publicOk = () =>
-    BigInt(drop.startTime) === P.public.startTime && drop.mintPrice === P.public.mintPrice &&
-    BigInt(drop.endTime) === P.public.endTime && BigInt(drop.maxTotalMintableByWallet) === P.public.maxTotalMintableByWallet;
-  if (!listOk() || !publicOk()) await loadDrop(); // the stages changed on-chain since this page loaded
-  const configured = { list: listOk(), public: publicOk() };
+  if (!listOk()) await loadDrop(); // the list changed since this page loaded: fetch its params and proofs again
+  const onChain = drop.startTime !== 0 && drop.feeBps <= 1000 && drop.restrictFeeRecipients;
+  if (onChain) {
+    P.public = {
+      ...P.public,
+      mintPrice: BigInt(drop.mintPrice),
+      startTime: BigInt(drop.startTime),
+      endTime: BigInt(drop.endTime),
+      maxTotalMintableByWallet: BigInt(drop.maxTotalMintableByWallet),
+      feeBps: BigInt(drop.feeBps),
+    };
+  }
+  const configured = { list: listOk(), public: onChain };
   const v = {
     configured,
     closed,
@@ -209,7 +219,8 @@ function paint() {
         </div>
         <button class="btn btn-neon btn-wide" data-mint="mint"${busy || short_ ? " disabled" : ""}>${busy ? "Minting…" : `Mint ${qty} · ${ethFmt(total)}`}</button>
         ${short_ ? `<p class="msg err">This wallet holds ${ethFmt(view.balance)} on Robinhood Chain: ${qty} Face${qty > 1 ? "s" : ""} need${qty > 1 ? "" : "s"} ${ethFmt(total)} plus a little gas.</p>` : ""}
-        <p class="fine">Plus network gas, a few cents. ${until}</p>${who}`;
+        <p class="fine">Plus network gas, a few cents. ${until}</p>
+        <p class="fine">You sign one transaction to OpenSea's SeaDrop contract (${short(P.seaDrop)}), nothing else: no token approval, so nothing else in your wallet can move.</p>${who}`;
     }
   }
   html += `<div class="mint-result" id="mint-result"></div>`;

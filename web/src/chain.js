@@ -6,6 +6,7 @@ import { createPublicClient, createTransport, createWalletClient, custom, http, 
 export const ABI = {
   faces: parseAbi([
     "function totalSupply() view returns (uint256)",
+    "function publicMinted() view returns (uint256)",
     "function ownerOf(uint256) view returns (address)",
     "function balanceOf(address) view returns (uint256)",
     "function tokenURI(uint256) view returns (string)",

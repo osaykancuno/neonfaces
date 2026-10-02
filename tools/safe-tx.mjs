@@ -8,6 +8,8 @@
 //                                        (`none` after the sale: the Safe is the collection owner again)
 //   pause | unpause                      NeonFaces.setMintPaused (emergency brake for the OpenSea mint)
 //   team-mint <to> <qty>                 NeonFaces.teamMint (account + base seed created in the same tx; <= 50 per tx)
+//   team-airdrop <csv>                   NeonFaces.teamMint to many wallets in one batch: lines `address,qty` (2 Oct: one
+//                                        team Face per Face minted before the public price fell, the founder's thank-you)
 //   reveal-request                       NeonFaces.requestReveal (then anyone calls reveal() after 5 blocks)
 //   lock-seeder                          NeonSeeder.lockConfig (baskets become immutable)
 //   freeze-metadata                      NeonFaces.freezeMetadata (renderer can never change again)
@@ -77,6 +79,14 @@ switch (action) {
     // each Face creates its account and receives its seed in the same tx (~190k gas per Face)
     if (!Number.isInteger(qty) || qty < 1 || qty > 50) throw new Error("team-mint <to> <qty 1..50>: split larger amounts");
     txs = [tx(dep.faces, "teamMint", [getAddress(to), BigInt(qty)])];
+    break;
+  }
+  case "team-airdrop": {
+    const rows = readFileSync(args[0], "utf8").trim().split(/\r?\n/).filter(Boolean).map((l) => l.split(","));
+    const total = rows.reduce((n, [, q]) => n + Number(q), 0);
+    if (!rows.length || rows.some(([a, q]) => !/^0x[0-9a-fA-F]{40}$/.test(a.trim()) || !Number.isInteger(Number(q)) || Number(q) < 1)) throw new Error("team-airdrop <csv of address,qty>");
+    if (total > 50) throw new Error(`team-airdrop: ${total} Faces, split it into batches of at most 50`);
+    txs = rows.map(([a, q]) => tx(dep.faces, "teamMint", [getAddress(a.trim()), BigInt(q)]));
     break;
   }
   case "reveal-request":

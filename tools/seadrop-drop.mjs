@@ -42,9 +42,10 @@ const LIST = {
   feeBps: BigInt(FEE_BPS),
   restrictFeeRecipients: true,
 };
-// 2 Oct (the founder): the public stage at the list's price, up to 15 Faces per wallet in total (list mints included)
+// 2 Oct (the founder): up to 15 Faces per wallet in total (list mints included); 0.009 ETH from the afternoon of 2 Oct,
+// the basket floor at ETH ≈ $2,750 (≈ 2% of margin: the treasury tops up the vault if ETH falls before the reveal)
 const PUBLIC = {
-  mintPrice: parseEther("0.013"),
+  mintPrice: parseEther("0.009"),
   startTime: PUBLIC_START,
   endTime: PUBLIC_END,
   maxTotalMintableByWallet: 15,

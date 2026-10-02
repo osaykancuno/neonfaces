@@ -505,16 +505,14 @@ async function refreshMint() {
     if (!siteMint) $("#phase-pill").textContent = done ? "Mint over · trade on OpenSea" : "Minting on OpenSea";
     if (!siteMint) $("#phase-pill").classList.toggle("live", !done);
     if (done && state.dep?.opensea?.collection) $("#opensea-btn").textContent = "View on OpenSea ↗";
-    // the bar counts the sale: 5444 Faces; the team's 111 are minted only after the sell-out (then the reveal)
-    // the sale's count is publicMinted (team Faces, minted to compensate early minters or after the sell-out, are not sold)
+    // the bar shows every Face minted out of the 5555 (the founder, 2 Oct); the sale itself is SOLD OUT when publicMinted
+    // reaches 5444, whatever the team has minted. 18 of the team's 111 went to the first minters on 2 Oct (a thank-you)
     const sold = closed || sale >= 5444n;
-    $("#progress-text").innerHTML = sold ? `<b class="neon">SOLD OUT</b> · 5444 / 5444` : `${sale} / 5444`;
-    $("#progress-bar").style.width = `${Math.min(1, Number(sale) / 5444) * 100}%`;
-    $("#progress-note").textContent = !sold
-      ? "5444 Faces in the sale, and 111 for the team (some go to the first minters): 5555 in all."
-      : supply - sale >= 111n || closed
-        ? "Sold out. The team's 111 are minted too: 5555 Faces in all."
-        : "Sold out. The team's last Faces come next, then the reveal.";
+    $("#progress-text").innerHTML = sold ? `<b class="neon">SOLD OUT</b> · ${supply} / 5555` : `${supply} / 5555`;
+    $("#progress-bar").style.width = `${Math.min(1, Number(supply) / 5555) * 100}%`;
+    $("#progress-note").textContent = sold
+      ? "Sold out: all 5444 Faces of the sale are minted. The team's remaining Faces come next, then the reveal."
+      : "5444 for sale, 111 for the team: 18 of those went to the first minters as a thank-you, and the team keeps 93.";
     $("#seeded-text").textContent = `${funded} seeded`;
     document.querySelectorAll('[data-stat="minted"]').forEach((e) => (e.textContent = supply.toString()));
     document.querySelectorAll('[data-stat="seeded"]').forEach((e) => (e.textContent = funded.toString()));

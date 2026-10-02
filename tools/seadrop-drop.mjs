@@ -28,14 +28,15 @@ const FEE_RECIPIENT = getAddress(arg("--fee-recipient", "0x0000a26b00c1F0DF00300
 
 // the sale (docs/LAUNCH-RUNBOOK.md): the list Thu 1 Oct 18:00 UTC for 24 h, then everyone from Fri 2 Oct 18:00 UTC
 const LIST_START = 1790877600;
-const PUBLIC_START = 1790964000;
+const LIST_END = 1790964000; // Fri 2 Oct 18:00 UTC: inside every leaf, so it stays (the root doesn't change)
+const PUBLIC_START = 1790946000; // Fri 2 Oct 13:00 UTC (the founder, 2 Oct: five hours earlier; the list overlaps it until 18:00)
 const PUBLIC_END = 1793469600; // Sat 31 Oct 2026 18:00 UTC (the founder, 2 Oct: the public stage stays open to the end of the month)
 const CAP = 5444;
 const LIST = {
   mintPrice: parseEther("0.013"),
   maxTotalMintableByWallet: 3n,
   startTime: BigInt(LIST_START),
-  endTime: BigInt(PUBLIC_START),
+  endTime: BigInt(LIST_END),
   dropStageIndex: 1n,
   maxTokenSupplyForStage: BigInt(CAP),
   feeBps: BigInt(FEE_BPS),
@@ -148,5 +149,5 @@ const plan = { ...params, wallets: addrs.length, shards: Object.keys(shards).len
 fs.writeFileSync(path.join(ROOT, `config/allowlists/opensea/drop.${chain}.json`), JSON.stringify(plan, null, 2) + "\n");
 console.log(`root ${root}`);
 console.log(`${addrs.length} wallets, ${Object.keys(shards).length} proof files in web/public/drop/proofs, every proof verified`);
-console.log(`list ${LIST_START} -> ${PUBLIC_START}, public ${PUBLIC_START} -> ${PUBLIC_END}, fee ${FEE_BPS} bps to ${FEE_RECIPIENT} (${feeAllowed ? "already allowed on SeaDrop" : "added by this call"})`);
+console.log(`list ${LIST_START} -> ${LIST_END}, public ${PUBLIC_START} -> ${PUBLIC_END}, fee ${FEE_BPS} bps to ${FEE_RECIPIENT} (${feeAllowed ? "already allowed on SeaDrop" : "added by this call"})`);
 console.log(`multiConfigure calldata ${data.length / 2 - 1} bytes -> config/allowlists/opensea/drop.${chain}.json`);

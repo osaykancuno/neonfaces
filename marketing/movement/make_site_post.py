@@ -129,7 +129,39 @@ def contracts_still(out):
     print(f"out/{out}")
 
 
+ml.mc.FONT["$"] = ["00100", "01111", "10100", "01110", "00101", "11110", "00100"]
+ml.mc.FONT["+"] = ["00000", "00100", "00100", "11111", "00100", "00100", "00000"]
+
+
+def tiers_still(out):
+    """2 Oct: what the baskets hold (docs/ECONOMICS.md, priced at deploy on 28 Sep) and who gets which: the base for every
+    Face at mint, the Watch and Heavy Stare top-ups drawn on-chain at the reveal (833 and 278 of 5555), the set bonus."""
+    bg = Image.fromarray(ml.wall_bg(47, dim=0.09))
+    d = ImageDraw.Draw(bg)
+    for k in range(6):
+        d.rectangle([60 + k, TOP + 60 + k, W - 61 - k, TOP + H45 - 61 - k], outline=NEON)
+    draw_text(bg, "INSIDE EVERY FACE", W // 2, TOP + 120, 7, NEON, "center")
+    rows = [("EVERY FACE", "5555", "$5 OF ONE STOCK TOKEN AT MINT", PALE),
+            ("WATCH", "833", "+$14 AT THE REVEAL", PALE),
+            ("HEAVY STARE", "278", "+$70 AT THE REVEAL. $75 INSIDE", NEON),
+            ("A FULL SET", "555", "+$12 ONCE, WHEN ASSEMBLED", PALE)]
+    y = TOP + 270
+    for name, n, what, col in rows:
+        draw_text(bg, name, 130, y, 6, col, "left")
+        draw_text(bg, n, W - 130 - ml.mc.text_width(n, 6), y, 6, col, "left")
+        draw_text(bg, what, 130, y + 85, 4, PALE, "left")
+        d.rectangle([130, y + 150, W - 130, y + 152], fill=(60, 72, 20))
+        y += 200
+    draw_text(bg, "TIERS ARE DRAWN ON CHAIN AT THE REVEAL.", W // 2, TOP + H45 - 200, 4, NEON, "center")
+    draw_text(bg, "VALUES AT 28 SEPTEMBER PRICES. THEY MOVE.", W // 2, TOP + H45 - 140, 4, PALE, "center")
+    bg.crop((0, TOP, W, TOP + H45)).save(HERE / "out" / out)
+    print(f"out/{out}")
+
+
 if __name__ == "__main__":
+    if "--tiers" in sys.argv:
+        tiers_still("l-tiers-4x5.png")
+        sys.exit()
     if "--contracts" in sys.argv:
         contracts_still("l-contracts-4x5.png")
         sys.exit()

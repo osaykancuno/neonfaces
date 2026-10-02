@@ -304,10 +304,21 @@ The admin is a 2-of-2 multisig, and the team's 111 Faces are minted to it after 
 Every contract is verified on Sourcify and RobinScan. Check it yourself: neonfaces.xyz, Guide.
 Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
-**Public** (20:00 Italy, video out/l-public-4x5.mp4; no price, the founder) Now, everyone.
-Up to 15 Faces per wallet, until 31 October.
-Every Face is born with its own wallet and a small basket inside. Holders can already open theirs on neonfaces.xyz: see what's inside, withdraw it, lock it before a sale.
-The art is revealed for everyone at once when the mint closes.
+**Tiers** (2 Oct, image out/l-tiers-4x5.png, make_site_post.py --tiers; the baskets of docs/ECONOMICS.md, priced at deploy) Every Face holds something. Some hold more.
+At mint, every Face gets $5 of one Stock Token: TSLA, NVDA, AAPL, AMZN or MSFT.
+At the reveal, the chain draws each Face's tier, the same way for everyone:
+833 Watch Faces get +$14 (NVDA, GOOGL, META and USDG).
+278 Heavy Stare Faces get +$70 (SPY, QQQ, NVDA, GLD for gold, cbBTC for bitcoin, SLV for silver): $75 inside one Face. That's 1 Face in 20.
+Assemble a set of four pieces and its Face gets +$12 more, once per set.
+The vault buys and delivers every basket with the mint itself. Values at 28 September prices: what's inside moves with the market, and you can withdraw it anytime.
+neonfaces.xyz
+Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
+
+**Public** (15:00 Italy since the public opens at 13:00 UTC; video out/l-public-4x5.mp4, then the Tiers image out/l-tiers-4x5.png as the first reply; no price, the founder) Now, everyone.
+Up to 15 Faces per wallet in total (Faces minted on the list count), until 31 October.
+Every Face is born with its own wallet and $5 of one Stock Token inside: TSLA, NVDA, AAPL, AMZN or MSFT.
+At the reveal, the chain draws each Face's tier, the same way for everyone: 833 Watch Faces get +$14, and 278 Heavy Stare Faces get +$70 (SPY, QQQ, NVDA, gold, bitcoin, silver): $75 inside one Face, 1 Face in 20. A full set of four adds +$12, once.
+The vault buys every basket with the mint itself. Values at 28 September prices: they move with the market, and holders can withdraw anytime.
 neonfaces.xyz
 Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 

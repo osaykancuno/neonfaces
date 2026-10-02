@@ -290,13 +290,22 @@ Fixed in the contracts: nobody can change the split.
 Every Face minted so far already holds its basket. Open yours on neonfaces.xyz, in Mine.
 Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
-**Communities** (16:00 Italy, image out/l-list-names-4x5.png; the founder made the list public on 2 Oct) On the list until 18:00 UTC today: holders of StonkBrokers, NORMIES, Normies Yacht Club, CryptoPunks, Bored Ape Yacht Club, Pudgy Penguins, Nakamigos, Meebits, Chimpers, ON THE WALL and JPEG Frens, plus the friends who asked to join. 3 Faces each at 0.013 ETH.
-From 18:00 UTC everyone mints at the same price: 0.013 ETH, up to 15 Faces per wallet, until 31 October.
+**Open now, the communities** (≈ 07:00 Italy, image out/l-list-names-4x5.png; the founder made the list public on 2 Oct; the list stage only, no public price: the founder) The mint is open on neonfaces.xyz.
+Until 18:00 UTC today the list goes first: holders of StonkBrokers, NORMIES, Normies Yacht Club, CryptoPunks, Bored Ape Yacht Club, Pudgy Penguins, Nakamigos, Meebits, Chimpers, ON THE WALL and JPEG Frens, plus the friends who asked to join. 3 Faces each at 0.013 ETH.
+Connect your wallet on neonfaces.xyz: it tells you if you're on the list. You pay with ETH on Robinhood Chain, not on Ethereum.
 A snapshot of holders, no partnership implied.
-neonfaces.xyz
 
-**Public** (20:00 Italy, video out/l-public-4x5.mp4) Now, everyone.
-0.013 ETH, up to 15 Faces per wallet, until 31 October.
+**Contracts** (16:00 Italy, image out/l-contracts-4x5.png, make_site_post.py --contracts) How NEONFACES is wired.
+The team's share is 15% of what reaches the split, 13.5% of each mint. It doesn't come to us at once: it streams through a vesting contract over 180 days, from 28 September. Anyone can release what has vested, and it can only go to the team's address.
+The split itself is fixed in NeonPayout: 55% to the vault, 15% treasury, 15% team, 15% growth. Nobody can change it.
+The vault can only buy the Faces' baskets, at Chainlink-checked prices.
+5555 Faces, fixed in the contract. No proxy. Transfers can never be paused. The art is sealed on-chain.
+The admin is a 2-of-2 multisig, and the team's 111 Faces are minted to it after the sell-out.
+Every contract is verified on Sourcify and RobinScan. Check it yourself: neonfaces.xyz, Guide.
+Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
+
+**Public** (20:00 Italy, video out/l-public-4x5.mp4; no price, the founder) Now, everyone.
+Up to 15 Faces per wallet, until 31 October.
 Every Face is born with its own wallet and a small basket inside. Holders can already open theirs on neonfaces.xyz: see what's inside, withdraw it, lock it before a sale.
 The art is revealed for everyone at once when the mint closes.
 neonfaces.xyz

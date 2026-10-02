@@ -571,12 +571,12 @@ def facts():
 
 
 def public():
-    """Fri 2 Oct 18:00 UTC: the sale opens to everyone (2 Oct: 0.013 ETH, up to 15 per wallet, until 31 October). Nine other
-    people of the batch look up together."""
+    """Fri 2 Oct 18:00 UTC: the sale opens to everyone (2 Oct: up to 15 per wallet, until 31 October; no price on screen,
+    the founder). Nine other people of the batch look up together."""
     people = ["a-a", "l-a", "h-a", "n1-c", "m-a", "n2-b", "n3-b", "n2-c", "n1-b"]
     parts = [(6.0, lambda: tiles(people, 6.0, "NOW, EVERYONE.")),
              (3.2, lambda: cards([(3.2, [("OPEN TO", 12, NEON), ("EVERYONE", 12, NEON)])], seed=37)),
-             (3.4, lambda: cards([(3.4, [("0.013 ETH", 9, NEON), ("", 4, PALE), ("UP TO 15 PER WALLET", 6, PALE),
+             (3.4, lambda: cards([(3.4, [("UP TO 15", 9, NEON), ("PER WALLET", 6, PALE), ("", 4, PALE),
                                          ("UNTIL 31 OCTOBER", 6, PALE), ("", 3, PALE), ("NEONFACES.XYZ", 7, PALE)])], seed=41))]
     sounds = [score(HERE / "raw" / "music-announce-percussive.m4a", 0.0, 12.6, 0.9)]
     return parts, sounds

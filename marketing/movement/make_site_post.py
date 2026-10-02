@@ -86,7 +86,7 @@ def split_still(out):
 
 
 def list_still(out, names):
-    """2 Oct: the communities on the list (the founder made them public), and the public stage's new terms."""
+    """2 Oct: the communities on the list (the founder made them public) and the list stage alone (no public terms)."""
     bg = Image.fromarray(ml.wall_bg(37, dim=0.09))
     d = ImageDraw.Draw(bg)
     for k in range(6):
@@ -98,14 +98,41 @@ def list_still(out, names):
         draw_text(bg, n, W // 2, y, 5, PALE, "center")
         y += 68
     y += 30
-    draw_text(bg, "UNTIL 18:00 UTC TODAY", W // 2, y, 5, NEON, "center")
-    draw_text(bg, "THEN EVERYONE: 0.013 ETH", W // 2, y + 80, 6, NEON, "center")
-    draw_text(bg, "UP TO 15 PER WALLET. NEONFACES.XYZ", W // 2, y + 160, 4, PALE, "center")
+    draw_text(bg, "3 FACES EACH AT 0.013 ETH", W // 2, y, 6, NEON, "center")
+    draw_text(bg, "UNTIL 18:00 UTC TODAY", W // 2, y + 80, 5, NEON, "center")
+    draw_text(bg, "MINT ON NEONFACES.XYZ", W // 2, y + 160, 4, PALE, "center")
+    bg.crop((0, TOP, W, TOP + H45)).save(HERE / "out" / out)
+    print(f"out/{out}")
+
+
+def contracts_still(out):
+    """2 Oct: the team's vesting and what the contracts fix (all read on-chain: VestingWallet start 28 Sep 18:54 UTC,
+    duration 180 days, beneficiary the team wallet; NeonPayout immutable; the Safe 2-of-2 holds the admin role)."""
+    bg = Image.fromarray(ml.wall_bg(43, dim=0.09))
+    d = ImageDraw.Draw(bg)
+    for k in range(6):
+        d.rectangle([60 + k, TOP + 60 + k, W - 61 - k, TOP + H45 - 61 - k], outline=NEON)
+    y = TOP + 120
+    draw_text(bg, "THE TEAM WAITS TOO", W // 2, y, 7, NEON, "center")
+    draw_text(bg, "OUR SHARE STREAMS OVER 180 DAYS", W // 2, y + 100, 4, PALE, "center")
+    draw_text(bg, "IN A VESTING CONTRACT", W // 2, y + 150, 4, PALE, "center")
+    facts = ["THE SPLIT IS FIXED IN NEONPAYOUT", "THE VAULT CAN ONLY BUY BASKETS", "5555 FACES. NO PROXY.",
+             "TRANSFERS CAN NEVER BE PAUSED", "THE ART IS SEALED ON CHAIN", "ADMIN: A 2 OF 2 MULTISIG"]
+    y += 270
+    for f in facts:
+        d.rectangle([140, y + 8, 164, y + 32], fill=NEON)
+        draw_text(bg, f, 190, y, 4, PALE, "left")
+        y += 100
+    draw_text(bg, "EVERY CONTRACT IS VERIFIED.", W // 2, TOP + H45 - 200, 4, NEON, "center")
+    draw_text(bg, "CHECK IT YOURSELF. NEONFACES.XYZ", W // 2, TOP + H45 - 140, 4, PALE, "center")
     bg.crop((0, TOP, W, TOP + H45)).save(HERE / "out" / out)
     print(f"out/{out}")
 
 
 if __name__ == "__main__":
+    if "--contracts" in sys.argv:
+        contracts_still("l-contracts-4x5.png")
+        sys.exit()
     if "--day2" in sys.argv:
         split_still("l-split-4x5.png")
         list_still("l-list-names-4x5.png", ["STONKBROKERS", "NORMIES", "NORMIES YACHT CLUB", "CRYPTOPUNKS", "BORED APE YACHT CLUB",

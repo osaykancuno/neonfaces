@@ -1,5 +1,9 @@
-# Runs tools/seed-keeper.mjs and the strategy agent (tools/agent-runner.mjs) every 10 minutes on GitHub's
-# machines: no server, no one at the keyboard. The keeper stocks and delivers seeds, top-ups and set bonuses,
+# Runs tools/seed-keeper.mjs on GitHub's machines, no server and no one at the keyboard: since 2 Oct as a loop (a
+# round a minute, like the manual keeper of launch day) for ≈ 5 h 40 min, then the run dispatches the next one, so a
+# Face's basket arrives within minutes day and night. GitHub delays and drops scheduled runs (one every ≈ 6 h in
+# practice), so the 10-minute schedule is only the safety net that restarts the chain if a dispatch is ever lost; the
+# concurrency group keeps exactly one keeper running (never two runners on one key). The strategy agent
+# (tools/agent-runner.mjs) runs once at the end of each turn. The keeper stocks and delivers seeds, top-ups and set bonuses,
 # pays the split and the team vesting, finalizes a requested reveal as a safety net and refreshes marketplace
 # metadata once a day. The strategy agent runs the strategies holders delegated to it.
 #
@@ -56,9 +60,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   round:
-    if: ${{ vars.KEEPER_CHAIN_ID != '' }}
+    if: ${{ vars.KEEPER_CHAIN_ID != '' && github.event.schedule != '17 4 * * 1' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 355 # GitHub stops a job at 6 h; the loop ends itself at 5 h 40 min
+    permissions:
+      contents: read
+      actions: write # dispatch the next turn
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -76,12 +83,14 @@ jobs:
             tools/.runner-state.json
           key: keeper-state-${{ github.run_id }}
           restore-keys: keeper-state-
-      - run: node seed-keeper.mjs ${{ vars.KEEPER_CHAIN_ID }} --once
+      - run: node seed-keeper.mjs ${{ vars.KEEPER_CHAIN_ID }}
         working-directory: tools
         env:
           PK: ${{ secrets.KEEPER_PK }}
           RPC_URL: ${{ vars.RPC_URL }}
           KEEPER_STATE: .keeper-state.json
+          INTERVAL: 60
+          RUN_FOR: 20400
       - name: strategy agent
         if: always()
         working-directory: tools
@@ -99,3 +108,9 @@ jobs:
             tools/.keeper-state.json
             tools/.runner-state.json
           key: keeper-state-${{ github.run_id }}
+      # the next turn: queued behind this run by the concurrency group, it starts as soon as this one ends
+      - name: dispatch the next turn
+        if: always()
+        run: gh workflow run keeper.yml --repo "${{ github.repository }}" --ref "${{ github.ref_name }}"
+        env:
+          GH_TOKEN: ${{ github.token }}

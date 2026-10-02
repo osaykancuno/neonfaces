@@ -10,7 +10,8 @@
 //        MAX_BUY_USD (per token per round, default 2000: big purchases are spread over rounds so arbitrage can
 //        bring each pool back to its Chainlink price in between),
 //        SET_EVERY_MIN (minutes between set scans after the reveal, default 30), SET_BUFFER (set bonuses to stock ahead, default: every set still unpaid),
-//        KEEPER_STATE (JSON file carried between --once runs, so a scheduled run doesn't re-read all 5555 Faces)
+//        KEEPER_STATE (JSON file carried between --once runs, so a scheduled run doesn't re-read all 5555 Faces),
+//        RUN_FOR (seconds: loop for that long, then exit cleanly; the GitHub workflow runs it in ≈ 6-hour turns)
 //
 // Each round:
 //   0. finalizes a requested reveal if its block hash is readable (the watcher's job, as a safety net),
@@ -35,6 +36,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const chainId = Number(process.argv[2] ?? 4663);
 const once = process.argv.includes("--once");
 const INTERVAL = Number(process.env.INTERVAL ?? 60);
+const RUN_FOR = Number(process.env.RUN_FOR ?? 0);
+const STOP_AT = RUN_FOR ? Date.now() + RUN_FOR * 1000 : Infinity;
 const BUFFER = Number(process.env.BUFFER ?? 25);
 const SLIPPAGE = BigInt(process.env.SLIPPAGE ?? 100);
 const SET_EVERY_MIN = Number(process.env.SET_EVERY_MIN ?? 30);
@@ -354,12 +357,13 @@ async function round() {
 }
 
 loadState();
-do {
+for (;;) {
   try {
     await round();
   } catch (e) {
     log("round failed:", e.shortMessage ?? e.message);
   }
   saveState();
-  if (!once) await new Promise((r) => setTimeout(r, INTERVAL * 1000));
-} while (!once);
+  if (once || Date.now() + INTERVAL * 1000 >= STOP_AT) break; // RUN_FOR: the next turn takes over
+  await new Promise((r) => setTimeout(r, INTERVAL * 1000));
+}

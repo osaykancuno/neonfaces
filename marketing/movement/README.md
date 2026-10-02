@@ -314,6 +314,15 @@ The vault buys and delivers every basket with the mint itself. Values at 28 Sept
 neonfaces.xyz
 Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
+**We listened** (2 Oct afternoon, after the price change and the thank-you airdrop; image out/l-listened-4x5.png, make_site_post.py --listened) We listened.
+The first day taught us two things: the price was too high, and people are careful about where they connect a wallet. Both fair.
+So the public price is now 0.009 ETH. We can't go lower: every Face is born with a real basket of Stock Tokens, bought by the mint itself, and below that the vault couldn't pay for them. If ETH falls before the reveal, the treasury tops up the vault so every basket still arrives.
+The first minters paid more, so every Face minted before the change got one more Face. They're already in their wallets. Thank you.
+Minting is one signature to OpenSea's SeaDrop contract, with no approvals: nothing else in your wallet can move. Rather not connect to our site? The Guide on neonfaces.xyz shows how to mint straight from the explorer.
+Up to 15 Faces per wallet, until 31 October.
+neonfaces.xyz
+Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
+
 **Public** (15:00 Italy since the public opens at 13:00 UTC; video out/l-public-4x5.mp4, then the Tiers image out/l-tiers-4x5.png as the first reply; no price, the founder) Now, everyone.
 Up to 15 Faces per wallet in total (Faces minted on the list count), until 31 October.
 Every Face is born with its own wallet and $5 of one Stock Token inside: TSLA, NVDA, AAPL, AMZN or MSFT.

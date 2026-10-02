@@ -158,7 +158,33 @@ def tiers_still(out):
     print(f"out/{out}")
 
 
+def listened_still(out):
+    """2 Oct afternoon: the reset post (the price lowered to the basket floor, a Face more for every early Face, a safe mint)."""
+    bg = Image.fromarray(ml.wall_bg(53, dim=0.09))
+    d = ImageDraw.Draw(bg)
+    for k in range(6):
+        d.rectangle([60 + k, TOP + 60 + k, W - 61 - k, TOP + H45 - 61 - k], outline=NEON)
+    draw_text(bg, "WE LISTENED", W // 2, TOP + 130, 9, NEON, "center")
+    rows = [("A LOWER PRICE", "AS LOW AS THE BASKETS ALLOW"),
+            ("A FACE MORE", "FOR EVERY FACE MINTED BEFORE"),
+            ("ONE SAFE SIGNATURE", "TO OPENSEA'S SEADROP. NO APPROVALS"),
+            ("A REAL BASKET", "STILL INSIDE EVERY FACE")]
+    y = TOP + 320
+    for head, sub in rows:
+        d.rectangle([130, y + 10, 156, y + 36], fill=NEON)
+        draw_text(bg, head, 190, y, 6, PALE, "left")
+        draw_text(bg, sub, 190, y + 80, 4, PALE, "left")
+        y += 190
+    draw_text(bg, "UP TO 15 PER WALLET. UNTIL 31 OCTOBER.", W // 2, TOP + H45 - 200, 4, NEON, "center")
+    draw_text(bg, "NEONFACES.XYZ", W // 2, TOP + H45 - 140, 5, PALE, "center")
+    bg.crop((0, TOP, W, TOP + H45)).save(HERE / "out" / out)
+    print(f"out/{out}")
+
+
 if __name__ == "__main__":
+    if "--listened" in sys.argv:
+        listened_still("l-listened-4x5.png")
+        sys.exit()
     if "--tiers" in sys.argv:
         tiers_still("l-tiers-4x5.png")
         sys.exit()

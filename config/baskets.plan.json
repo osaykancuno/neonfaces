@@ -1,5 +1,5 @@
 {
-  "_readme": "Seed baskets by USD target. Tier 1 = BASE baskets delivered at mint to every Face (keep them equal in value: the draw among them is not secret). Tier 2 / 3 = TOP-UPS delivered after reveal to Watch / Heavy Stare Faces, on top of the base. Tier 4 = SET BONUS, delivered once per set on its first assembly (555 sets). `node tools/baskets.mjs --live` reads current prices from the Chainlink feeds listed per token (verified 2026-09-24); without --live it uses `prices`. Token addresses verified on-chain (symbol + decimals).",
+  "_readme": "Seed baskets by USD target. Tier 1 = BASE baskets delivered at mint to every Face (keep them equal in value: the draw among them is not secret). Tier 2 / 3 = TOP-UPS delivered after reveal to Watch / Heavy Stare Faces, on top of the base. Tier 4 = SET BONUS, delivered once per set on its first assembly (555 sets). `node tools/baskets.mjs --live` reads current prices from the Chainlink feeds listed per token (verified 2026-09-24); without --live it uses `prices`. Token addresses verified on-chain (symbol + decimals). Watch +$5 (total $10), Heavy Stare +$10 (total $15), set bonus $5. The base baskets stay as deployed (`--keep 1,2,3,4,5`).",
   "chainId": 4663,
   "pricesAsOf": "2026-09-24T21:17Z (Chainlink, Robinhood Chain mainnet)",
   "prices": {
@@ -133,42 +133,42 @@
     {
       "name": "Watch top-up / NVDA + USDG",
       "legs": {
-        "NVDA": 10.0,
-        "USDG": 4.0
+        "NVDA": 4.0,
+        "USDG": 1.0
       }
     },
     {
       "name": "Watch top-up / GOOGL + USDG",
       "legs": {
-        "GOOGL": 10.0,
-        "USDG": 4.0
+        "GOOGL": 4.0,
+        "USDG": 1.0
       }
     },
     {
       "name": "Watch top-up / META + USDG",
       "legs": {
-        "META": 10.0,
-        "USDG": 4.0
+        "META": 4.0,
+        "USDG": 1.0
       }
     },
     {
       "name": "Heavy Stare top-up / Multi-asset",
       "legs": {
-        "SPY": 15.0,
-        "QQQ": 11.0,
-        "NVDA": 7.0,
-        "GLD": 18.0,
-        "CBBTC": 12.0,
-        "SLV": 7.0
+        "SPY": 2.0,
+        "QQQ": 1.5,
+        "NVDA": 1.0,
+        "GLD": 2.5,
+        "CBBTC": 2.0,
+        "SLV": 1.0
       }
     },
     {
       "name": "Set bonus / SPCX + GOOGL + META + MSFT",
       "legs": {
-        "SPCX": 3.0,
-        "GOOGL": 3.0,
-        "META": 3.0,
-        "MSFT": 3.0
+        "SPCX": 1.25,
+        "GOOGL": 1.25,
+        "META": 1.25,
+        "MSFT": 1.25
       }
     }
   ],

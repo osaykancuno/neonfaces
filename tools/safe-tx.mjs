@@ -11,6 +11,9 @@
 //   team-airdrop <csv>                   NeonFaces.teamMint to many wallets in one batch: lines `address,qty` (2 Oct: one
 //                                        team Face per Face minted before the public price fell, the founder's thank-you)
 //   reveal-request                       NeonFaces.requestReveal (then anyone calls reveal() after 5 blocks)
+//   set-baskets <id,id,...>              NeonSeeder.setBasket for those ids, from ../contracts/config/baskets.<chainId>.json
+//                                        (the top-ups and the set bonus: `set-baskets 6,7,8,9,10`; only before
+//                                        lock-seeder; a basket some Faces already received must never change)
 //   lock-seeder                          NeonSeeder.lockConfig (baskets become immutable)
 //   freeze-metadata                      NeonFaces.freezeMetadata (renderer can never change again)
 //   contract-uri [uri]                   NeonFaces.setContractURI: emits ERC-7572 ContractURIUpdated so marketplaces re-read
@@ -43,6 +46,7 @@ const abi = parseAbi([
   "function teamMint(address to, uint256 quantity) returns (uint256)",
   "function requestReveal()",
   "function lockConfig()",
+  "function setBasket(uint32 basketId, (address token, uint256 amount)[] legs)",
   "function freezeMetadata()",
   "function setContractURI(string uri)",
   "function releaseAll()",
@@ -92,6 +96,19 @@ switch (action) {
   case "reveal-request":
     txs = [tx(dep.faces, "requestReveal")];
     break;
+  case "set-baskets": {
+    const ids = (args[0] ?? "").split(",").filter(Boolean).map(Number);
+    if (!ids.length || ids.some((i) => !Number.isInteger(i) || i < 1)) throw new Error("set-baskets <id,id,...>");
+    const cfg = JSON.parse(readFileSync(resolve(here, `../contracts/config/baskets.${chainId}.json`), "utf8"));
+    txs = ids.map((id) => {
+      const b = cfg.baskets[id - 1];
+      if (!b) throw new Error(`no basket ${id} in baskets.${chainId}.json`);
+      const t = tx(dep.seeder, "setBasket", [id, b.tokens.map((token, k) => ({ token: getAddress(token), amount: BigInt(b.amounts[k]) }))]);
+      t._description = `setBasket(${id}: ${b.name})`;
+      return t;
+    });
+    break;
+  }
   case "lock-seeder":
     txs = [tx(dep.seeder, "lockConfig")];
     break;

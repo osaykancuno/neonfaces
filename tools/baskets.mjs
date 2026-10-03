@@ -1,7 +1,9 @@
 // Resolve seed baskets from USD targets into on-chain token amounts.
 //
-//   node baskets.mjs [--live] [../config/baskets.plan.json]
+//   node baskets.mjs [--live] [--keep 1,2,3,4,5] [../config/baskets.plan.json]
 //
+// --keep: those basket ids keep the amounts already in ../contracts/config/baskets.<chainId>.json (the deployed ones),
+// so re-pricing the top-ups never changes a basket some Faces already received (3 Oct: the base baskets stay).
 // Tier 1 = base baskets (every Face, at mint); tiers 2/3 = top-ups after reveal (Watch / Heavy Stare).
 // Writes ../contracts/config/baskets.<chainId>.json (read by Deploy.s.sol) and prints the
 // pool budget needed to seed all 5555 Faces (per token and in USD).
@@ -13,7 +15,9 @@ import { parseUnits, formatUnits, getAddress, createPublicClient, http, parseAbi
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const live = args.includes("--live");
-const planPath = resolve(args.find((a) => !a.startsWith("--")) ?? resolve(here, "../config/baskets.plan.json"));
+const keepAt = args.indexOf("--keep");
+const keep = new Set(keepAt >= 0 ? args[keepAt + 1].split(",").map(Number) : []);
+const planPath = resolve(args.find((a, i) => !a.startsWith("--") && i !== keepAt + 1) ?? resolve(here, "../config/baskets.plan.json"));
 const plan = JSON.parse(readFileSync(planPath, "utf8"));
 
 // --live: current prices from the Chainlink feeds (8 decimals), refusing stale ones
@@ -69,7 +73,14 @@ if (missingUsed.length) {
   process.exit(1);
 }
 
+const outPath = resolve(here, `../contracts/config/baskets.${plan.chainId}.json`);
+const deployed = keep.size ? JSON.parse(readFileSync(outPath, "utf8")) : null;
 const baskets = plan.baskets.map((b, i) => {
+  if (keep.has(i + 1)) {
+    const d = deployed.baskets[i];
+    if (d.name !== b.name) throw new Error(`--keep ${i + 1}: the plan says "${b.name}", the deployed file "${d.name}"`);
+    return { id: i + 1, name: b.name, tokens: d.tokens, amounts: d.amounts, usd: Object.values(b.legs).reduce((s, v) => s + v, 0) };
+  }
   const tokens = [];
   const amounts = [];
   let usd = 0;
@@ -102,13 +113,12 @@ for (const [tier, ids] of Object.entries(plan.tiers)) {
 }
 
 const out = {
-  _generated: `from ${planPath} on ${new Date().toISOString()} with prices as of ${plan.pricesAsOf}`,
+  _generated: `from ${planPath} on ${new Date().toISOString()} with prices as of ${plan.pricesAsOf}${keep.size ? `; baskets ${[...keep].join(", ")} kept as deployed` : ""}`,
   chainId: plan.chainId,
   basketCount: baskets.length,
   baskets: baskets.map(({ tokens, amounts, name }) => ({ name, tokens, amounts })),
   tiers: Object.fromEntries(Object.entries(plan.tiers).map(([k, v]) => [k, v])),
 };
-const outPath = resolve(here, `../contracts/config/baskets.${plan.chainId}.json`);
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, JSON.stringify(out, null, 2));
 

@@ -500,19 +500,20 @@ function startSiteMint(drop) {
 async function refreshMint() {
   if (state.preview) return;
   try {
-    const [supply, funded, closed, sale] = await Promise.all([read("faces", "totalSupply"), read("seeder", "fundedCount"), read("faces", "mintClosed"), read("faces", "publicMinted")]);
+    const [supply, funded, closed, sale, team] = await Promise.all([read("faces", "totalSupply"), read("seeder", "fundedCount"), read("faces", "mintClosed"), read("faces", "publicMinted"), read("faces", "teamMinted")]);
     const done = closed || supply >= 5555n;
     if (!siteMint) $("#phase-pill").textContent = done ? "Mint over · trade on OpenSea" : "Minting on OpenSea";
     if (!siteMint) $("#phase-pill").classList.toggle("live", !done);
     if (done && state.dep?.opensea?.collection) $("#opensea-btn").textContent = "View on OpenSea ↗";
     // the bar shows every Face minted out of the 5555 (the founder, 2 Oct); the sale itself is SOLD OUT when publicMinted
-    // reaches 5444, whatever the team has minted. 18 of the team's 111 went to the first minters on 2 Oct (a thank-you)
+    // reaches 5444, whatever the team has minted. The team's Faces minted during the sale went to the first holders (18 on
+    // 2 Oct as a thank-you, 18 on 3 Oct with the new terms), read from the chain
     const sold = closed || sale >= 5444n;
     $("#progress-text").innerHTML = sold ? `<b class="neon">SOLD OUT</b> · ${supply} / 5555` : `${supply} / 5555`;
     $("#progress-bar").style.width = `${Math.min(1, Number(supply) / 5555) * 100}%`;
     $("#progress-note").textContent = sold
       ? "Sold out: all 5444 Faces of the sale are minted. The team's remaining Faces come next, then the reveal."
-      : "5444 for sale, 111 for the team: 18 of those went to the first minters as a thank-you, and the team keeps 93.";
+      : `5444 for sale, 111 for the team: ${team} of those went to the first holders, and the team keeps ${111n - team}.`;
     $("#seeded-text").textContent = `${funded} seeded`;
     document.querySelectorAll('[data-stat="minted"]').forEach((e) => (e.textContent = supply.toString()));
     document.querySelectorAll('[data-stat="seeded"]').forEach((e) => (e.textContent = funded.toString()));
@@ -560,7 +561,7 @@ async function renderMyFaces() {
 // =====================================================================================
 // face page
 // =====================================================================================
-const fmtDate = (sec) => new Date(Number(sec) * 1000).toISOString().slice(0, 16).replace("T", " ");
+const fmtDate = (sec) => `${new Date(Number(sec) * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
 
 async function showFace(id) {
   $("#face-title").textContent = `NEONFACES #${id}`;
@@ -810,7 +811,7 @@ async function polls(limit = 3) {
 }
 
 const pollHTML = (p, mineVote) =>
-  `<div class="poll"><p><b>${esc(p.question)}</b><br><span class="fine">${p.open ? `open until ${fmtDate(p.end)} UTC` : `closed ${fmtDate(p.end)} UTC`} · ${p.votes} set${p.votes === 1 ? "" : "s"} voted</span></p>${p.choices
+  `<div class="poll"><p><b>${esc(p.question)}</b><br><span class="fine">${p.open ? `open until ${fmtDate(p.end)}` : `closed ${fmtDate(p.end)}`} · ${p.votes} set${p.votes === 1 ? "" : "s"} voted</span></p>${p.choices
     .map((c, i) => {
       const pct = p.votes ? Math.round((100 * p.counts[i]) / p.votes) : 0;
       return `<div class="poll-row${mineVote === i ? " mine" : ""}"><span>${esc(c)}</span><b>${p.counts[i]}</b><i style="width:${pct}%"></i></div>`;

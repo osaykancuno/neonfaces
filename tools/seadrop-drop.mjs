@@ -1,7 +1,12 @@
 // Plan B for the sale (28 Sep): configure the OpenSea SeaDrop stages on-chain from the sale manager, without Studio,
 // and give neonfaces.xyz what it needs to mint through SeaDrop directly. Nothing is sent: this writes files.
 //
-//   node tools/seadrop-drop.mjs 4663 [--fee-bps 1000] [--fee-recipient 0x…] [--rpc URL]
+//   node tools/seadrop-drop.mjs 4663 --list-start <ISO UTC> [--list <csv>] [--fee-bps 1000]
+//                                   [--fee-recipient 0x…] [--rpc URL]
+//
+// The NEONLIST (3 Oct, the founder): chosen wallets mint at 0.004 ETH, up to 15 Faces each in total (every stage counts),
+// from --list-start to the public stage's end (always the same end), while the public stage stays open to everyone at 0.009. The CSV (default
+// config/allowlists/opensea/list-communities.csv, git-ignored) has one wallet per line: `address` or `address,15`.
 //
 // -> config/allowlists/opensea/drop.4663.json (git-ignored folder): the list stage's MintParams, the public drop, the
 //    Merkle root, the fee recipient, and the multiConfigure calldata the sale manager sends to NeonFaces
@@ -26,18 +31,28 @@ const dep = JSON.parse(fs.readFileSync(path.join(ROOT, `contracts/deployments/${
 const FEE_BPS = Number(arg("--fee-bps", "1000")); // OpenSea's 10% (ECONOMICS.md assumes it)
 const FEE_RECIPIENT = getAddress(arg("--fee-recipient", "0x0000a26b00c1F0DF003000390027140000fAa719"));
 
-// the sale (docs/LAUNCH-RUNBOOK.md): the list Thu 1 Oct 18:00 UTC for 24 h, then everyone from Fri 2 Oct 18:00 UTC
-const LIST_START = 1790877600;
-const LIST_END = 1790964000; // Fri 2 Oct 18:00 UTC: inside every leaf, so it stays (the root doesn't change)
-const PUBLIC_START = 1790946000; // Fri 2 Oct 13:00 UTC (the founder, 2 Oct: five hours earlier; the list overlaps it until 18:00)
+// the public stage (docs/LAUNCH-RUNBOOK.md): everyone from Fri 2 Oct 13:00 UTC to the last Face or Sat 31 Oct 18:00 UTC
+const PUBLIC_START = 1790946000; // Fri 2 Oct 13:00 UTC (the founder, 2 Oct: five hours earlier)
 const PUBLIC_END = 1793469600; // Sat 31 Oct 2026 18:00 UTC (the founder, 2 Oct: the public stage stays open to the end of the month)
 const CAP = 5444;
+// the list's window is inside every leaf: changing it means a new root, new proofs and a new configure transaction
+const isoArg = (k) => {
+  const v = arg(k);
+  const t = Date.parse(v ?? "");
+  if (!v || !/(Z|[+-]\d\d:\d\d)$/.test(v) || Number.isNaN(t)) throw new Error(`${k} <ISO time with Z, e.g. 2026-10-06T18:00Z>`);
+  return Math.floor(t / 1000);
+};
+const LIST_START = isoArg("--list-start");
+const LIST_END = PUBLIC_END; // the founder, 3 Oct: the NEONLIST always ends with the public stage (if PUBLIC_END moves, rebuild the list too)
+if (!(LIST_END > LIST_START)) throw new Error("the NEONLIST must start before the public stage ends");
+// the list (the founder, 3 Oct): 0.004 ETH with the top-ups of ECONOMICS.md (Watch +$5, Heavy Stare +$10, set $5), ≈ $6.89 of
+// baskets per paid Face against ≈ $5.31 reaching the vault at ETH $2,684: the treasury and growth cover the gap (ECONOMICS.md)
 const LIST = {
-  mintPrice: parseEther("0.013"),
-  maxTotalMintableByWallet: 3n,
+  mintPrice: parseEther("0.004"),
+  maxTotalMintableByWallet: 15n,
   startTime: BigInt(LIST_START),
   endTime: BigInt(LIST_END),
-  dropStageIndex: 1n,
+  dropStageIndex: 2n,
   maxTokenSupplyForStage: BigInt(CAP),
   feeBps: BigInt(FEE_BPS),
   restrictFeeRecipients: true,
@@ -69,18 +84,21 @@ const MINT_PARAMS = {
 const leafOf = (a) => keccak256(encodeAbiParameters([{ type: "address" }, MINT_PARAMS], [a, LIST]));
 const pair = (x, y) => keccak256((x < y ? x + y.slice(2) : y + x.slice(2)));
 
-// the list: address,limit (the CSV for Studio); every row must carry the stage's limit
-const csv = fs.readFileSync(path.join(ROOT, "config/allowlists/opensea/list.csv"), "utf8").trim().split(/\r?\n/);
+// the list: one wallet per line, `address` or `address,15` (a header line or blank lines are skipped)
+const listFile = path.resolve(ROOT, arg("--list", "config/allowlists/opensea/list-communities.csv"));
+const csv = fs.readFileSync(listFile, "utf8").trim().split(/\r?\n/);
 const addrs = [];
 const seen = new Set();
 for (const line of csv) {
-  const [a, lim] = line.split(",");
-  if (Number(lim) !== Number(LIST.maxTotalMintableByWallet)) throw new Error(`limit ${lim} for ${a}`);
-  const g = getAddress(a.trim());
+  const [a, lim] = line.split(",").map((x) => x?.trim());
+  if (!a || /^address$/i.test(a)) continue;
+  if (lim && Number(lim) !== Number(LIST.maxTotalMintableByWallet)) throw new Error(`limit ${lim} for ${a}: every wallet gets ${LIST.maxTotalMintableByWallet}`);
+  const g = getAddress(a);
   if (seen.has(g)) throw new Error(`duplicate ${g}`);
   seen.add(g);
   addrs.push(g);
 }
+if (!addrs.length) throw new Error(`no wallets in ${listFile}`);
 
 // the tree
 const leaves = addrs.map(leafOf);
@@ -117,7 +135,12 @@ if (bad) throw new Error(`${bad} proofs don't verify`);
 const out = path.join(ROOT, "web/public/drop");
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(path.join(out, "proofs"), { recursive: true });
-for (const [k, v] of Object.entries(shards)) fs.writeFileSync(path.join(out, "proofs", `${k}.json`), JSON.stringify(v));
+// all 256 shards, empty ones included: a short list leaves most of them empty, and a missing file would come back as
+// the site's index page (SPA fallback) instead of "not on the list"
+for (let i = 0; i < 256; i++) {
+  const k = i.toString(16).padStart(2, "0");
+  fs.writeFileSync(path.join(out, "proofs", `${k}.json`), JSON.stringify(shards[k] ?? {}));
+}
 const str = (o) => JSON.parse(JSON.stringify(o, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
 const params = { seaDrop: dep.seaDrop, faces: dep.faces, feeRecipient: FEE_RECIPIENT, list: str(LIST), public: str(PUBLIC), root };
 fs.writeFileSync(path.join(out, "params.json"), JSON.stringify(params, null, 2) + "\n");
@@ -149,6 +172,6 @@ const data = encodeFunctionData({
 const plan = { ...params, wallets: addrs.length, shards: Object.keys(shards).length, to: dep.faces, from: "sale manager", data };
 fs.writeFileSync(path.join(ROOT, `config/allowlists/opensea/drop.${chain}.json`), JSON.stringify(plan, null, 2) + "\n");
 console.log(`root ${root}`);
-console.log(`${addrs.length} wallets, ${Object.keys(shards).length} proof files in web/public/drop/proofs, every proof verified`);
+console.log(`${addrs.length} wallets, 256 proof files in web/public/drop/proofs (${Object.keys(shards).length} with wallets), every proof verified`);
 console.log(`list ${LIST_START} -> ${LIST_END}, public ${PUBLIC_START} -> ${PUBLIC_END}, fee ${FEE_BPS} bps to ${FEE_RECIPIENT} (${feeAllowed ? "already allowed on SeaDrop" : "added by this call"})`);
 console.log(`multiConfigure calldata ${data.length / 2 - 1} bytes -> config/allowlists/opensea/drop.${chain}.json`);

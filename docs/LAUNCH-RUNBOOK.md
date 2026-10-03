@@ -44,6 +44,8 @@ Keep `art/output/onchain/chunks.json`, `placeholder.hex`, `provenance.json`, `ar
 
 On a trading day, right before deploying: `node tools/baskets.mjs --live` → reads Chainlink prices, writes `contracts/config/baskets.4663.json` and prints the pool budget (≈ $60k at full supply). Nothing is bought in advance: the mint pays for the pool through `NeonSeedVault` (see [ECONOMICS.md](ECONOMICS.md) for the minimum price that makes this work).
 
+Changing the top-ups or the set bonus after the deploy: edit the USD targets in `config/baskets.plan.json`, then on a trading day `node tools/baskets.mjs --live --keep 1,2,3,4,5` (the base baskets keep their deployed amounts), `node tools/safe-tx.mjs 4663 set-baskets 6,7,8,9,10` → `safe/4663-set-baskets.json`, rehearse on a fork, and the Safe executes it (signer 1 creates and executes, the personal wallet signs). Only before `lock-seeder`; never change a basket some Faces already received.
+
 ## 3. Deploy
 
 ```bash
@@ -94,10 +96,11 @@ Sale day: the sale lasts hours (a day at most), and GitHub's schedule can run la
 
 ## 6. Team allocation (after the sell-out, before the reveal)
 
+During the sale 36 of the 111 went to the first buyers (`safe-tx.mjs 4663 team-airdrop <csv>`): 18 on 2 Oct, one per Face bought before the first price change; 18 more on 3 Oct, again one per Face bought, with the new terms (`safe/4663-team-airdrop-3oct.json`, ≈ 5.8M gas on a fork: set the limit by hand to ≈ 7.5M). The team keeps 75, minted at the end (check `teamMinted()` first: a batch that goes past 111 reverts):
+
 ```bash
 node tools/safe-tx.mjs 4663 team-mint <safe> 50    # account + base seed in the same tx (~190k gas per Face)
-node tools/safe-tx.mjs 4663 team-mint <safe> 50
-node tools/safe-tx.mjs 4663 team-mint <safe> 11
+node tools/safe-tx.mjs 4663 team-mint <safe> 25
 ```
 Minting the team Faces last means the sale's proceeds already stocked their seeds, and buyers' Faces are never queued behind them. During the sale OpenSea shows 5444 (the unminted team reserve isn't for sale). Ids don't matter: art and tier are assigned at reveal.
 
@@ -117,10 +120,10 @@ In OpenSea Studio, connected with the sale manager: create the drop from the exi
 
 | Stage | Allowlist | Start / end (UTC) | Price | Per wallet | Supply |
 |---|---|---|---|---|---|
-| 1. The list | `config/allowlists/opensea/list.csv` | Thu 1 Oct 18:00 / Fri 2 Oct 18:00 | 0.013 ETH | from CSV (3) | 5444 |
-| 2. Public | none | Fri 2 Oct 13:00 / Sat 31 Oct 18:00 (set on 2 Oct; minting really closes with the reveal request after the sell-out) | 0.009 ETH (0.018, then 0.013, 2 Oct) | 15 (from 5, 2 Oct) | 5444 |
+| NEONLIST | `config/allowlists/opensea/list-communities.csv` | its own window, inside the public stage | 0.004 ETH | 15 in total | 5444 |
+| Public | none | until Sat 31 Oct 18:00 (minting really closes with the reveal request after the sell-out) | 0.009 ETH | 15 in total | 5444 |
 
-Never below the self-funding floor (≈ 0.009 ETH at ETH $2,687, see [ECONOMICS.md](ECONOMICS.md)) and no free stage: every free Face is paid by the others.
+No free stage: every free Face is paid by the others. Below the self-funding floor (≈ 0.0052 ETH at ETH $2,684, see [ECONOMICS.md](ECONOMICS.md)) only with the treasury and growth covering the difference, as for the NEONLIST.
 
 - **Payout address = `NeonPayout`** (`payout` in the deployments file). Any other address is rejected on-chain.
 - SeaDrop reads the collection's supply cap from `maxSupply()` (5444 until the team mint, which comes after the sell-out), and the per-wallet limit counts every Face a wallet minted through SeaDrop. Check how Studio labels both before publishing.
@@ -140,14 +143,14 @@ Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers ne
 For when Studio can't manage the contract (28 Sep: OpenSea indexed the collection, but Studio doesn't list a contract it didn't deploy). The stages are the same SeaDrop stages Studio would set, so the Faces still mint through OpenSea's SeaDrop contract, OpenSea still takes its fee, and the collection page shows every Face.
 
 ```bash
-node tools/seadrop-drop.mjs 4663        # Merkle tree of the list, the proofs (web/public/drop/, git-ignored), the calldata
+node tools/seadrop-drop.mjs 4663 --list-start 2026-10-06T18:00Z   # the NEONLIST (it ends with the public stage), its proofs (web/public/drop/, git-ignored), the calldata
 node tools/configure-drop.mjs 4663      # http://127.0.0.1:8787 in the browser of the sale manager's wallet
 ```
-The page states every term, refuses any wallet other than the sale manager, simulates, sends the one `multiConfigure` and reads SeaDrop back (four checks). Then `verify-drop.mjs` as above. Re-run `seadrop-drop.mjs` whenever the list changes, and configure again before the list stage starts.
+The page states every term, refuses any wallet other than the sale manager, simulates, sends the one `multiConfigure` and reads SeaDrop back (four checks). Then `verify-drop.mjs` as above. Re-run `seadrop-drop.mjs` whenever the list changes, and configure again before the list stage starts. The NEONLIST (3 Oct): `config/allowlists/opensea/list-communities.csv`, one wallet per line, 0.004 ETH, 15 per wallet in total; its window can sit inside the public stage, and the panel then offers the list's price to a wallet on the list and the public price to everyone else. Deploy the site with the new proofs before or after the configure transaction: until SeaDrop's root matches params.json the panel only offers the public stage.
 
 The web app mints when `web/public/drop/params.json` is published with it: the panel on Home shows a countdown, then the stage open for the connected wallet (its proof on the list, what it minted, what is left), simulates each mint and sends it to SeaDrop with OpenSea's fee recipient. Every Face minted is then born on screen with its account and basket, read from the transaction, and the screen lights up neon; each size from 1 to 5 has its own scene. So on plan B the web app goes live **before Thu 18:00 UTC**, with the proofs (`tools/site.sh deploy web`, 256 proof files, 29 MB). **On the Studio path, delete `web/public/drop/` before building**, or the site would offer its own mint next to OpenSea's.
 
-Tested on a fork of mainnet (29 Sep): the configure page (wrong account refused, dry run, four checks PASS), the countdown switching to the list stage at 18:00:00 without a reload, listed and unlisted wallets, the per-wallet limits, a refused signature, mints of 1 to 5 in both stages, then a keeper round seeding all 100 Faces of a 100-Face rehearsal. A mint of 5 uses about 1.5M gas (a few cents at 0.02 gwei). The first Faces are born with their basket pending: the pool fills from the mint itself, on the keeper's next round.
+Tested on a fork of mainnet (29 Sep): the configure page (wrong account refused, dry run, four checks PASS), the countdown switching to the list stage at 18:00:00 without a reload, listed and unlisted wallets, the per-wallet limits, a refused signature, mints of 1 to 5 in both stages, then a keeper round seeding all 100 Faces of a 100-Face rehearsal. A mint of 5 uses about 1.5M gas (a few cents at 0.02 gwei). The first Faces are born with their basket pending: the pool fills from the mint itself, on the keeper's next round. 3 Oct, on a fork of mainnet: the Safe setting the top-up and set baskets (#1 to #5 unchanged, tiers unchanged, any other wallet refused), the sale manager's configure with a test list inside the public stage, a listed wallet minting 15 at the list price then refused a 16th on both stages, a short payment and a borrowed proof refused, an unlisted wallet minting at 0.009 and refused at the list price (34/34); the panel showing the list price to listed wallets and 0.009 to others, connected and not, at 320 px too.
 
 ### Site capacity (checked 27 Sep)
 

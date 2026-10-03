@@ -43,7 +43,7 @@ export async function knownTokens() {
 }
 
 const dayMs = 86_400_000;
-const niceDate = (sec) => new Date(Number(sec) * 1000).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const niceDate = (sec) => { const d = new Date(Number(sec) * 1000); return `${d.toLocaleString("en-GB", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" })}, ${d.toISOString().slice(11, 16)} UTC`; };
 const short = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -420,7 +420,7 @@ export async function holderPanel(ctx, host, id, account, agentInfo, lockedUntil
   box.querySelector("#hp-lock-go").onclick = () => {
     const days = Number(chosen("hp-lock") || 7);
     const until = Math.max(Date.now() + days * dayMs, Number(lockedUntil) * 1000 + 60_000);
-    const msg = `Lock this Face's wallet until ${new Date(until).toLocaleString("en-GB")}?\n\nUntil then nobody, not even you, can move anything out of it. It can't be undone or shortened.`;
+    const msg = `Lock this Face's wallet until ${niceDate(until / 1000)}?\n\nUntil then nobody, not even you, can move anything out of it. It can't be undone or shortened.`;
     if (confirm(msg)) ctx.send(account, ctx.ABI.account, "lock", [BigInt(Math.floor(until / 1000))], ctx.reload);
   };
 }

@@ -85,7 +85,7 @@ def wallet_post():
     img.paste(posts.fit(ROOT / "landing" / "img" / "face-watch-1.png", 480), (140, 200))
     x, y = 700, 214
     posts.draw_text(img, "THE NFT IS THE KEY.", x, y, 5, posts.PALE)
-    rows = [("BASE BASKET", "ABOUT $5"), ("WATCH", "+ ABOUT $14"), ("HEAVY STARE", "+ ABOUT $70"), ("SET BONUS, ONCE", "ABOUT $12")]
+    rows = [("BASE BASKET", "ABOUT $5"), ("WATCH", "+ ABOUT $5"), ("HEAVY STARE", "+ ABOUT $10"), ("SET BONUS, ONCE", "ABOUT $5")]
     for i, (a, b) in enumerate(rows):
         posts.draw_text(img, a, x, y + 90 + i * 58, 4, posts.DIM)
         posts.draw_text(img, b, x + 440, y + 90 + i * 58, 4, posts.NEON)

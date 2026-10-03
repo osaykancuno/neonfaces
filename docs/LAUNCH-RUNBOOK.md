@@ -96,7 +96,7 @@ Sale day: the sale lasts hours (a day at most), and GitHub's schedule can run la
 
 ## 6. Team allocation (after the sell-out, before the reveal)
 
-During the sale 36 of the 111 went to the first buyers (`safe-tx.mjs 4663 team-airdrop <csv>`): 18 on 2 Oct, one per Face bought before the first price change; 18 more on 3 Oct, again one per Face bought, with the new terms (`safe/4663-team-airdrop-3oct.json`, ≈ 5.8M gas on a fork: set the limit by hand to ≈ 7.5M). The team keeps 75, minted at the end (check `teamMinted()` first: a batch that goes past 111 reverts):
+During the sale 36 of the 111 went to the first buyers (`safe-tx.mjs 4663 team-airdrop <csv>`): 18 on 2 Oct, one per Face bought before the first price change; 18 more on 3 Oct, again one per Face bought, with the new terms (`safe/4663-team-airdrop-3oct.json`: MetaMask and eth_estimateGas say ≈ 4.2M, which runs out inside the Safe (four reverts on 3 Oct); set the limit by hand to 8M, checked with eth_call). The team keeps 75, minted at the end (check `teamMinted()` first: a batch that goes past 111 reverts):
 
 ```bash
 node tools/safe-tx.mjs 4663 team-mint <safe> 50    # account + base seed in the same tx (~190k gas per Face)

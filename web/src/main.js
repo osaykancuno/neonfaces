@@ -477,7 +477,7 @@ function setupMint() {
 function startSiteMint(drop) {
   siteMint = true;
   const fee = Number(drop.list.feeBps) / 100;
-  $("#hero-mint").textContent = "Mint";
+  $("#hero-mint").textContent = "NEONLIST";
   const btn = $("#opensea-btn");
   btn.className = "btn btn-ghost btn-wide";
   btn.textContent = "The collection on OpenSea ↗";

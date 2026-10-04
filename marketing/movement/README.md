@@ -390,43 +390,44 @@ opensea.io/collection/neonfaces
 
 Every person in these pieces was generated: like every face in the collection, they don't exist.
 
-## The NEONLIST, presented as new (prepared 3 Oct; dates, communities and the founder's go still to come)
+## The NEONLIST, presented as new (prepared 3-4 Oct; opens Tuesday 13 October, 13:00 UTC; wallets and communities still to come)
 
-The founder's plan (3 Oct): **one day of silence on X**, the communities reached through other channels (the messages below); **when OpenSea hides its drop page**, the NEONLIST (SeaDrop's allowlist stage) opens at 0.004 ETH (the public price is 0.009) with the updated site, and the project is presented fresh: what it is today, with no reference to earlier terms or changes. Fresh, not false: never "first", "launch" or "the mint opens" as if nothing had sold (the chain shows the Faces already minted), and never "pre-opening" (the public stage is open); "the NEONLIST is open" and "mint on neonfaces.xyz" are true. If someone asks about earlier terms, answer plainly (replies below). Before the first post: delete or correct the old posts that name the earlier top-ups ($14, $70, "$75 inside": the 2 Oct Tiers image and the Public post), and check OpenSea's collection description, so nothing public shows other values. Posts carry no price and no comparison of prices (the founder's rules: people work it out); the panel on neonfaces.xyz shows the NEONLIST's price next to the public one. The "New terms" piece (out/l-terms-4x5.png) is not used.
+The founder's plan (3 Oct): **one day of silence on X**, the communities reached through other channels (the messages below); **when OpenSea hides its drop page**, the NEONLIST (SeaDrop's allowlist stage) is the only way the site mints (the founder, 4 Oct): 0.004 ETH, up to 15 per wallet, from Tuesday 13 October, 13:00 UTC until Saturday 31 October, 18:00 UTC; the site shows its date and countdown, no mint button before it opens; and the project is presented fresh: what it is today, with no reference to earlier terms or changes. Fresh, not false: never "first", "launch" or "the mint opens" as if nothing had sold (the chain shows the Faces already minted), and never "pre-opening"; "the NEONLIST is open" and "mint on neonfaces.xyz" are true. If someone asks about earlier terms, answer plainly (replies below). Before the first post: delete or correct the old posts that name the earlier top-ups ($14, $70, "$75 inside": the 2 Oct Tiers image and the Public post), and check OpenSea's collection description, so nothing public shows other values. Posts carry no price and no comparison of prices (the founder's rules); the panel on neonfaces.xyz shows the NEONLIST's price. The "New terms" piece (out/l-terms-4x5.png) is not used.
 
-Order: **Meet** when the NEONLIST opens (video or still, first reply the Tiers image out/l-tiers2-4x5.png), **NEONLIST** an hour later with the communities' names (`list_still`, as `--day2` does, once they say yes), **Last day** on 30 October (the NEONLIST and the public stage end together on 31 October, 18:00 UTC).
+Order: **Meet** when the NEONLIST opens (video or still, first reply the Tiers image out/l-tiers2-4x5.png), **NEONLIST** an hour later with the communities' names (`list_still`, as `--day2` does, once they say yes), **Last day** on 30 October (the NEONLIST ends on 31 October, 18:00 UTC).
 
 **Meet** (when the NEONLIST opens) 5555 faces that don't blink.
 NEONFACES is fully on-chain pixel art on Robinhood Chain, and every Face is its own wallet.
 Each one is born holding $5 of one Stock Token: TSLA, NVDA, AAPL, AMZN or MSFT.
 At the reveal, the chain draws the tiers for everyone at once: 833 Watch Faces get +$5, 278 Heavy Stare Faces get +$10. Assemble a set of four and its Face gets +$5 more.
 What's inside is the holder's: withdraw it, trade it, or let it sit.
-Wallets on the NEONLIST mint at a lower price. Mint on neonfaces.xyz, up to 15 per wallet, until 31 October. The Faces trade on OpenSea.
+They mint on the NEONLIST, on neonfaces.xyz: up to 15 per wallet, until 31 October. The Faces trade on OpenSea.
 Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
 **NEONLIST** (an hour after Meet; image: the communities' names) The NEONLIST is open.
-Holders from COMMUNITIES mint at a lower price, until 31 October, 18:00 UTC. Up to 15 Faces per wallet in total.
-Connect on neonfaces.xyz: the mint panel shows both prices and which one is yours. Not on the NEONLIST? The public stage is open to everyone.
+Holders from COMMUNITIES are on it, until 31 October, 18:00 UTC. Up to 15 Faces per wallet in total.
+Connect on neonfaces.xyz: the mint panel tells you whether your wallet is on it and shows your price.
 One signature to OpenSea's SeaDrop contract, no approvals. Only neonfaces.xyz: check the address bar.
 You pay with ETH on Robinhood Chain, not on Ethereum.
 Thank you to COMMUNITIES for having us.
 
-**Last day** (30 October, 18:00 UTC: the NEONLIST ends with the public stage) The NEONLIST and the public stage close in 24 hours: 31 October, 18:00 UTC.
+**Last day** (30 October, 18:00 UTC) The NEONLIST closes in 24 hours: 31 October, 18:00 UTC.
 On it? Connect on neonfaces.xyz and the panel shows your price. Up to 15 Faces per wallet in total.
 Every Face is born with its own wallet and a Stock Token inside. They don't blink.
 neonfaces.xyz
 Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 
 **Replies ready** (only when asked)
-- Why is the NEONLIST cheaper? It's for the communities that back the collection. The treasury and growth cover the difference, so every Face still gets its full basket.
+- Why only a list? NEONFACES mints for the communities that back it. The treasury and growth cover what 0.004 ETH leaves short of the baskets, so every Face still gets its full basket.
 - Weren't the top-ups bigger? Yes: on 3 October they became Watch +$5, Heavy Stare +$10 and a set +$5, the same for every Face, so the NEONLIST could mint at a lower price. Each Face bought before then brought its holder one more Face from the team's share. Everything is in the Economics page of the repo.
-- Am I on the NEONLIST? Connect on neonfaces.xyz: the panel says it and shows your price. We never DM first.
+- Am I on the NEONLIST? Connect on neonfaces.xyz: the panel says it. We never DM first.
+- Can I mint from the explorer? Yes: connect a wallet on the NEONLIST on neonfaces.xyz and open "Mint from the explorer instead" under the panel: it shows the values for SeaDrop's `mintAllowList`.
 
 ### Talking to the communities (the founder writes; private messages, so the price can be named)
 
 **First message** (to a founder, a mod or the team of a community; English, edit the brackets)
 Hi [name], I'm [name], the founder of NEONFACES: 5555 fully on-chain pixel faces on Robinhood Chain. Every Face is its own wallet (ERC-6551) and is born holding $5 of a Stock Token, bought by the mint itself.
-We're putting a few communities we respect on the NEONLIST: 0.004 ETH a Face (the public price is 0.009), up to 15 per wallet, from [start] UTC until 31 October, 18:00 UTC. We'd like [community] to be one of them.
+We're putting a few communities we respect on the NEONLIST: 0.004 ETH a Face, up to 15 per wallet, from Tuesday 13 October, 13:00 UTC until 31 October, 18:00 UTC: NEONFACES mints only on the NEONLIST. We'd like [community] to be one of them.
 Two ways: we take a snapshot of [collection] holders, or you send us the wallets you choose. Nothing is asked in return and nothing is paid for. If you're happy to share it, we send a ready announcement and an image.
 Everything can be checked: the contracts are verified on Sourcify and RobinScan, the mint goes through OpenSea's SeaDrop with one signature and no approvals, and the Guide on neonfaces.xyz explains it all.
 Can we name [community] in our post when the NEONLIST opens? Thanks either way.
@@ -434,7 +435,7 @@ Can we name [community] in our post when the NEONLIST opens? Thanks either way.
 **Their announcement** (for a Discord or Telegram; they post it, we never post in their channels)
 [Community] holders are on the NEONLIST.
 NEONFACES: 5555 fully on-chain pixel faces on Robinhood Chain. Every Face is its own wallet and is born with $5 of a Stock Token inside.
-From [start] UTC until 31 October, 18:00 UTC, holders mint at 0.004 ETH a Face (the public price is 0.009), up to 15 per wallet. Connect on neonfaces.xyz to check your wallet: only that address, one signature to OpenSea's SeaDrop, no approvals.
+From Tuesday 13 October, 13:00 UTC until 31 October, 18:00 UTC, holders mint at 0.004 ETH a Face, up to 15 per wallet. Connect on neonfaces.xyz to check your wallet: only that address, one signature to OpenSea's SeaDrop, no approvals.
 You pay with ETH on Robinhood Chain, not on Ethereum. The NEONFACES team never DMs first.
 Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.
 

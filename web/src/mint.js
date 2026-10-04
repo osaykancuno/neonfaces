@@ -73,11 +73,18 @@ export async function loadDrop() {
   }
 }
 
-/** The NEONLIST's price before its own stage is set on-chain (the founder, 3 Oct): announced on the panel until then. */
-const NEONLIST_PRICE = parseEther("0.004");
-
-/** The NEONLIST's price next to the public one: both figures, no comparison (the founder, 3 Oct). */
-const listPrice = () => `${ethFmt(P.list.mintPrice)} (public price ${ethFmt(P.public.mintPrice)})`;
+/** The NEONLIST (the founder, 4 Oct): the only way this site mints, from Tue 13 Oct 13:00 UTC to Sat 31 Oct 18:00 UTC.
+ *  Until its stage is set on-chain (its wallets come later), the panel shows these announced terms. */
+const NEONLIST = {
+  mintPrice: parseEther("0.004"),
+  maxTotalMintableByWallet: 15n,
+  startTime: BigInt(Date.UTC(2026, 9, 13, 13) / 1000),
+  endTime: BigInt(Date.UTC(2026, 9, 31, 18) / 1000),
+};
+/** The NEONLIST is set when SeaDrop holds the site's list (params.json) and that list is the NEONLIST (stage index 2). */
+const listSet = (v) => !!v?.configured.list && P.list.dropStageIndex === 2n;
+/** The NEONLIST's terms: from its Merkle leaves once set, the announced ones before. */
+const L = () => (listSet(view) ? P.list : NEONLIST);
 
 const ethFmt = (wei) => `${Number(formatEther(wei)).toLocaleString("en-US", { maximumFractionDigits: 4 })} ETH`;
 const when = (sec) => {
@@ -94,13 +101,11 @@ const countdown = (sec) => {
 };
 const nowChain = () => Date.now() / 1000 + skew;
 
-/** True while the list's window is open (it can run inside the public stage: chosen wallets pay the list price). */
-const listOpen = (t) => t >= Number(P.list.startTime) && t < Number(P.list.endTime);
-
-/** The stage at a given chain time. */
+/** The stage at a given chain time: the NEONLIST only. */
 function stageAt(t) {
-  if (t < Number(P.public.startTime)) return listOpen(t) ? "list" : "before";
-  if (t < Number(P.public.endTime)) return "public";
+  const l = L();
+  if (t < Number(l.startTime)) return "before";
+  if (t < Number(l.endTime)) return "list";
   return "ended";
 }
 
@@ -170,18 +175,15 @@ async function readChain() {
 
 /** What this wallet can do now: { stage, price, limit, left, reason } */
 function offer(v) {
-  const t = nowChain();
-  // a wallet on the list mints at the list's terms while its window is open, even inside the public stage
-  const stage = stageAt(t) === "public" && listOpen(t) && v.configured.list && v.proof ? "list" : stageAt(t);
+  const stage = stageAt(nowChain());
   const remaining = v.max > v.supply ? v.max - v.supply : 0n;
   if (v.closed || remaining === 0n) return { stage: "soldout" };
   if (stage === "before" || stage === "ended") return { stage };
-  if (!v.configured[stage]) return { stage: "waiting" };
-  const s = stage === "list" ? P.list : P.public;
-  const price = s.mintPrice;
-  const limit = s.maxTotalMintableByWallet;
+  if (!listSet(v)) return { stage: "waiting" };
+  const price = P.list.mintPrice;
+  const limit = P.list.maxTotalMintableByWallet;
   if (!v.account) return { stage, price, limit };
-  if (stage === "list" && !v.proof) return { stage, price, limit, reason: "notlisted" };
+  if (!v.proof) return { stage, price, limit, reason: "notlisted" };
   let left = limit > v.minted ? limit - v.minted : 0n;
   if (left > remaining) left = remaining;
   return { stage, price, limit, left };
@@ -191,59 +193,39 @@ function paint() {
   const box = $("#site-mint");
   if (!box || !view) return;
   const o = offer(view);
+  const l = L();
   const pill = $("#phase-pill");
-  const live = o.stage === "list" || o.stage === "public";
-  pill.classList.toggle("live", live && !o.reason);
-  pill.textContent = { before: "NEONLIST opens soon", list: "NEONLIST live", public: "Public mint live", waiting: "Opening", soldout: "Sold out", ended: "Mint over" }[o.stage];
+  pill.classList.toggle("live", o.stage === "list" && !o.reason);
+  pill.textContent = { before: "NEONLIST opens soon", list: "NEONLIST live", waiting: "Opening", soldout: "Sold out", ended: "Mint over" }[o.stage];
   const who = view.account ? `<span class="fine">Wallet ${short(view.account)}${view.balance != null ? ` · ${ethFmt(view.balance)} on Robinhood Chain` : ""}</span>` : "";
+  const terms = `Wallets of the communities that back NEONFACES mint at ${ethFmt(l.mintPrice)} a Face, up to ${l.maxTotalMintableByWallet} each, until ${esc(when(l.endTime))}.`;
   let html = "";
   if (o.stage === "before") {
-    html = `<p class="mint-line">The NEONLIST opens ${esc(when(P.list.startTime))}.</p>
-      <p class="mint-count" id="mint-count" aria-label="Time until the NEONLIST opens">${countdown(Number(P.list.startTime) - nowChain())}</p>
-      <p class="fine">Wallets on the NEONLIST mint first, up to ${P.list.maxTotalMintableByWallet} Faces each at ${ethFmt(P.list.mintPrice)}. Then everyone, from ${esc(when(P.public.startTime))} until every Face is sold (${esc(when(P.public.endTime))} at the latest), up to ${P.public.maxTotalMintableByWallet} per wallet in total at ${ethFmt(P.public.mintPrice)}. You pay with ETH on Robinhood Chain, not on Ethereum, plus a few cents of gas.</p>
-      ${view.account ? (view.proof ? `<p class="msg ok">This wallet is on the NEONLIST: come back when it opens.</p>` : `<p class="msg">This wallet isn't on the NEONLIST: you can mint from ${esc(when(P.public.startTime))}.</p>`) : `<button class="btn btn-ghost btn-wide" data-mint="connect">Connect to check your wallet</button>`}
-      ${who}`;
+    // no mint button before it opens: the date, the countdown, the terms and, once the list is set, this wallet's place on it
+    const check = !listSet(view)
+      ? `<p class="fine">Before it opens, this page will tell each wallet whether it is on the NEONLIST.</p>`
+      : view.account
+        ? view.proof
+          ? `<p class="msg ok">This wallet is on the NEONLIST: come back when it opens.</p>`
+          : `<p class="msg">This wallet isn't on the NEONLIST.</p>`
+        : `<button class="btn btn-ghost btn-wide" data-mint="connect">Connect to check your wallet</button>`;
+    html = `<p class="mint-line">The NEONLIST opens <b>${esc(when(l.startTime))}</b>.</p>
+      <p class="mint-count" id="mint-count" aria-label="Time until the NEONLIST opens">${countdown(Number(l.startTime) - nowChain())}</p>
+      <p class="fine">Minting on neonfaces.xyz happens on the NEONLIST. ${terms} You pay with ETH on Robinhood Chain, not on Ethereum, plus a few cents of gas.</p>
+      ${check}${who}`;
   } else if (o.stage === "waiting") {
-    html = `<p class="mint-line">Opening in a moment: the stage is being set on-chain.</p><p class="fine">This page checks every few seconds. No need to reload.</p>${who}`;
+    html = `<p class="mint-line">Opening in a moment: the NEONLIST is being set on-chain.</p><p class="fine">This page checks every few seconds. No need to reload.</p>${who}`;
   } else if (o.stage === "soldout" || o.stage === "ended") {
     html = `<p class="mint-line">${o.stage === "soldout" ? "Sold out: all 5444 Faces of the sale are minted." : "The mint is over."} They now trade on OpenSea.</p>`;
   } else {
-    const stageName = o.stage === "list" ? "NEONLIST" : "Public stage";
-    const t = nowChain();
-    const publicOpen = t >= Number(P.public.startTime);
-    // the list next to the public stage: its price and window, and where this wallet stands
-    const listSoon = view.configured.list && t < Number(P.list.startTime);
-    const listNow = view.configured.list && listOpen(t);
-    // before the NEONLIST is set on-chain (SeaDrop still holds an earlier list, over), the panel announces it
-    const announce = !listNow && !listSoon
-      ? `The NEONLIST is coming: wallets of the communities that back NEONFACES will mint at ${ethFmt(NEONLIST_PRICE)} (public price ${ethFmt(P.public.mintPrice)}) until ${esc(when(P.public.endTime))}. Its opening date comes soon.`
-      : "";
-    const listLine = announce
-      ? announce
-      : !view.account
-      ? listNow
-        ? `The NEONLIST is open: wallets of the communities that back NEONFACES mint at ${listPrice()} until ${esc(when(P.list.endTime))}. Connect to check yours.`
-        : listSoon
-          ? `The NEONLIST opens ${esc(when(P.list.startTime))}: wallets of the communities that back NEONFACES mint at ${listPrice()} until ${esc(when(P.list.endTime))}. Connect to check yours.`
-          : ""
-      : listSoon && view.proof
-        ? `This wallet is on the NEONLIST: from ${esc(when(P.list.startTime))} it mints at ${listPrice()}.`
-        : (listNow || listSoon) && view.proof === null
-          ? "This wallet isn't on the NEONLIST: it mints at the public price."
-          : "";
-    const until =
-      o.stage === "list"
-        ? publicOpen
-          ? `This wallet is on the NEONLIST: this price until ${esc(when(P.list.endTime))}.`
-          : `Everyone can mint from ${esc(when(P.public.startTime))}.`
-        : listLine;
-    html = `<p class="mint-line"><b>${stageName}</b> · ${ethFmt(o.price)} per Face${o.stage === "list" && publicOpen ? ` (public price ${ethFmt(P.public.mintPrice)})` : ""} · up to ${o.limit} per wallet${o.stage === "public" || publicOpen ? " in total, every stage included" : ""}</p>`;
+    const until = `The NEONLIST closes ${esc(when(l.endTime))}.`;
+    html = `<p class="mint-line"><b>NEONLIST</b> · ${ethFmt(o.price)} per Face · up to ${o.limit} per wallet in total</p>`;
     if (!view.account) {
-      html += `<button class="btn btn-neon btn-wide" data-mint="connect">Connect wallet to mint</button><p class="fine">${until}</p>`;
+      html += `<button class="btn btn-neon btn-wide" data-mint="connect">Connect wallet to mint</button><p class="fine">${terms}</p>`;
     } else if (o.reason === "notlisted") {
-      html += `<p class="msg">This wallet isn't on the NEONLIST. ${until}</p>${who}`;
+      html += `<p class="msg">This wallet isn't on the NEONLIST.</p>${who}`;
     } else if (o.left === 0n) {
-      html += `<p class="msg ok">This wallet has minted ${view.minted}, its limit${o.stage === "list" && !publicOpen ? " for the NEONLIST" : ""}.${o.stage === "list" && !publicOpen && P.public.maxTotalMintableByWallet > view.minted ? ` From ${esc(when(P.public.startTime))} it can mint ${P.public.maxTotalMintableByWallet - view.minted} more in the public stage.` : ""}</p>${who}`;
+      html += `<p class="msg ok">This wallet has minted ${view.minted}, its limit.</p>${who}`;
     } else {
       if (BigInt(qty) > o.left) qty = Number(o.left);
       if (qty < 1) qty = 1;
@@ -260,6 +242,16 @@ function paint() {
         <p class="fine">Plus network gas, a few cents. ${until}</p>
         <p class="fine">You sign one transaction to OpenSea's SeaDrop contract (${short(P.seaDrop)}), nothing else: no token approval, so nothing else in your wallet can move.</p>${who}`;
     }
+  }
+  // the explorer path (the founder, 4 Oct): a wallet on the NEONLIST can send the same call itself; these are its values
+  if (listSet(view) && view.proof && (o.stage === "before" || o.stage === "list")) {
+    const lp = P.list;
+    const params = `[${[lp.mintPrice, lp.maxTotalMintableByWallet, lp.startTime, lp.endTime, lp.dropStageIndex, lp.maxTokenSupplyForStage, lp.feeBps].join(", ")}, ${lp.restrictFeeRecipients}]`;
+    const row = (k, v) => `<dt>${k}</dt><dd><code>${esc(v)}</code></dd>`;
+    html += `<details class="explorer-mint"><summary>Mint from the explorer instead</summary>
+      <p class="fine">From ${esc(when(lp.startTime))}: on <a href="https://robinhoodchain.blockscout.com/address/${P.seaDrop}?tab=write_contract" target="_blank" rel="noopener">OpenSea's SeaDrop contract</a>, connect this wallet and call <code>mintAllowList</code> with these values, sending ${ethFmt(lp.mintPrice)} times the quantity. It is the same transaction this page sends.</p>
+      <dl>${row("nftContract", P.faces)}${row("feeRecipient", P.feeRecipient)}${row("minterIfNotPayer", ZERO)}${row("quantity", "1 to " + lp.maxTotalMintableByWallet)}${row("mintParams", params)}${row("proof", JSON.stringify(view.proof))}</dl>
+    </details>`;
   }
   html += `<div class="mint-result" id="mint-result"></div>`;
   const keep = $("#mint-result")?.innerHTML;
@@ -393,16 +385,9 @@ export function setupSiteMint(helpers) {
   const heroTick = () => {
     const t = nowChain();
     const s = stageAt(t);
-    hero.hidden = !(s === "before" || s === "list" || s === "public");
-    if (s === "before") hero.innerHTML = `<span>The NEONLIST opens in</span><b>${countdown(Number(P.list.startTime) - t)}</b>`;
-    else if (s === "list") hero.innerHTML = `<span>The NEONLIST is open · everyone in</span><b>${countdown(Number(P.public.startTime) - t)}</b>`;
-    else if (s === "public") {
-      // the list inside the public stage, once SeaDrop holds the site's list (view.configured.list)
-      const list = view?.configured.list;
-      if (list && t < Number(P.list.startTime)) hero.innerHTML = `<span>Open to everyone · the NEONLIST opens in</span><b>${countdown(Number(P.list.startTime) - t)}</b>`;
-      else if (list && listOpen(t)) hero.innerHTML = `<span>The NEONLIST is open · everyone too</span><b>Mint now</b>`;
-      else hero.innerHTML = `<span>Open to everyone</span><b>Mint now</b>`;
-    }
+    hero.hidden = !(s === "before" || s === "list");
+    if (s === "before") hero.innerHTML = `<span>The NEONLIST opens in</span><b>${countdown(Number(L().startTime) - t)}</b>`;
+    else if (s === "list") hero.innerHTML = `<span>The NEONLIST is open</span><b>Mint now</b>`;
   };
   heroTick();
   // the countdown and the stage change on time, between reads
@@ -410,14 +395,13 @@ export function setupSiteMint(helpers) {
   setInterval(() => {
     heroTick();
     if (!view) return;
-    const t = nowChain();
-    const s = stageAt(t) + (listOpen(t) ? "+list" : "");
+    const s = stageAt(nowChain());
     if (s !== last && last !== null) {
       refresh();
-      if (s.includes("list") || s === "public") opening();
+      if (s === "list") opening();
     }
     last = s;
     const c = $("#mint-count");
-    if (c) c.textContent = countdown(Number(P.list.startTime) - nowChain());
+    if (c) c.textContent = countdown(Number(L().startTime) - nowChain());
   }, 1000);
 }

@@ -120,8 +120,8 @@ In OpenSea Studio, connected with the sale manager: create the drop from the exi
 
 | Stage | Allowlist | Start / end (UTC) | Price | Per wallet | Supply |
 |---|---|---|---|---|---|
-| NEONLIST | `config/allowlists/opensea/list-communities.csv` | its own window, inside the public stage | 0.004 ETH | 15 in total | 5444 |
-| Public | none | until Sat 31 Oct 18:00 (minting really closes with the reveal request after the sell-out) | 0.009 ETH | 15 in total | 5444 |
+| NEONLIST | `config/allowlists/opensea/list-communities.csv` | Tue 13 Oct 13:00 / Sat 31 Oct 18:00 (minting really closes with the reveal request) | 0.004 ETH | 15 in total | 5444 |
+| Public | none | set on-chain until Sat 31 Oct 18:00, not offered by the site since 4 Oct (the founder: the NEONLIST only) | 0.009 ETH | 15 in total | 5444 |
 
 No free stage: every free Face is paid by the others. Below the self-funding floor (≈ 0.0052 ETH at ETH $2,684, see [ECONOMICS.md](ECONOMICS.md)) only with the treasury and growth covering the difference, as for the NEONLIST.
 
@@ -143,10 +143,10 @@ Emergency brake: `node tools/safe-tx.mjs 4663 pause` (minting only; transfers ne
 For when Studio can't manage the contract (28 Sep: OpenSea indexed the collection, but Studio doesn't list a contract it didn't deploy). The stages are the same SeaDrop stages Studio would set, so the Faces still mint through OpenSea's SeaDrop contract, OpenSea still takes its fee, and the collection page shows every Face.
 
 ```bash
-node tools/seadrop-drop.mjs 4663 --list-start 2026-10-06T18:00Z   # the NEONLIST (it ends with the public stage), its proofs (web/public/drop/, git-ignored), the calldata
+node tools/seadrop-drop.mjs 4663 --list-start 2026-10-13T13:00Z   # the NEONLIST (it ends with the public stage), its proofs (web/public/drop/, git-ignored), the calldata
 node tools/configure-drop.mjs 4663      # http://127.0.0.1:8787 in the browser of the sale manager's wallet
 ```
-The page states every term, refuses any wallet other than the sale manager, simulates, sends the one `multiConfigure` and reads SeaDrop back (four checks). Then `verify-drop.mjs` as above. Re-run `seadrop-drop.mjs` whenever the list changes, and configure again before the list stage starts. The NEONLIST (3 Oct): `config/allowlists/opensea/list-communities.csv`, one wallet per line, 0.004 ETH, 15 per wallet in total; its window can sit inside the public stage, and the panel then offers the list's price to a wallet on the list and the public price to everyone else. Deploy the site with the new proofs before or after the configure transaction: until SeaDrop's root matches params.json the panel only offers the public stage.
+The page states every term, refuses any wallet other than the sale manager, simulates, sends the one `multiConfigure` and reads SeaDrop back (four checks). Then `verify-drop.mjs` as above. Re-run `seadrop-drop.mjs` whenever the list changes, and configure again before the list stage starts. The NEONLIST (3 Oct): `config/allowlists/opensea/list-communities.csv`, one wallet per line, 0.004 ETH, 15 per wallet in total; since 4 Oct the panel offers only the NEONLIST: before it opens, its date, countdown and terms (no mint button) and, once its wallets are set, whether a connected wallet is on it, with the values for minting from the explorer; then the mint for wallets on it. Deploy the site with the new proofs before or after the configure transaction: until SeaDrop's root matches params.json the panel only offers the public stage.
 
 The web app mints when `web/public/drop/params.json` is published with it: the panel on Home shows a countdown, then the stage open for the connected wallet (its proof on the list, what it minted, what is left), simulates each mint and sends it to SeaDrop with OpenSea's fee recipient. Every Face minted is then born on screen with its account and basket, read from the transaction, and the screen lights up neon; each size from 1 to 5 has its own scene. So on plan B the web app goes live **before Thu 18:00 UTC**, with the proofs (`tools/site.sh deploy web`, 256 proof files, 29 MB). **On the Studio path, delete `web/public/drop/` before building**, or the site would offer its own mint next to OpenSea's.
 

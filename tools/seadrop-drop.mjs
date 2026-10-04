@@ -5,7 +5,8 @@
 //                                   [--fee-recipient 0x…] [--rpc URL]
 //
 // The NEONLIST (3 Oct, the founder): chosen wallets mint at 0.004 ETH, up to 15 Faces each in total (every stage counts),
-// from --list-start to the public stage's end (always the same end), while the public stage stays open to everyone at 0.009. The CSV (default
+// from --list-start (Tue 13 Oct 13:00 UTC) to Sat 31 Oct 18:00 UTC; since 4 Oct the site offers no other stage (SeaDrop's public
+// stage stays configured on-chain, at 0.009, but the site doesn't show it). The CSV (default
 // config/allowlists/opensea/list-communities.csv, git-ignored) has one wallet per line: `address` or `address,15`.
 //
 // -> config/allowlists/opensea/drop.4663.json (git-ignored folder): the list stage's MintParams, the public drop, the

@@ -190,28 +190,20 @@ def icons() -> None:
         (landing / name).write_bytes((WEB / name).read_bytes())
 
 
-def lime_portrait(path: Path, size: int, seed: int = 419) -> Image.Image:
-    """A source portrait of the collection (a person who doesn't exist) lit like the site: its greys mapped onto the eye
-    palette, black through olive to neon and ice, with a fine film grain so it reads as a photograph, not a filter."""
-    im = Image.open(path).convert("L")
-    w, h = im.size
-    c = int(min(w, h) * 0.86)  # a close crop: forehead to chin, the eyes on the upper third
-    left, top = (w - c) // 2, int(h * 0.10)
-    im = im.crop((left, top, left + c, top + c)).resize((size, size), Image.LANCZOS)
-    g = np.asarray(im, dtype=np.float32) / 255.0
-    g = np.clip((g - 0.08) / 0.84, 0, 1) ** 0.95  # open the shadows a little, keep the highlights
-    rng = np.random.default_rng(seed)
-    g = np.clip(g + rng.normal(0, 0.025, g.shape), 0, 1)
-    stops = np.linspace(0, 1, len(EYE_PAL))
-    pal = np.array(EYE_PAL, dtype=np.float32)
-    rgb = np.stack([np.interp(g, stops, pal[:, k]) for k in range(3)], axis=-1)
-    return Image.fromarray(rgb.astype(np.uint8), "RGB")
+def set_face(set_id: int, size: int, cells: int = 48) -> Image.Image:
+    """A whole set's Face (its four pieces as one face, art/output/images, drawn from the on-chain records) on black,
+    at a whole number of pixels per cell so every cell stays square and sharp."""
+    face = Image.open(ROOT / "output" / "images" / f"set-{set_id}.png").convert("RGB").resize((cells, cells), Image.NEAREST)
+    k = size // cells
+    out = Image.new("RGB", (size, size), BLACK)
+    out.paste(face.resize((cells * k, cells * k), Image.NEAREST), ((size - cells * k) // 2, (size - cells * k) // 2))
+    return out
 
 
 def og_card(faces: list[str], hero) -> None:
     """The link preview (29 Sep): NEONCAM's lit page. Neon field with its dot grid, black type, one face in a black
     frame with the site's offset shadow, and the NEONCAM photo's black band along the bottom. Since 5 Oct the face is
-    a person of the collection (set #419's portrait, 31), lit in the palette, instead of a Face's pixels."""
+    set #419's: the face of the collection (the founder)."""
     W, H = 1200, 630
     og = Image.new("RGB", (W, H), NEON)
     d = ImageDraw.Draw(og)
@@ -295,8 +287,8 @@ def banner_gif(faces: list[str]) -> None:
         (landing / name).write_bytes((BRAND / name).read_bytes())
 
 
-# the link preview's face (the founder, 5 Oct): a person of the collection around 30, set #419's portrait (a woman, 31)
-OG_PORTRAIT = lambda: lime_portrait(ROOT / "portraits" / "set-419.png", 450)  # noqa: E731
+# the link preview's face (the founder, 5 Oct): set #419's Face, the face of the collection
+OG_PORTRAIT = lambda: set_face(419, 450)  # noqa: E731
 
 
 def main() -> None:

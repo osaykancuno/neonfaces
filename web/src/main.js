@@ -97,7 +97,8 @@ function route() {
     window.scrollTo(0, 0);
     showFace(Number(m[1]));
   } else if (location.hash.length > 1) {
-    requestAnimationFrame(() => document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: changed ? "auto" : "smooth" }));
+    // a timer, not requestAnimationFrame: a tab opened in the background (a link from X) still lands on the section
+    setTimeout(() => document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: changed ? "auto" : "smooth" }), 60);
   } else if (changed) {
     window.scrollTo(0, 0);
   }

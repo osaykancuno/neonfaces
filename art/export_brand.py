@@ -190,9 +190,28 @@ def icons() -> None:
         (landing / name).write_bytes((WEB / name).read_bytes())
 
 
+def lime_portrait(path: Path, size: int, seed: int = 419) -> Image.Image:
+    """A source portrait of the collection (a person who doesn't exist) lit like the site: its greys mapped onto the eye
+    palette, black through olive to neon and ice, with a fine film grain so it reads as a photograph, not a filter."""
+    im = Image.open(path).convert("L")
+    w, h = im.size
+    c = int(min(w, h) * 0.86)  # a close crop: forehead to chin, the eyes on the upper third
+    left, top = (w - c) // 2, int(h * 0.10)
+    im = im.crop((left, top, left + c, top + c)).resize((size, size), Image.LANCZOS)
+    g = np.asarray(im, dtype=np.float32) / 255.0
+    g = np.clip((g - 0.08) / 0.84, 0, 1) ** 0.95  # open the shadows a little, keep the highlights
+    rng = np.random.default_rng(seed)
+    g = np.clip(g + rng.normal(0, 0.025, g.shape), 0, 1)
+    stops = np.linspace(0, 1, len(EYE_PAL))
+    pal = np.array(EYE_PAL, dtype=np.float32)
+    rgb = np.stack([np.interp(g, stops, pal[:, k]) for k in range(3)], axis=-1)
+    return Image.fromarray(rgb.astype(np.uint8), "RGB")
+
+
 def og_card(faces: list[str], hero) -> None:
-    """The link preview (29 Sep): NEONCAM's lit page. Neon field with its dot grid, black type, one Face in a black
-    frame with the site's offset shadow, and the NEONCAM photo's black band along the bottom."""
+    """The link preview (29 Sep): NEONCAM's lit page. Neon field with its dot grid, black type, one face in a black
+    frame with the site's offset shadow, and the NEONCAM photo's black band along the bottom. Since 5 Oct the face is
+    a person of the collection (set #419's portrait, 31), lit in the palette, instead of a Face's pixels."""
     W, H = 1200, 630
     og = Image.new("RGB", (W, H), NEON)
     d = ImageDraw.Draw(og)
@@ -202,7 +221,7 @@ def og_card(faces: list[str], hero) -> None:
     x0, y0, S = 70, 60, 450
     d.rectangle([x0 + 14, y0 + 14, x0 + S + 14 + 16, y0 + S + 14 + 16], fill=BLACK)  # the offset shadow
     d.rectangle([x0, y0, x0 + S + 16, y0 + S + 16], fill=BLACK)
-    og.paste(hero.resize((S, S), Image.NEAREST) if isinstance(hero, Image.Image) else face_image(hero, S), (x0 + 8, y0 + 8))
+    og.paste(hero.resize((S, S), Image.NEAREST if hero.width < S else Image.LANCZOS) if isinstance(hero, Image.Image) else face_image(hero, S), (x0 + 8, y0 + 8))
     cx = 870
     draw_centered(d, "NEONFACES", cx, 150, 8, BLACK)
     draw_centered(d, "THEY DON'T BLINK.", cx, 250, 4, BLACK)
@@ -214,8 +233,7 @@ def og_card(faces: list[str], hero) -> None:
     from neonfaces.pixelfont import draw_text, text_width
     draw_text(d, "NEONFACES", 40, H - 45, 4, NEON)
     draw_text(d, "NEONFACES.XYZ", W - 40 - text_width("NEONFACES.XYZ", 3), H - 41, 3, (201, 212, 163))
-    og.save(WEB / "og.png", optimize=True)
-    (ROOT.parent / "landing" / "og.png").write_bytes((WEB / "og.png").read_bytes())
+    og.save(WEB / "og.png", optimize=True)  # the web app only: landing/ is retired (1 Oct)
 
 
 def logo_gif() -> None:
@@ -277,12 +295,16 @@ def banner_gif(faces: list[str]) -> None:
         (landing / name).write_bytes((BRAND / name).read_bytes())
 
 
+# the link preview's face (the founder, 5 Oct): a person of the collection around 30, set #419's portrait (a woman, 31)
+OG_PORTRAIT = lambda: lime_portrait(ROOT / "portraits" / "set-419.png", 450)  # noqa: E731
+
+
 def main() -> None:
     BRAND.mkdir(exist_ok=True)
     gallery = json.loads((WEB / "data" / "gallery.json").read_text())
     faces = [f["record"] for f in gallery["faces"]]
     icons()
-    og_card(faces, Image.open(ROOT.parent / "landing" / "img" / "set-337.png").convert("RGB"))  # a whole face: set #337's four pieces
+    og_card(faces, OG_PORTRAIT())
     logo_gif()
     banner_gif(faces)
     for p in sorted([*WEB.glob("favicon.*"), *WEB.glob("*icon*.png"), WEB / "og.png", *BRAND.iterdir()]):
@@ -290,4 +312,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    if "--og" in sys.argv:  # only the link preview
+        og_card([], OG_PORTRAIT())
+        print("web/public/og.png")
+    else:
+        main()

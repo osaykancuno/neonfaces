@@ -80,6 +80,8 @@ document.addEventListener("click", (e) => {
 function route() {
   // the preview's NEONCAM link (/#cam), shared before the launch, opens the Cam view
   if (location.pathname === "/" && location.hash === "#cam") history.replaceState({}, "", "/cam");
+  // the link the posts share (5 Oct): a fresh address for X's link cards, straight to the NEONLIST panel
+  if (location.pathname === "/neonlist") history.replaceState({}, "", "/#mint");
   const m = location.pathname.match(/^\/face\/(\d+)/) || location.hash.match(/^#\/face\/(\d+)/);
   let tab = m ? "faces" : location.pathname.split("/")[1] ?? "";
   if (!m && (tab === "faces" || tab === "sets") && document.documentElement.classList.contains("until-reveal")) {

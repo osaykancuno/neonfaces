@@ -3,12 +3,14 @@
 //
 // While recording, every NEONCAM frame is drawn into a square with the photo's band (NEONFACES, NEONCAM · the site):
 // the video is that canvas through MediaRecorder (MP4 where the browser can, WebM otherwise); the GIF is built from
-// the same frames at 384 px, each with its own timing, played forward then backward so it loops without a jump.
+// the same frames at 384 px, three times faster than life, played forward then backward so it loops without a jump.
 
 // the cam's own canvas is 768 px: 24, 32 and 48 cells are 32, 24 and 16 px, so the video keeps the cells exact (and
 // even, which the video's colour sampling needs), and the GIF at half size keeps them square too
 const SIZE = 768; // the video
 const GIF_SIZE = 384;
+const GIF_SPEED = 3; // the GIF runs three times faster than life (7 Oct, the founder: quick back and forth, like a meme)
+const GIF_STEP = 4; // hundredths of a second per GIF frame: 25 frames a second
 const BAND = 0.0667; // the band's height, as in the 1080 px photo (72 px)
 
 /** The photo's band, scaled to a square of side `s`. */
@@ -111,12 +113,16 @@ export function camRecorder(out) {
     async gif() {
       if (!frames.length) throw new Error("no frames");
       if (!pal) fixPalette();
-      // forward, then backward without repeating the two ends: a loop with no jump; each frame keeps its own timing
-      const n = frames.length;
-      const hold = frames.map((_, i) => Math.max(2, Math.round(((times[i + 1] ?? times[i] + 70) - times[i]) / 10)));
-      const order = frames.map((_, i) => i);
-      for (let i = n - 2; i > 0; i--) order.push(i);
-      return encodeGif(GIF_SIZE, GIF_SIZE, pal.bytes, order.map((i) => frames[i]), order.map((i) => hold[Math.min(i, n - 2)] ?? 7));
+      // GIF_SPEED times faster than life, like a meme: one frame of the clip every GIF_STEP of GIF time, each held for
+      // its share of the clip (a slow device's sparse frames keep the same speed); then forward and backward without
+      // repeating the two ends, a loop with no jump
+      const n = frames.length, step = GIF_STEP * 10 * GIF_SPEED; // ms of the clip per GIF frame
+      const pick = [0];
+      for (let i = 1; i < n; i++) if (times[i] - times[pick[pick.length - 1]] >= step - 1 || i === n - 1) pick.push(i);
+      const hold = pick.map((f, k) => Math.max(2, Math.round(((times[pick[k + 1]] ?? times[f] + step) - times[f]) / (10 * GIF_SPEED))));
+      const order = pick.map((_, k) => k);
+      for (let k = pick.length - 2; k > 0; k--) order.push(k);
+      return encodeGif(GIF_SIZE, GIF_SIZE, pal.bytes, order.map((k) => frames[pick[k]]), order.map((k) => hold[Math.min(k, pick.length - 2)] ?? GIF_STEP));
     },
   };
 

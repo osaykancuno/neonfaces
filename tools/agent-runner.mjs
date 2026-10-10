@@ -16,7 +16,7 @@ import { route as routeOf } from "./route.mjs";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPublicClient, createWalletClient, http, parseAbi, parseAbiItem, encodeFunctionData, formatUnits, getAddress } from "viem";
+import { createPublicClient, createWalletClient, http, fallback, parseAbi, parseAbiItem, encodeFunctionData, formatUnits, getAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -36,8 +36,11 @@ if (!process.env.RUNNER_PK) throw new Error("set RUNNER_PK (the strategy agent k
 if (!dep.trader) throw new Error("deployments file needs trader");
 const chain = { id: chainId, name: "robinhood", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [rpc] } } };
 const me = privateKeyToAccount(process.env.RUNNER_PK);
-const pub = createPublicClient({ chain, transport: http(rpc, { batch: true }) });
-const wallet = createWalletClient({ account: me, chain, transport: http(rpc) });
+// 10 Oct: the official node's Cloudflare sometimes answers Node clients with a 403 challenge page: fall through to
+// PublicNode (no logs) and dRPC (logs in ranges up to 10,000 blocks, hence the scan step below)
+const nodes = [...new Set([rpc, ...(chainId === 4663 ? ["https://rpc.mainnet.chain.robinhood.com", "https://robinhood-rpc.publicnode.com", "https://robinhood.drpc.org"] : [])])];
+const pub = createPublicClient({ chain, transport: fallback(nodes.map((u) => http(u, { batch: true }))) });
+const wallet = createWalletClient({ account: me, chain, transport: fallback(nodes.map((u) => http(u))) });
 
 const abi = parseAbi([
   "function strategyOf(address) view returns ((uint8 kind, address token, address funding, uint16 bps, uint32 every, uint96 usd8))",
@@ -62,7 +65,13 @@ const read = (address, functionName, args = []) => pub.readContract({ address, a
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 const tokens = cfg.tokens.map((t) => ({ ...t, address: getAddress(t.address), dec: t.symbol === "WETH" ? 18 : t.decimals ?? null }));
-for (const t of tokens) if (t.dec == null) t.dec = Number(await read(t.address, "decimals"));
+try {
+  for (const t of tokens) if (t.dec == null) t.dec = Number(await read(t.address, "decimals"));
+} catch (e) {
+  // no node answered: nothing is lost, the next turn tries again (a failed step would only mark the keeper run red)
+  console.log("no RPC answered, strategies wait for the next turn:", e.shortMessage ?? e.message);
+  process.exit(0);
+}
 const bySym = Object.fromEntries(tokens.map((t) => [t.symbol, t]));
 const byAddr = Object.fromEntries(tokens.map((t) => [t.address.toLowerCase(), t]));
 const USDG = bySym.USDG;
@@ -83,7 +92,7 @@ const save = () => STATE && writeFileSync(STATE, JSON.stringify(st));
 async function discover() {
   const latest = await pub.getBlockNumber();
   let from = BigInt(st.fromBlock);
-  const step = 50_000n;
+  const step = 10_000n; // dRPC's free limit, if the scan falls through to it
   while (from <= latest) {
     const to = from + step - 1n < latest ? from + step - 1n : latest;
     const logs = await pub.getLogs({ address: dep.trader, event: STRATEGY_SET, fromBlock: from, toBlock: to });

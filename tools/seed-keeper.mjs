@@ -29,7 +29,7 @@ import { route as routeOf } from "./route.mjs";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPublicClient, createWalletClient, http, parseAbi, keccak256, encodeAbiParameters, formatEther } from "viem";
+import { createPublicClient, createWalletClient, http, fallback, parseAbi, keccak256, encodeAbiParameters, formatEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -55,8 +55,11 @@ const rpc = process.env.RPC_URL || { 4663: "https://rpc.mainnet.chain.robinhood.
 if (!process.env.PK) throw new Error("set PK (the keeper key, or any key with a little ETH for gas)");
 if (!dep.seedVault || !dep.trader) throw new Error("deployments file needs seedVault and trader");
 const chain = { id: chainId, name: "robinhood", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [rpc] } } };
-const pub = createPublicClient({ chain, transport: http(rpc, { batch: true }) });
-const wallet = createWalletClient({ account: privateKeyToAccount(process.env.PK), chain, transport: http(rpc) });
+// 10 Oct: the official node's Cloudflare sometimes answers Node clients with a 403 challenge page (GitHub runners
+// included), so every call falls through to PublicNode, then dRPC (none of them is needed for logs here)
+const nodes = [...new Set([rpc, ...(chainId === 4663 ? ["https://rpc.mainnet.chain.robinhood.com", "https://robinhood-rpc.publicnode.com", "https://robinhood.drpc.org"] : [])])];
+const pub = createPublicClient({ chain, transport: fallback(nodes.map((u) => http(u, { batch: true }))) });
+const wallet = createWalletClient({ account: privateKeyToAccount(process.env.PK), chain, transport: fallback(nodes.map((u) => http(u))) });
 
 const abi = parseAbi([
   "function totalSupply() view returns (uint256)",

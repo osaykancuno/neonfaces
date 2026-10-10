@@ -83,6 +83,8 @@ const NEONLIST = {
   startTime: BigInt(Date.UTC(2026, 9, 13, 13) / 1000),
   endTime: BigInt(Date.UTC(2026, 9, 31, 18) / 1000),
 };
+/** The wallet check opens Mon 12 Oct 09:00 UTC (the founder, 10 Oct), with the post that announces it. */
+const CHECK_OPENS = Date.UTC(2026, 9, 12, 9) / 1000;
 /** The NEONLIST is set when SeaDrop's public stage holds its price and window. */
 const listSet = (v) =>
   !!v?.configured && P.public.mintPrice === NEONLIST.mintPrice && P.public.startTime === NEONLIST.startTime && P.public.endTime === NEONLIST.endTime;
@@ -232,7 +234,8 @@ function paint() {
     html = `<p class="mint-line">The NEONLIST opens <b>${esc(when(l.startTime))}</b>.</p>
       <p class="mint-count" id="mint-count" aria-label="Time until the NEONLIST opens">${countdown(Number(l.startTime) - nowChain())}</p>
       <p class="fine">${terms}</p>`;
-    if (!view.account) html += `<button class="btn btn-neon btn-wide" data-mint="connect">Check your wallet</button><p class="fine">Connecting signs nothing.</p>`;
+    if (nowChain() < CHECK_OPENS) html += `<p class="msg">The wallet check opens ${esc(when(CHECK_OPENS))}.</p>`;
+    else if (!view.account) html += `<button class="btn btn-neon btn-wide" data-mint="connect">Check your wallet</button><p class="fine">Connecting signs nothing.</p>`;
     else html += fixes(view, o) + who;
   } else if (o.stage === "waiting") {
     html = `<p class="mint-line">Opening in a moment: the NEONLIST is being set on-chain.</p><p class="fine">This page checks every few seconds. No need to reload.</p>${who}`;
@@ -263,7 +266,7 @@ function paint() {
     }
   }
   // the explorer path (the founder, 4 Oct): a wallet can send the same call itself; these are its values
-  if (view.account && (o.stage === "before" || o.stage === "list")) {
+  if (view.account && (o.stage === "list" || (o.stage === "before" && nowChain() >= CHECK_OPENS))) {
     const row = (k, v) => `<dt>${k}</dt><dd><code>${esc(v)}</code></dd>`;
     html += `<details class="explorer-mint"><summary>Mint from the explorer instead</summary>
       <p class="fine">From ${esc(when(l.startTime))}: on <a href="https://robinhoodchain.blockscout.com/address/${P.seaDrop}?tab=write_contract" target="_blank" rel="noopener">OpenSea's SeaDrop contract</a>, connect this wallet and call <code>mintPublic</code> with these values, sending ${ethFmt(l.mintPrice)} times the quantity. It is the same transaction this page sends.</p>
@@ -274,7 +277,7 @@ function paint() {
   const keep = $("#mint-result")?.innerHTML;
   box.innerHTML = html;
   if (keep) $("#mint-result").innerHTML = keep;
-  if (o.stage === "before" && view.account) stare(view, o);
+  if (o.stage === "before" && view.account && nowChain() >= CHECK_OPENS) stare(view, o);
   else if (o.stage !== "before") $("#stare").hidden = !busy;
 }
 
@@ -441,10 +444,10 @@ export function setupSiteMint(helpers) {
   setInterval(() => {
     heroTick();
     if (!view) return;
-    const s = stageAt(nowChain());
+    const s = stageAt(nowChain()) + (nowChain() >= CHECK_OPENS ? "+check" : "");
     if (s !== last && last !== null) {
       refresh();
-      if (s === "list") opening();
+      if (s.startsWith("list") && !last.startsWith("list")) opening();
     }
     last = s;
     const c = $("#mint-count");

@@ -1,8 +1,9 @@
-// A NEONFACES eye rendered live in blocks. It follows the cursor. It never blinks.
+// A NEONFACES eye rendered live in blocks. It follows the cursor. It never blinks; it can open, slowly (setOpen), for
+// the NEONLIST check: the stare finds the wallet.
 const PALETTE = ["#000000", "#1f2504", "#414d12", "#677920", "#94b21d", "#ccff00", "#f2ffc8"];
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => v / 16 - 0.47);
 
-export function pixelEye(canvas, { cols = 48, rows = 24, fade = true } = {}) {
+export function pixelEye(canvas, { cols = 48, rows = 24, fade = true, open = 1 } = {}) {
   const ctx = canvas.getContext("2d");
   const W = canvas.width;
   const H = canvas.height;
@@ -12,6 +13,8 @@ export function pixelEye(canvas, { cols = 48, rows = 24, fade = true } = {}) {
   const gaze = { x: 0, y: 0 };
   let saccade = { x: 0, y: 0, t: 0 };
   let visible = true;
+  let lid = open; // 0 closed (a lash line), 1 wide open
+  let lidTo = open;
 
   const onMove = (e) => {
     const r = canvas.getBoundingClientRect();
@@ -23,7 +26,7 @@ export function pixelEye(canvas, { cols = 48, rows = 24, fade = true } = {}) {
   window.addEventListener("pointermove", onMove, { passive: true });
   new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(canvas);
 
-  function lum(u, v, gx, gy, t) {
+  function lum(u, v, gx, gy, t, lid) {
     // u in [-1,1] across, v in [-1,1] down
     let L = 1.0;
     // socket shadow, deeper at the inner corner (left)
@@ -33,7 +36,7 @@ export function pixelEye(canvas, { cols = 48, rows = 24, fade = true } = {}) {
     const by = -0.72 - 0.12 * Math.sin(Math.PI * Math.min(1, Math.max(0, (u + 0.9) / 1.8)));
     if (Math.abs(v - by) < 0.13 * (1.2 - (u + 1) * 0.25) && u > -0.85 && u < 0.9) L *= 0.08;
     // crease
-    const eh = 0.36;
+    const eh = 0.36 * lid;
     if (Math.abs(v - (-eh - 0.16 + 0.1 * u * u)) < 0.05 && Math.abs(u) < 0.75) L -= 0.25;
     // almond
     const w = 0.72;
@@ -41,7 +44,7 @@ export function pixelEye(canvas, { cols = 48, rows = 24, fade = true } = {}) {
     if (Math.abs(dx) < 1) {
       const up = -eh * Math.pow(1 - dx * dx, 0.8) - 0.03 * dx;
       const lo = eh * 0.8 * Math.pow(1 - dx * dx, 0.9) - 0.03 * dx;
-      if (v > up && v < lo) {
+      if (lid > 0.04 && v > up && v < lo) {
         L = 0.62 - 0.12 * (1 - Math.abs(dx));
         const ix = gx * w * 0.5;
         const iy = gy * eh * 0.35;
@@ -70,13 +73,14 @@ export function pixelEye(canvas, { cols = 48, rows = 24, fade = true } = {}) {
     if (t > saccade.t) saccade = { x: (Math.random() - 0.5) * 0.18, y: (Math.random() - 0.5) * 0.12, t: t + 0.6 + Math.random() * 1.4 };
     gaze.x += (target.x + saccade.x - gaze.x) * 0.12;
     gaze.y += (target.y + saccade.y - gaze.y) * 0.12;
+    lid += (lidTo - lid) * 0.07;
 
     ctx.clearRect(0, 0, W, H);
     for (let j = 0; j < rows; j++) {
       for (let i = 0; i < cols; i++) {
         const u = ((i + 0.5) / cols) * 2 - 1;
         const v = ((j + 0.5) / rows) * 2 - 1;
-        let L = lum(u * 1.25, v * 1.25, gaze.x, gaze.y, t);
+        let L = lum(u * 1.25, v * 1.25, gaze.x, gaze.y, t, lid);
         const d = BAYER[(j % 4) * 4 + (i % 4)];
         // fade to transparent at the frame edges (dithered)
         const edge = fade ? Math.min(1, (1 - Math.hypot(u * 0.92, v * 0.98)) * 3.4) : 1;
@@ -88,4 +92,5 @@ export function pixelEye(canvas, { cols = 48, rows = 24, fade = true } = {}) {
     }
   }
   requestAnimationFrame(frame);
+  return { setOpen: (v) => (lidTo = Math.max(0, Math.min(1, v))) };
 }

@@ -479,14 +479,14 @@ function setupMint() {
 /** Plan B: the panel mints here. The words that said "on OpenSea" say where the mint really happens. */
 function startSiteMint(drop) {
   siteMint = true;
-  const fee = Number(drop.list.feeBps) / 100;
+  const fee = Number(drop.public.feeBps) / 100;
   $("#hero-mint").textContent = "NEONLIST";
   const btn = $("#opensea-btn");
   btn.className = "btn btn-ghost btn-wide";
   btn.textContent = "The collection on OpenSea ↗";
   if (!btn.href) btn.hidden = true;
   $("#official-os-label").textContent = "Collection";
-  $("#mint-fine").textContent = `Minting happens right here, through OpenSea's SeaDrop contract: the same contract OpenSea's own drops use, so the stage, price, limit and list are enforced on-chain, not by this page. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only, not ownership of shares.`;
+  $("#mint-fine").textContent = `Minting happens right here, through OpenSea's SeaDrop contract: the same contract OpenSea's own drops use, so the stage, price and limit are enforced on-chain, not by this page. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only, not ownership of shares.`;
   $("#funds-lead").innerHTML = `The mint runs through OpenSea's SeaDrop contract${fee ? `, and OpenSea keeps ${fee}% of primary sales` : ""}. The rest can only be paid to <code>NeonPayout</code>: shares and addresses are immutable, and anyone can push the split with <code>releaseAll()</code>. Resale royalties: 5% suggested on-chain (ERC-2981) to the treasury multisig, optional because transfers are never restricted.`;
   $("#faq-where").textContent = "Right here: the Mint button on Home opens the panel, which mints through OpenSea's SeaDrop contract on Robinhood Chain. Your Faces show up on OpenSea and trade there. This app is also where you look inside your Faces and manage them: withdraw, trade, lock, assemble sets, delegate an agent.";
   setupSiteMint({

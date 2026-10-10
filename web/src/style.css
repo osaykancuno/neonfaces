@@ -580,7 +580,9 @@ a, button, summary, label, input, select, textarea { -webkit-tap-highlight-color
 .qty .fine { margin: 0; }
 #site-mint .btn-wide[data-mint="mint"]:not(:disabled) { box-shadow: 0 0 0 1px var(--neon), 0 0 26px rgba(204, 255, 0, .35); }
 #site-mint .btn:disabled { cursor: not-allowed; }
-#site-mint + .mint-log + .btn { margin-top: 14px; }
+#site-mint + .btn { margin-top: 14px; }
+#site-mint .btn-wide + .btn-wide, #site-mint .msg + .btn-wide { margin-top: 10px; }
+.stare + .mint-log { margin: 0 0 16px; }
 .mint-log { font-family: var(--mono); font-size: 12px; line-height: 1.7; color: var(--text); background: #000; border: 1px solid var(--line); padding: 10px 12px; margin-top: 14px; white-space: pre-wrap; }
 .mint-log .neon, .birth-log .neon { color: var(--neon); }
 .explorer-mint { margin-top: 14px; border: 1px solid var(--line); padding: 10px 12px; }
@@ -592,6 +594,14 @@ a, button, summary, label, input, select, textarea { -webkit-tap-highlight-color
 .mint-log .dim, .birth-log .dim { color: var(--dim); }
 .mint-log .err { color: #ff5d7a; }
 .mint-panel.flash { animation: stage-open 1.1s steps(6) 1; }
+/* The Stare (10 Oct): #419's eye opens on the wallet during the NEONLIST check and watches the signature */
+.stare { position: relative; margin: 0 0 16px; border: 1px solid var(--line); background: #000; aspect-ratio: 2 / 1; overflow: hidden; }
+.stare canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; opacity: .55; filter: saturate(.6); transition: opacity .6s steps(4), filter .6s steps(4); }
+.stare.ready { border-color: var(--neon); box-shadow: 0 0 0 1px var(--neon), 0 0 28px rgba(204, 255, 0, .3); }
+.stare.ready canvas { opacity: 1; filter: drop-shadow(0 0 10px rgba(204, 255, 0, .55)); }
+.stare.short canvas { opacity: .7; }
+.stare::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 0 46%, rgba(204, 255, 0, .22) 50%, transparent 54%) 0 0 / 100% 200%; animation: scan 2.4s linear infinite; pointer-events: none; mix-blend-mode: screen; }
+.stare.ready::after { animation: none; opacity: 0; }
 @keyframes stage-open { 0%, 30%, 60% { background: var(--neon); } 15%, 45%, 100% { background: #030400; } }
 
 /* the art pane while minting: the eye while you sign, Faces flickering while the chain writes */
@@ -655,7 +665,7 @@ html.birth-lit #cursor { border-color: #000; }
   .birth[data-n="5"] .birth-grid { grid-template-columns: repeat(3, 27vw); gap: 8px; }
   .birth-log { min-height: 0; }
 }
-@media (prefers-reduced-motion: reduce) { .chamber-scan { animation: none; } .mint-panel.flash { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .chamber-scan, .stare::after { animation: none; } .mint-panel.flash { animation: none; } }
 
 /* ------------------------------------------------------------------ NEONCAM (the Cam view, from the preview; cam.js) */
 #view-cam .prose { display: grid; gap: 14px; max-width: 760px; margin-bottom: 18px; }

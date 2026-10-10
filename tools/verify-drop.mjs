@@ -41,7 +41,7 @@ const ROLES = {
   seedVault: ["DEFAULT_ADMIN", "KEEPER_ROLE"],
   art: ["DEFAULT_ADMIN", "ARTIST_ROLE"],
 };
-const PUBLIC_START = Date.UTC(2026, 9, 2, 13) / 1000; // Friday 2 October 2026 13:00 UTC (the founder, 2 Oct: five hours earlier)
+const PUBLIC_START = Date.UTC(2026, 9, 13, 13) / 1000; // the NEONLIST (SeaDrop's public stage): Tuesday 13 October 2026 13:00 UTC
 const PUBLIC_END = Date.UTC(2026, 9, 31, 18) / 1000; // Saturday 31 October 2026 18:00 UTC
 const roleId = (r) => (r === "DEFAULT_ADMIN" ? "0x" + "00".repeat(32) : keccak256(toHex(r)));
 const sd = (functionName) => pub.readContract({ address: dep.seaDrop, abi, functionName, args: [dep.faces] });
@@ -63,28 +63,33 @@ const [drop, payout, root, fees, signers, payers, gated, owner, manager, admin, 
 ok(getAddress(payout) === getAddress(dep.payout), `creator payout is NeonPayout (${payout})`);
 ok(drop.feeBps <= 1000 && drop.restrictFeeRecipients, `public stage fee ${drop.feeBps / 100}% with restricted recipients`);
 info(`public stage: ${formatEther(drop.mintPrice)} ETH, ${drop.maxTotalMintableByWallet}/wallet, ${new Date(Number(drop.startTime) * 1000).toISOString()} -> ${new Date(Number(drop.endTime) * 1000).toISOString()}`);
-// a public stage with a start time and price 0 would be a free mint for everyone: the stage must be set, at 0.009 (2 Oct)
+// a public stage with a start time and price 0 would be a free mint for everyone: the stage must be set, at 0.004 (10 Oct)
 ok(drop.startTime !== 0, "the public stage is configured");
-ok(drop.mintPrice === 9_000_000_000_000_000n, "public price is 0.009 ETH (the list's price lives in its Merkle leaves: see below)");
+ok(drop.mintPrice === 4_000_000_000_000_000n, "NEONLIST price is 0.004 ETH");
 ok(drop.maxTotalMintableByWallet === 15, `public: 15 Faces per wallet in total (${drop.maxTotalMintableByWallet})`);
-ok(drop.startTime === PUBLIC_START, `public opens Friday 2 October 13:00 UTC (${new Date(drop.startTime * 1000).toISOString()})`);
+ok(drop.startTime === PUBLIC_START, `the NEONLIST opens Tuesday 13 October 13:00 UTC (${new Date(drop.startTime * 1000).toISOString()})`);
 ok(drop.endTime === PUBLIC_END, `public ends Saturday 31 October 18:00 UTC at the latest (${new Date(drop.endTime * 1000).toISOString()})`);
 ok(fees.length === 1, `exactly one allowed fee recipient: ${fees.join(", ") || "none"}`);
 if (process.env.OPENSEA_FEE_RECIPIENT) {
   ok(fees.every((f) => getAddress(f) === getAddress(process.env.OPENSEA_FEE_RECIPIENT)), "fee recipient is OpenSea's");
 } else info("set OPENSEA_FEE_RECIPIENT to check the fee recipient is OpenSea's (see the fee address on OpenSea's other drops)");
-ok(signers.length === 0, `no server-signed mint signers (${signers.length})`);
+// OpenSea Studio's signer (1 Oct) may sign mints only inside its validation window: harmless once that window is over
+const VP = parseAbi(["function getSignedMintValidationParams(address,address) view returns ((uint80 minMintPrice, uint24 maxMaxTotalMintableByWallet, uint40 minStartTime, uint40 maxEndTime, uint40 maxMaxTokenSupplyForStage, uint16 minFeeBps, uint16 maxFeeBps))"]);
+for (const s of signers) {
+  const vp = await pub.readContract({ address: dep.seaDrop, abi: VP, functionName: "getSignedMintValidationParams", args: [dep.faces, s] });
+  ok(Number(vp.maxEndTime) < Date.now() / 1000, `signer ${s}: signed mints only until ${new Date(Number(vp.maxEndTime) * 1000).toISOString()} (min price ${formatEther(vp.minMintPrice)} ETH)`);
+}
+if (!signers.length) ok(true, "no server-signed mint signers");
 ok(gated.length === 0, `no token-gated stages (${gated.length})`);
 info(`payers allowed to mint for others: ${payers.length ? payers.join(", ") : "none"} (OpenSea may add its own)`);
-ok(!/^0x0{64}$/.test(root), `the list stage has its allowlist (root ${root})`);
-// the site's list (tools/seadrop-drop.mjs): its root must be the one on SeaDrop, or the panel offers no list price
+info(`allowlist root ${root} (the 2 Oct list, ended; the NEONLIST is the public stage and needs no proof)`);
+// the site's parameters (tools/seadrop-drop.mjs) must match SeaDrop's public stage
 try {
   const params = JSON.parse(readFileSync(resolve(here, "../web/public/drop/params.json"), "utf8"));
-  ok(params.root.toLowerCase() === root.toLowerCase(), `the site's list (web/public/drop/params.json) has SeaDrop's root`);
-  const now = Date.now() / 1000;
-  info(`the list: ${formatEther(BigInt(params.list.mintPrice))} ETH, ${params.list.maxTotalMintableByWallet}/wallet in total, ${new Date(params.list.startTime * 1000).toISOString()} -> ${new Date(params.list.endTime * 1000).toISOString()} (${now < params.list.startTime ? "not open yet" : now < params.list.endTime ? "open" : "over"})`);
+  const p = params.public;
+  ok(BigInt(p.mintPrice) === drop.mintPrice && p.startTime === drop.startTime && p.endTime === drop.endTime && p.maxTotalMintableByWallet === drop.maxTotalMintableByWallet, "the site's parameters (web/public/drop/params.json) match SeaDrop's public stage");
 } catch {
-  info("no web/public/drop/params.json here: the list's terms can't be checked against the site");
+  info("no web/public/drop/params.json here: the site's terms can't be checked against SeaDrop");
 }
 info(`owner() on OpenSea: ${owner}${getAddress(manager) === "0x0000000000000000000000000000000000000000" ? " (the Safe)" : " (sale manager: clear it after the sale)"}; admin ${admin}`);
 info(`supply ${supply} / sellable max ${max}; mint ${paused ? "PAUSED" : "open"}`);

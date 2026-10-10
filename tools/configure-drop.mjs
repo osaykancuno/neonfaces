@@ -1,7 +1,7 @@
 // Plan B, the one transaction the sale manager signs: configure the SeaDrop stages on NeonFaces (multiConfigure,
 // the same call OpenSea Studio makes), from a page served on this computer only.
 //
-//   node tools/seadrop-drop.mjs 4663          # first: builds the calldata from the list
+//   node tools/seadrop-drop.mjs 4663          # first: builds the calldata (the NEONLIST: SeaDrop's public stage)
 //   node tools/configure-drop.mjs 4663 [--rpc http://127.0.0.1:8549] [--port 8787]
 //   -> open http://127.0.0.1:8787 in the browser where the sale manager's wallet is
 //
@@ -29,7 +29,6 @@ const dep = JSON.parse(fs.readFileSync(path.join(ROOT, `contracts/deployments/${
 if (getAddress(plan.faces) !== getAddress(dep.faces) || getAddress(plan.to) !== getAddress(dep.faces)) throw new Error("the plan is for another NeonFaces");
 
 const SD = parseAbi([
-  "function getAllowListMerkleRoot(address) view returns (bytes32)",
   "function getPublicDrop(address) view returns ((uint80 mintPrice, uint48 startTime, uint48 endTime, uint16 maxTotalMintableByWallet, uint16 feeBps, bool restrictFeeRecipients))",
   "function getCreatorPayoutAddress(address) view returns (address)",
   "function getAllowedFeeRecipients(address) view returns (address[])",
@@ -38,9 +37,8 @@ const NF = parseAbi(["function saleManager() view returns (address)"]);
 const read = (label, to, abi, functionName, args, expect) => ({ label, to, data: encodeFunctionData({ abi, functionName, args }), expect: expect.toLowerCase() });
 const P = plan.public;
 const checks = [
-  read("List: Merkle root", plan.seaDrop, SD, "getAllowListMerkleRoot", [plan.faces], plan.root),
   read(
-    "Public stage",
+    "NEONLIST (public stage)",
     plan.seaDrop,
     SD,
     "getPublicDrop",
@@ -58,8 +56,7 @@ const utc = (t) => new Date(Number(t) * 1000).toISOString().replace("T", " ").sl
 const terms = [
   ["Contract", `NeonFaces ${plan.faces}`],
   ["Sale manager", "the connected wallet must be it"],
-  ["List stage", `${formatEther(BigInt(plan.list.mintPrice))} ETH, up to ${plan.list.maxTotalMintableByWallet} per wallet, ${utc(plan.list.startTime)} to ${utc(plan.list.endTime)}, ${plan.wallets.toLocaleString("en-US")} wallets (root ${plan.root.slice(0, 10)}…)`],
-  ["Public stage", `${formatEther(BigInt(P.mintPrice))} ETH, up to ${P.maxTotalMintableByWallet} per wallet in total, ${utc(P.startTime)} to ${utc(P.endTime)}`],
+  ["NEONLIST (public stage)", `${formatEther(BigInt(P.mintPrice))} ETH, up to ${P.maxTotalMintableByWallet} per wallet in total, ${utc(P.startTime)} to ${utc(P.endTime)}`],
   ["OpenSea fee", `${Number(P.feeBps) / 100}% to ${plan.feeRecipient} (restricted)`],
   ["Payout", `NeonPayout ${dep.payout} (the only address NeonFaces accepts)`],
 ];
@@ -77,7 +74,7 @@ button:disabled{opacity:.35;cursor:not-allowed}#log{white-space:pre-wrap;border:
 .ok{color:var(--neon)}.bad{color:#ff5d7a}
 </style></head><body><main>
 <h1>NEONFACES · configure the drop</h1>
-<p class="dim">One transaction from the sale manager. It sets both SeaDrop stages on NeonFaces, the call OpenSea Studio would make. Nothing else changes; it can be sent again later with a new plan.</p>
+<p class="dim">One transaction from the sale manager. It sets the NEONLIST (SeaDrop's public stage) on NeonFaces, the call OpenSea Studio would make. Nothing else changes; it can be sent again later with a new plan.</p>
 <dl>${terms.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
 <button id="connect">Connect wallet</button><button id="send" disabled>Configure the drop</button><button id="check">Read SeaDrop now</button>
 <div id="log"></div>
@@ -144,5 +141,5 @@ http
   })
   .listen(PORT, "127.0.0.1", () => {
     console.log(`Configure the drop: open http://127.0.0.1:${PORT} with the sale manager's wallet (Ctrl+C to stop)`);
-    console.log(`reads ${RPC}; ${plan.wallets} wallets on the list, root ${plan.root}`);
+    console.log(`reads ${RPC}`);
   });

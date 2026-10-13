@@ -57,7 +57,8 @@ renderMyFaces();
 renderWatch();
 setupHunter();
 // Faces and Sets stay dark until the reveal (the founder, 1 Oct): their art and traits are only known then. The views
-// come back by themselves once the chain has a reveal seed. Each Face's own page stays open.
+// come back by themselves once the chain has a reveal seed. Each Face's own page stays open. The class is already on
+// <html> in index.html (13 Oct), so nothing flashes while the bundle loads.
 document.documentElement.classList.add("until-reveal");
 if (!state.preview) read("faces", "revealSeed").then((s) => s > 0n && (document.documentElement.classList.remove("until-reveal"), route())).catch(() => {});
 route();

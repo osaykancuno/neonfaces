@@ -269,8 +269,8 @@ function paint() {
   if (view.account && (o.stage === "list" || (o.stage === "before" && nowChain() >= CHECK_OPENS))) {
     const row = (k, v) => `<dt>${k}</dt><dd><code>${esc(v)}</code></dd>`;
     html += `<details class="explorer-mint"><summary>Mint from the explorer instead</summary>
-      <p class="fine">From ${esc(when(l.startTime))}: on <a href="https://robinhoodchain.blockscout.com/address/${P.seaDrop}?tab=write_contract" target="_blank" rel="noopener">OpenSea's SeaDrop contract</a>, connect this wallet and call <code>mintPublic</code> with these values, sending ${ethFmt(l.mintPrice)} times the quantity. It is the same transaction this page sends.</p>
-      <dl>${row("nftContract", P.faces)}${row("feeRecipient", P.feeRecipient)}${row("minterIfNotPayer", ZERO)}${row("quantity", "1 to " + l.maxTotalMintableByWallet)}</dl>
+      <p class="fine">From ${esc(when(l.startTime))}: on <a href="https://robinhoodchain.blockscout.com/address/${P.seaDrop}?tab=write_contract" target="_blank" rel="noopener">OpenSea's SeaDrop contract</a>, connect this wallet, open <code>mintPublic</code> and fill in these values. It is the same transaction this page sends.</p>
+      <dl>${row("nftContract", P.faces)}${row("feeRecipient", P.feeRecipient)}${row("minterIfNotPayer", ZERO)}${row("quantity", "1 to " + l.maxTotalMintableByWallet)}<dd class="fine">A plain number: don't press ×10¹⁸ on this field.</dd>${row("Send native ETH", String(l.mintPrice))}<dd class="fine">That is ${ethFmt(l.mintPrice)} written in wei, for 1 Face: multiply it by the quantity (3 Faces: <code>${String(l.mintPrice * 3n)}</code>). Or type ${Number(formatEther(l.mintPrice))} times the quantity and press ×10¹⁸ on this field only.</dd></dl>
     </details>`;
   }
   html += `<div class="mint-result" id="mint-result"></div>`;

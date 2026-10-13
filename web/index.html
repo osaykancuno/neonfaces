@@ -118,7 +118,7 @@
               <div id="mint-log" class="mint-log" hidden aria-live="polite"></div>
               <div id="site-mint" hidden></div>
               <a id="opensea-btn" class="btn btn-ghost btn-wide" target="_blank" rel="noopener">The collection on OpenSea ↗</a>
-              <p class="fine" id="mint-fine">Minting happens right here, through OpenSea's SeaDrop contract: the same contract OpenSea's own drops use, so the stage, price and limit are enforced on-chain, not by this page. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only, not ownership of shares.</p>
+              <p class="fine" id="mint-fine">Minting happens right here, through OpenSea's SeaDrop contract: the same contract OpenSea's own drops use, so the stage, price and limit are enforced on-chain, not by this page. Each Face is minted with its account and base basket in the same transaction. Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.</p>
             </div>
           </div>
         </section>
@@ -132,7 +132,7 @@
               <tr><td>Contract</td><td class="addr">0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B<br>on Robinhood Chain</td></tr>
             </tbody>
           </table></div>
-          <p class="fine">We never DM first. No airdrop, no claim. Never share your seed phrase. Any other link is not us.</p>
+          <p class="fine">We never DM first, and we never ask you to claim anything. Never share your seed phrase. Any other link is not us.</p>
         </section>
         <section id="watch" class="block reveal">
           <div class="label">The watch</div>
@@ -314,8 +314,8 @@
         <section id="guide-faq" class="block reveal">
           <div class="label">Guide / FAQ</div>
           <div class="faq">
-            <details><summary>What is the NEONLIST?</summary><p>The way NEONFACES mints: 0.004 ETH a Face, up to 15 per wallet, from Tuesday 13 October, 13:00 UTC until Saturday 31 October, 18:00 UTC. Before it opens, the panel on Home checks whether a connected wallet is ready to mint.</p></details>
-            <details><summary>Can I mint without connecting to this site?</summary><p>Yes. The mint is OpenSea's SeaDrop contract <code>0x00005EA00Ac477B1030CE78506496e8C2dE24bf5</code> on Robinhood Chain. Open it on <a href="https://robinhoodchain.blockscout.com/address/0x00005EA00Ac477B1030CE78506496e8C2dE24bf5?tab=write_contract" target="_blank" rel="noopener">the explorer</a>, connect there and call <code>mintPublic</code>. Its values are on Home: connect a wallet and open <em>Mint from the explorer instead</em> under the panel. The value to send is 0.004 ETH times the quantity. It is the same transaction this site sends.</p></details>
+            <details><summary>What is the NEONLIST?</summary><p>The way NEONFACES mints: 0.004 ETH a Face, up to 15 per wallet, from Tuesday 13 October, 13:00 UTC until Saturday 31 October, 18:00 UTC. The panel on Home checks whether a connected wallet is ready (Robinhood Chain, enough ETH, Faces left) and mints from it.</p></details>
+            <details><summary>Can I mint without connecting to this site?</summary><p>Yes. The mint is OpenSea's SeaDrop contract <code>0x00005EA00Ac477B1030CE78506496e8C2dE24bf5</code> on Robinhood Chain. Open it on <a href="https://robinhoodchain.blockscout.com/address/0x00005EA00Ac477B1030CE78506496e8C2dE24bf5?tab=write_contract" target="_blank" rel="noopener">the explorer</a>, connect there and open <code>mintPublic</code>. Its values are on Home: connect a wallet and open <em>Mint from the explorer instead</em> under the panel. In <em>Send native ETH</em> the explorer wants wei: 4000000000000000 for 1 Face, times the quantity (or type 0.004 times the quantity and press ×10¹⁸ on that field only). It is the same transaction this site sends.</p></details>
             <details><summary>Where do I mint?</summary><p id="faq-where">Right here: the Mint button on Home opens the panel, which mints through OpenSea's SeaDrop contract on Robinhood Chain. Your Faces show up on OpenSea and trade there. This app is also where you look inside your Faces and manage them: withdraw, trade, lock, assemble sets, delegate an agent.</p></details>
             <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT: a base basket from mint, a top-up after reveal for Watch / Heavy Stare, plus anything you add. You can withdraw everything, add more, delegate an agent or lock it, all from the Face's page.</p></details>
             <details><summary>How are the faces made?</summary><p>Each one starts from a black-and-white portrait of a person who doesn't exist, generated for the collection: 555 different people for the sets, others for the close-ups. The portrait is cut to the Face's crop, turned into big neon blocks with its grain and traits, and only those pixels are stored on-chain. They are the art, sealed against a fingerprint published before the mint.</p></details>

@@ -53,17 +53,37 @@ async function ask(request, env, url) {
   const v = validate(body);
   if (v.error) return say(v.error, 400);
   const models = String(env.ASK_MODELS || FREE_MODELS).split(",").map((m) => m.trim()).filter(Boolean);
+  // one model at a time, in order: a free model that errors or is busy hands over to the next one; the one that answers
+  // keeps the rest of this conversation turn. Logged for `wrangler tail`: model, status, time, OpenRouter's error text
+  // (never the question or the answer).
+  let start = 0;
   const llm = async (req) => {
-    // ASK_ENDPOINT only for local tests against a scripted model (wrangler dev --var); production uses OpenRouter
-    const r = await fetch(env.ASK_ENDPOINT || "https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: { authorization: `Bearer ${env.OPENROUTER_API_KEY}`, "content-type": "application/json", "http-referer": "https://neonfaces.xyz", "x-title": "NEONFACES" },
-      body: JSON.stringify({ models, ...req }),
-    });
-    const j = await r.json().catch(() => null);
-    if (r.status === 429) throw Object.assign(new Error("busy"), { busy: true });
-    if (!r.ok || !j) throw new Error(j?.error?.message ?? `the model answered ${r.status}`);
-    return j;
+    let busy = false;
+    let last = "no model answered";
+    for (let i = start; i < models.length; i++) {
+      const t = Date.now();
+      try {
+        // ASK_ENDPOINT only for local tests against a scripted model (wrangler dev --env-file); production uses OpenRouter
+        const r = await fetch(env.ASK_ENDPOINT || "https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: { authorization: `Bearer ${env.OPENROUTER_API_KEY}`, "content-type": "application/json", "http-referer": "https://neonfaces.xyz", "x-title": "NEONFACES" },
+          body: JSON.stringify({ model: models[i], ...req }),
+        });
+        const j = await r.json().catch(() => null);
+        const ok = r.ok && j?.choices?.[0]?.message;
+        console.log(JSON.stringify({ ask: models[i], status: r.status, ms: Date.now() - t, ok: !!ok, error: ok ? undefined : String(j?.error?.message ?? j?.choices?.[0]?.error?.message ?? "").slice(0, 200) }));
+        if (ok) {
+          start = i;
+          return j;
+        }
+        if (r.status === 429) busy = true;
+        last = j?.error?.message ?? `answered ${r.status}`;
+      } catch (e) {
+        last = e.message;
+        console.log(JSON.stringify({ ask: models[i], ms: Date.now() - t, ok: false, error: String(e.message).slice(0, 200) }));
+      }
+    }
+    throw Object.assign(new Error(last), { busy });
   };
   try {
     const out = await answer(serverFor(env, url), llm, v.messages);

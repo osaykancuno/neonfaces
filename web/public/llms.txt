@@ -6,7 +6,8 @@ This file tells AI assistants how to help a holder. You can read everything from
 
 ## Talk to a Face with an MCP client
 
-Download https://neonfaces.xyz/neonfaces-mcp.mjs (one file, Node 18+, no dependencies) and add it to the client, e.g. Claude Desktop:
+Nothing to install: add **https://neonfaces.xyz/mcp** as a remote MCP server (a custom connector) in any assistant that takes one. It is read-only, needs no account or key, and keeps nothing about who asks.
+Or run it locally: download https://neonfaces.xyz/neonfaces-mcp.mjs (one file, Node 18+, no dependencies) and add it to the client, e.g. Claude Desktop:
 `"mcpServers": { "neonfaces": { "command": "node", "args": ["/path/to/neonfaces-mcp.mjs"] } }`
 Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, lock), `analysis` (What I see, below), `market` (every basket token), `check` (the scam guard, below), `prices`, `faces_of`, `prepare_action`.
 

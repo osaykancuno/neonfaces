@@ -118,7 +118,10 @@ rules. A future option: strategies (Accumulate, Keep liquid, Trim) could show th
    check to scripts); the kit reads through the official node and PublicNode in batches of 20 with retries. The kit
    can't show the value on arrival or the journal (public nodes don't serve the old events): it points to the page.
    llms.txt and the FAQ describe What I see and Check.
-4. Possible next: the kit hosted at neonfaces.xyz/mcp (a remote MCP server on the same Cloudflare Worker), so a
-   holder adds a URL to their assistant instead of downloading a file.
+4. Done 14 Oct: **https://neonfaces.xyz/mcp**, the same server hosted on the site's Cloudflare Worker
+   (`tools/cloudflare/web-worker.mjs`, MCP Streamable HTTP, stateless, read-only; only /mcp runs the Worker, every other
+   path is served as static assets). The server core is `web/mcp/core.mjs`; the downloadable kit is generated from it
+   and `web/mcp/stdio.mjs`. Reads go through Multicall3 (a Worker may make few requests per call), through the site's
+   Alchemy key on the Worker and the official node and PublicNode behind it.
 
 Nothing here touches the launch contracts, the art or the baskets.

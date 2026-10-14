@@ -9,7 +9,7 @@
 import { createServer } from "../../web/mcp/core.mjs";
 import { answer, validate } from "../../web/mcp/ask.mjs";
 
-const FREE_MODELS = "google/gemma-4-31b-it:free,nvidia/nemotron-3-ultra-550b-a55b:free,thinkingmachines/inkling:free";
+const FREE_MODELS = "nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free,openrouter/free";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -60,7 +60,11 @@ async function ask(request, env, url) {
   const llm = async (req) => {
     let busy = false;
     let last = "no model answered";
-    for (let i = start; i < models.length; i++) {
+    // two passes: free models are often busy for a moment; after a short pause the list is tried once more
+    const order = [...models.slice(start), ...models.slice(start)];
+    for (let k = 0; k < order.length; k++) {
+      if (k === order.length / 2) await new Promise((ok) => setTimeout(ok, 1500));
+      const i = models.indexOf(order[k]);
       const t = Date.now();
       try {
         // ASK_ENDPOINT only for local tests against a scripted model (wrangler dev --env-file); production uses OpenRouter

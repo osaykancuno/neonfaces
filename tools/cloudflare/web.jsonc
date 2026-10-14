@@ -19,9 +19,10 @@
     { "pattern": "neonfaces.xyz/*", "zone_name": "neonfaces.xyz" },
     { "pattern": "www.neonfaces.xyz/*", "zone_name": "neonfaces.xyz" }
   ],
-  // the chat (/api/ask): free models tried in order (change them here, no code change); its OpenRouter key is the
+  // the chat (/api/ask): free models tried in order (change them here, no code change; 14 Oct: Gemma's free provider
+  // was often rate-limited, Inkling refuses websites, Nemotron Ultra answered best; openrouter/free = any free model); its OpenRouter key is the
   // secret OPENROUTER_API_KEY, set by the founder with `npx wrangler@4.142.0 secret put OPENROUTER_API_KEY -c tools/cloudflare/web.jsonc`
-  "vars": { "ASK_MODELS": "google/gemma-4-31b-it:free,nvidia/nemotron-3-ultra-550b-a55b:free,thinkingmachines/inkling:free" },
+  "vars": { "ASK_MODELS": "nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free,openrouter/free" },
   // each visitor (by IP) may ask 6 questions a minute
   "ratelimits": [{ "name": "ASK_LIMIT", "namespace_id": "4663", "simple": { "limit": 6, "period": 60 } }],
   "workers_dev": true,

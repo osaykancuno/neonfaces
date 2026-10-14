@@ -87,7 +87,7 @@ export function setupAsk(root) {
     input.value = "";
     busy = true;
     send.disabled = true;
-    paint(`<div class="ask-msg ai wait"><span></span><span></span><span></span> Reading the chain…</div>`);
+    paint(`<div class="ask-msg ai wait"><span></span><span></span><span></span> Reading the chain… free models can take up to half a minute.</div>`);
     try {
       const r = await fetch("/api/ask", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: msgs }) });
       const j = await r.json().catch(() => ({}));

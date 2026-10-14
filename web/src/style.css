@@ -657,6 +657,36 @@ a, button, summary, label, input, select, textarea { -webkit-tap-highlight-color
 .birth.lit .btn-ghost { background: transparent; color: #000; border-color: #000; }
 .birth.lit .birth-log .neon { font-weight: 700; }
 html.birth-lit #cursor { border-color: #000; }
+/* First sight (effects/firstsight.js): the birth stage, one Face at a time, its place in its set under the log */
+.first-sight .birth-tile { cursor: default; }
+.fs-set { margin: 0 0 18px; }
+.fs-set-grid { display: grid; grid-template-columns: repeat(2, 64px); gap: 4px; margin-bottom: 8px; }
+.fs-piece { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid #1f2504; background: #000; font-style: normal; }
+.fs-piece b { font: 700 11px/1 var(--mono); color: #3d4a0c; letter-spacing: .06em; }
+.fs-piece.yours { border-color: var(--neon); }
+.fs-piece.yours b { color: var(--neon); }
+.fs-piece.on { border-color: var(--neon); box-shadow: 0 0 12px rgba(204, 255, 0, .5); }
+.fs-piece img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.birth.lit .fs-piece { border-color: #000; background: #000; }
+.birth.lit .fs-set .fine { color: #000; }
+.fs-cta { grid-column: 1 / -1; justify-self: start; margin-bottom: 4px; }
+/* The reveal (/reveal): the minted Faces turning over in order */
+.reveal-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin-top: 18px; }
+.reveal-tile { position: relative; display: block; border: 1px solid #1f2504; background: #000; opacity: .35; transition: opacity .05s, border-color .05s; }
+.reveal-tile img { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; }
+.reveal-tile span { position: absolute; left: 4px; bottom: 4px; font: 11px/1.2 var(--mono); background: #000; color: var(--neon); padding: 1px 4px; }
+.reveal-tile.on { opacity: 1; border-color: var(--line); animation: reveal-strike .32s steps(4); }
+.reveal-tile.on[data-tier="Watch"] { border-color: var(--neon); }
+.reveal-tile.on[data-tier="Heavy Stare"] { border-color: var(--neon); box-shadow: 0 0 14px rgba(204, 255, 0, .6); }
+@keyframes reveal-strike { 0%, 50% { opacity: .2; } 25%, 75%, 100% { opacity: 1; } }
+.reveal-more { margin-top: 14px; }
+.reveal-more[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .reveal-tile.on { animation: none; } }
+@media (max-width: 600px) {
+  .first-sight .birth-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .first-sight .birth-acts .btn { width: 100%; padding-left: 6px; padding-right: 6px; }
+  .first-sight .birth-acts > :is(a, .btn-neon, .fs-skip) { grid-column: 1 / -1; } /* Next, Share, Skip full width; Save and Open side by side */
+}
 @media (max-width: 860px) {
   .birth { place-items: start center; }
   .birth-box { grid-template-columns: 1fr; gap: 20px; padding-top: 64px; }

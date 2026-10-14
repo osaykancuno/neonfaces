@@ -434,8 +434,13 @@ export function setupSiteMint(helpers) {
   const heroTick = () => {
     const t = nowChain();
     const s = stageAt(t);
-    hero.hidden = !(s === "before" || s === "list");
-    if (s === "before") hero.innerHTML = `<span>The NEONLIST opens in</span><b>${countdown(Number(L().startTime) - t)}</b>`;
+    // once the mint is over (sold out or past its end), the countdown becomes the way to the reveal
+    const over = s === "ended" || view?.closed;
+    const revealed = !document.documentElement.classList.contains("until-reveal");
+    hero.hidden = !(s === "before" || s === "list" || over);
+    hero.href = over ? (revealed ? "/mine" : "/reveal") : "/#mint";
+    if (over) hero.innerHTML = revealed ? `<span>The Faces are revealed</span><b>See yours</b>` : `<span>The mint is closed</span><b>The reveal</b>`;
+    else if (s === "before") hero.innerHTML = `<span>The NEONLIST opens in</span><b>${countdown(Number(L().startTime) - t)}</b>`;
     else if (s === "list") hero.innerHTML = `<span>The NEONLIST is open</span><b>Mint now</b>`;
   };
   heroTick();

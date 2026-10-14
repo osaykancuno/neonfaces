@@ -11,13 +11,14 @@ import { mosaic, reveals, cursor, tape, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 import { loadDrop, setupSiteMint, MINT_ERRORS } from "./mint.js";
 import { setupCam } from "./cam.js";
+import { firstSight, seenIds } from "./effects/firstsight.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let gallery = []; // [{ artId, stare, record }]: on-chain pixel records
 let hunting = 0; // the set hunter shows only its latest lookup
-const VIEWS = { "": "view-home", cam: "view-cam", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide" }; // routes of the app
+const VIEWS = { "": "view-home", cam: "view-cam", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide", reveal: "view-reveal" }; // routes of the app
 let lastView = null;
 let sets = []; // [{ set, stare, face, records[4] }]: whole sets for the Sets section
 let placeholder = null;
@@ -60,7 +61,7 @@ setupHunter();
 // come back by themselves once the chain has a reveal seed. Each Face's own page stays open. The class is already on
 // <html> in index.html (13 Oct), so nothing flashes while the bundle loads.
 document.documentElement.classList.add("until-reveal");
-if (!state.preview) read("faces", "revealSeed").then((s) => s > 0n && (document.documentElement.classList.remove("until-reveal"), route())).catch(() => {});
+if (!state.preview) read("faces", "revealSeed").then((s) => s > 0n && (document.documentElement.classList.remove("until-reveal"), route(), checkFirstSight())).catch(() => {});
 route();
 
 window.addEventListener("popstate", route);
@@ -104,6 +105,7 @@ function route() {
     window.scrollTo(0, 0);
   }
   if (view === "view-mine") renderMyFaces();
+  if (view === "view-reveal") renderReveal();
   // NEONCAM (cam.js) lights the page while its camera is on, and turns it off when the view is left
   if (view === "view-cam") setupCam();
   window.dispatchEvent(new Event("neon:route"));
@@ -410,6 +412,7 @@ window.addEventListener("neon:account", () => {
   renderMyFaces();
   if (state.account) runHunter("mine");
   if (!$("#face-page").hidden) route();
+  checkFirstSight();
 });
 
 const FRIENDLY = {
@@ -557,9 +560,146 @@ async function renderMyFaces() {
     });
     return;
   }
-  el.innerHTML = ids.length
-    ? ids.map((id) => `<a href="/face/${id}" data-link>#${id} →</a>`).join("")
-    : `<span class="fine">No Face found for ${short(state.account)}. Know the number? Open it: <a href="/face/1" data-link>/face/&lt;number&gt;</a></span>`;
+  if (!ids.length) {
+    el.innerHTML = `<span class="fine">No Face found for ${short(state.account)}. Know the number? Open it: <a href="/face/1" data-link>/face/&lt;number&gt;</a></span>`;
+    return;
+  }
+  const unseen = ids.filter((id) => !seenIds().has(id));
+  el.innerHTML =
+    (unseen.length ? `<button class="btn btn-neon fs-cta" id="mine-first-sight">First sight: ${unseen.length === 1 ? `#${unseen[0]} is waiting` : `${unseen.length} Faces are waiting`}</button>` : "") +
+    ids.map((id) => `<a class="sealed" href="/face/${id}" data-link><img alt="NEONFACES #${id}"><span><b>#${id}</b><small id="mine-tier-${id}"></small><i>Open it →</i></span></a>`).join("");
+  $("#mine-first-sight")?.addEventListener("click", () => runFirstSight(unseen));
+  ids.forEach((id) =>
+    metadata(id)
+      .then((m) => {
+        const im = $(`#my-faces a[href="/face/${id}"] img`);
+        if (im && m?.image) im.src = m.image;
+        const t = $(`#mine-tier-${id}`);
+        if (t) t.textContent = [m.attributes.find((a) => a.trait_type === "Stare")?.value, m.attributes.find((a) => a.trait_type === "Crop")?.value].filter(Boolean).join(" · ");
+      })
+      .catch(() => {}),
+  );
+}
+
+// =====================================================================================
+// The reveal (/reveal): where it stands, live; once revealed, the minted Faces turn over one by one
+// =====================================================================================
+let revealTimer = null;
+let revealShown = 0;
+
+async function renderReveal() {
+  clearTimeout(revealTimer);
+  if (state.preview) return;
+  const status = $("#reveal-status");
+  const detail = $("#reveal-detail");
+  try {
+    const [seed, target, closed, supply] = await Promise.all([read("faces", "revealSeed"), read("faces", "revealBlock"), read("faces", "mintClosed"), read("faces", "totalSupply")]);
+    if (seed > 0n) {
+      document.documentElement.classList.remove("until-reveal");
+      status.textContent = `Revealed. One seed from the chain dealt the art and the Stare of all ${supply} Faces at once.`;
+      const hex = `0x${seed.toString(16).padStart(64, "0")}`;
+      detail.innerHTML = `Seed <code>${hex.slice(0, 10)}…${hex.slice(-8)}</code>, from the hash of block ${target.toLocaleString("en-US")}: anyone can recompute every Face from it. Connect on <a href="/mine" data-link>Mine</a> to see yours first.`;
+      if (!revealShown) revealWall(Number(supply), 48);
+      return;
+    }
+    if (closed && target > 0n) {
+      const now = await state.pub.getBlockNumber();
+      const left = target >= now ? Number(target - now) + 1 : 0;
+      status.textContent = left ? `The mint is closed. The seed comes from block ${target.toLocaleString("en-US")}: ${left} block${left === 1 ? "" : "s"} to go.` : "The block is there: the reveal is being finalized.";
+      detail.textContent = "Nobody knows a block's hash before it exists. When it does, one transaction turns it into the seed, and every Face is revealed in the same instant.";
+    } else {
+      status.textContent = "The reveal comes when the mint closes: with the last Face, or on Sat 31 Oct, 18:00 UTC, whichever is first.";
+      detail.textContent = "Then the hash of a future block becomes the seed: nobody knows it in advance, and it deals the art and the Stare of every Face at once. Until then every Face carries the same sealed image.";
+    }
+  } catch {
+    status.textContent = "The chain didn't answer. Trying again…";
+  }
+  if (!$("#view-reveal").hidden) revealTimer = setTimeout(renderReveal, 3000);
+}
+
+/** The minted Faces, sealed, turning into their art in order, one every 120 ms, as their metadata arrives. */
+function revealWall(supply, count) {
+  const wall = $("#reveal-wall");
+  const from = revealShown + 1;
+  const to = Math.min(supply, revealShown + count);
+  const sealedSrc = placeholder ? svgDataURI(5555, placeholder) : "";
+  for (let id = from; id <= to; id++) {
+    wall.insertAdjacentHTML("beforeend", `<a class="reveal-tile" href="/face/${id}" data-link id="rt-${id}"><img src="${sealedSrc}" alt="NEONFACES #${id}"><span>#${id}</span></a>`);
+  }
+  revealShown = to;
+  $(".reveal-more").hidden = revealShown >= supply;
+  $("#reveal-more").onclick = () => revealWall(supply, 48);
+  let k = 0;
+  for (let id = from; id <= to; id++, k++) {
+    const at = k * 120;
+    metadata(id)
+      .then((m) =>
+        setTimeout(() => {
+          const t = $(`#rt-${id}`);
+          if (!t) return;
+          t.querySelector("img").src = m.image;
+          t.dataset.tier = m.attributes.find((a) => a.trait_type === "Stare")?.value ?? "";
+          t.classList.add("on");
+        }, at),
+      )
+      .catch(() => {});
+  }
+}
+
+// =====================================================================================
+// First sight: after the reveal, each of the holder's Faces is shown to them once per device (effects/firstsight.js)
+// =====================================================================================
+let firstSightOn = false;
+let firstSightAsked = false; // offered on its own once per visit; Mine and each Face's page keep a button
+
+async function runFirstSight(ids) {
+  if (firstSightOn || !ids.length || state.preview) return;
+  firstSightOn = true;
+  try {
+    const faces = await Promise.all(
+      ids.map(async (id) => {
+        const [m, seed] = await Promise.all([metadata(id), read("seeder", "seedOf", [BigInt(id)]).catch(() => null)]);
+        const artId = m.attributes.find((a) => a.trait_type === "Art ID")?.value;
+        const record = artId != null ? await readAt(state.dep.art, "art", "artData", [BigInt(artId)]).catch(() => null) : null;
+        const topup = seed && seed.tier >= 2 ? `${TIERS[seed.tier]} basket, ${seed.upgraded ? "inside" : "on its way"}` : "";
+        return { id, image: m.image, attrs: m.attributes, record, topup };
+      }),
+    );
+    // the holder's own set pieces, so a piece shows which of the other three are already theirs
+    const owned = new Map();
+    const all = state.account ? await facesOf(state.account).catch(() => ids) : ids;
+    await Promise.all(
+      all.map(async (id) => {
+        const [setId, piece] = await read("seeder", "setOf", [BigInt(id)]).catch(() => [0n, 0n]);
+        if (!setId) return;
+        if (!owned.has(Number(setId))) owned.set(Number(setId), new Set());
+        owned.get(Number(setId)).add(Number(piece));
+      }),
+    );
+    const text = (f, tier) => `First sight: NEONFACES #${f.id} is a ${tier}. They don't blink. #NEONFACE`;
+    await firstSight(faces, {
+      records: gallery.map((f) => f.record),
+      sealed: placeholder ? svgDataURI(5555, placeholder) : null,
+      owned,
+      share: (f, tier) => `https://x.com/intent/post?text=${encodeURIComponent(text(f, tier))}&url=${encodeURIComponent(`${location.origin}/face/${f.id}`)}`,
+      open: (id) => { history.pushState({}, "", `/face/${id}`); route(); },
+    });
+  } catch (e) {
+    toast(errMsg(e));
+  } finally {
+    firstSightOn = false;
+    if (!$("#view-mine").hidden) renderMyFaces();
+  }
+}
+
+/** Once the chain is revealed and a holder is connected: their Faces not seen yet on this device, once per visit. */
+async function checkFirstSight() {
+  if (firstSightAsked || firstSightOn || !state.account || document.documentElement.classList.contains("until-reveal")) return;
+  const ids = await facesOf(state.account).catch(() => []);
+  const unseen = ids.filter((id) => !seenIds().has(id));
+  if (!unseen.length) return;
+  firstSightAsked = true;
+  runFirstSight(unseen);
 }
 
 // =====================================================================================
@@ -667,6 +807,13 @@ async function showFace(id) {
 
     if (new URLSearchParams(location.search).get("do") && !(state.account && state.account.toLowerCase() === owner.toLowerCase())) {
       $("#face-actions").insertAdjacentHTML("beforebegin", `<p class="msg">An action was prepared for this Face. Connect the wallet that holds it to review it; nothing happens without your confirmation.</p>`);
+    }
+    if (!document.documentElement.classList.contains("until-reveal") && state.account && state.account.toLowerCase() === owner.toLowerCase() && !seenIds().has(id)) {
+      const b = document.createElement("button");
+      b.className = "btn btn-neon";
+      b.textContent = "First sight";
+      b.onclick = () => runFirstSight([id]);
+      $("#face-actions").prepend(b);
     }
     if (state.account && state.account.toLowerCase() === owner.toLowerCase() && deployed) {
       const ctx = { state, send, readAt, ABI, toast, reload: () => showFace(id) };

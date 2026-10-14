@@ -12,6 +12,7 @@ export const ABI = {
     "function balanceOf(address) view returns (uint256)",
     "function tokenURI(uint256) view returns (string)",
     "function revealSeed() view returns (uint256)",
+    "function revealBlock() view returns (uint256)",
     "function mintClosed() view returns (bool)",
     "function heldSince(uint256 tokenId) view returns (uint64)",
     "function safeTransferFrom(address from, address to, uint256 tokenId)",

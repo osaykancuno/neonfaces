@@ -14,11 +14,11 @@ import { pixelEye } from "./eye.js";
 import { scramble } from "./fx.js";
 import { sound } from "./sound.js";
 
-const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+export const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-const wait = (ms) => new Promise((r) => setTimeout(r, still() ? 0 : ms));
+export const wait = (ms) => new Promise((r) => setTimeout(r, still() ? 0 : ms));
 // a phone often comes back from its wallet app while the transaction confirms: play the scene once the page is seen
-const seen = () => (document.hidden ? new Promise((r) => document.addEventListener("visibilitychange", r, { once: true })) : Promise.resolve());
+export const seen = () => (document.hidden ? new Promise((r) => document.addEventListener("visibilitychange", r, { once: true })) : Promise.resolve());
 
 // ------------------------------------------------------------------ terminal lines, typed
 export function terminal(el) {
@@ -94,7 +94,7 @@ export function chamber(art, records) {
 }
 
 // ------------------------------------------------------------------ pixel burst, from one or more points
-function burst(cv, origins, { colors = ["#000000", "#1f2504"], count = 160, power = 14 } = {}) {
+export function burst(cv, origins, { colors = ["#000000", "#1f2504"], count = 160, power = 14 } = {}) {
   if (still()) return;
   const ctx = cv.getContext("2d");
   const W = (cv.width = innerWidth);
@@ -128,14 +128,14 @@ function burst(cv, origins, { colors = ["#000000", "#1f2504"], count = 160, powe
   };
   tick();
 }
-const centerOf = (el) => {
+export const centerOf = (el) => {
   const r = el.getBoundingClientRect();
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 };
 
 // ------------------------------------------------------------------ a Face resolving
 /** Load the on-chain image once; `draw(cv, blocks)` paints it at that many blocks across. */
-function loadFace(src) {
+export function loadFace(src) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -143,7 +143,7 @@ function loadFace(src) {
     img.src = src;
   });
 }
-function draw(cv, img, blocks) {
+export function draw(cv, img, blocks) {
   const ctx = cv.getContext("2d");
   ctx.imageSmoothingEnabled = false;
   if (!img) return;
@@ -154,7 +154,7 @@ function draw(cv, img, blocks) {
   ctx.drawImage(tmp, 0, 0, s, s, 0, 0, cv.width, cv.height);
 }
 /** Before a Face settles: a few Faces of the collection flash past, the way the art is still to be dealt. */
-async function shuffle(cv, records, ms = 500) {
+export async function shuffle(cv, records, ms = 500) {
   if (!records?.length || still()) return;
   const ctx = cv.getContext("2d");
   const frames = Math.max(3, Math.round(ms / 70));
@@ -169,7 +169,7 @@ async function shuffle(cv, records, ms = 500) {
     await wait(70);
   }
 }
-async function dissolve(cv, img, ms = 1100) {
+export async function dissolve(cv, img, ms = 1100) {
   sound.sweep();
   const steps = [2, 4, 8, 12, 16, 24, 32, 48, 64, cv.width];
   for (const s of steps) {
@@ -180,11 +180,11 @@ async function dissolve(cv, img, ms = 1100) {
 }
 
 // ------------------------------------------------------------------ neon strikes
-const STRIKE = [[50, 120], [30, 60], [90, 260], [40, 50], [60, 140]]; // a tube catching: uneven, then steady
-const QUICK = [[40, 90], [30, 140], [70, 60]];
+export const STRIKE = [[50, 120], [30, 60], [90, 260], [40, 50], [60, 140]]; // a tube catching: uneven, then steady
+export const QUICK = [[40, 90], [30, 140], [70, 60]];
 
 /** Flicker the "on" class of the elements with a strike pattern, with its buzz, and leave them on. */
-async function strike(els, pattern = STRIKE) {
+export async function strike(els, pattern = STRIKE) {
   const on = (v) => els.forEach((e) => e.classList.toggle("on", v));
   for (const [a, b] of pattern) {
     on(true);
@@ -198,7 +198,7 @@ async function strike(els, pattern = STRIKE) {
 }
 
 /** The whole screen lights up: neon, black type, the phone's bar neon too, as NEONCAM did. */
-async function ignite(m) {
+export async function ignite(m) {
   const meta = document.querySelector('meta[name="theme-color"]');
   const before = meta?.content;
   const lit = (v) => {

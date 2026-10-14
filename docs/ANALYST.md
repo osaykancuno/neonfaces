@@ -1,8 +1,10 @@
-# What I see: an assistant in every Face (design, after the launch)
+# What I see: an assistant in every Face
 
-Status: design, agreed direction on 30 Sep 2026 (the founder: "like having a real assistant"), to build after the sale;
-how it fits with the rest is decided when it is built. No launch contract changes: everything
-below reads the chain and runs in the web app and the MCP kit.
+Status: agreed on 30 Sep 2026 (the founder: "like having a real assistant"); moved up to the sale and built in the web
+app on 14 Oct 2026: `web/src/analysis.js` (numbers and sentences), `web/src/guard.js` (the scam guard),
+`web/src/whatisee.js` (chain reads and the panel), the Face page panel, `/market` and `/check`, with tests in
+`web/test/analysis.test.mjs` and `web/test/guard.test.mjs`. The MCP tools and llms.txt are the next step. No contract
+changes: everything below reads the chain.
 
 ## The idea
 
@@ -32,8 +34,8 @@ Face's journal (`web/src/journal.js`). No price API, no backend, no model that c
 | Swings | 30-day volatility of each holding and of the Face as a whole; largest drop from a 30-day high | daily Chainlink answers |
 | Mix | how many assets, the largest share, asset classes (single stocks, index funds, metals, bitcoin, dollars) | balances + a fixed class table |
 | Together | which holdings moved together over 30 days (correlation, in words: "moved together", "moved apart", "unrelated") | daily returns |
-| Market status | whether each price is live or paused (weekend or holiday), and since when | feed `updatedAt` |
-| Trading cost | pool fee and how much can be traded within 1% of the Chainlink price for each holding; the pool's gap to Chainlink now | QuoterV2, pool state |
+| Market status | how old each Chainlink price is, and whether NeonTrader would trade on it (it refuses prices older than 26 hours, `MAX_PRICE_AGE`); weekends named as such. Stock Token feeds also update outside US market hours, so market hours are never used to call a price paused | feed `updatedAt` |
+| Trading cost | a $10 trade against USDG, in and out, compared with Chainlink, pool fees included | QuoterV2 (`quoteExactInput` over NeonTrader's route) |
 | Activity | trades, strategies, agent, lock, top-ups and bonuses received, from the journal | events |
 
 Each section ends with the time of its data. Missing or stale data is said as such, never filled in.
@@ -45,7 +47,7 @@ here the Face speaks plainly ("don't touch this"), still only from what it can c
 
 | Check | What the Face says | How |
 |---|---|---|
-| Fake tokens | a token in the Face with a listed ticker but another contract is a lookalike; tokens named like a link or a "claim" are bait, never to be opened or traded | the Face's balances vs `config/trader.4663.json` |
+| Fake tokens | a token in the Face with a listed ticker but another contract is a lookalike; tokens named like a link or a "claim" are bait, never to be opened or traded | the account's token list from Blockscout (`/api/v2/addresses/<account>/token-balances`, named as the source, with its own scam flag) vs `deployment.json` |
 | Approvals | every spender the Face account (and, if the holder asks, their wallet) has approved, flagging unlimited ones and any spender that isn't NeonTrader or another listed contract, with a one-click revoke | `Approval` events, current allowances |
 | Agent | who the agent is, what it may call, until when, how much ETH; flags permissions that can move assets out | `agentConfig`, `isAgentCallAllowed` |
 | Fake collections | an NFT or collection that says NEONFACES but isn't the contract 0x67384d95…1C1B | contract address |
@@ -60,14 +62,16 @@ added later as an extra source, always named as such.
 
 Sentences are built from templates filled with the numbers above, in the Face's own voice, for example:
 
-- "I hold 0.0217 NVDA, worth $5.00. That is 0.1% below its value when it arrived on 1 Oct."
-- "NVDA moved +3.1% in 7 days and swung more than the other assets I could hold."
-- "All my value sits in one stock. A basket with more assets moves less on one company's news."
-- "The stock price is paused since Friday 20:00 UTC: markets are closed. Trades wait until they reopen."
+- "I carry 0.02168 NVDA, worth $4.97 at $229.35 each."
+- "My basket was worth $4.94 when it arrived on Tue 13 Oct. Now $4.97, +0.6%."
+- "All my value sits in one asset: NVDA. One company's news moves all of it; a mix of assets usually moves less on any single name."
+- "NVDA: last Chainlink price 14 h ago. Fresh enough for NeonTrader."
 
-The third line is a description of concentration, not a recommendation. A wording rule list (a unit test) rejects
-any template containing advice or forecast words (buy, sell, hold, should, recommend, will rise, will fall, target,
-opportunity, undervalued, overvalued) and em dashes.
+The third line is a description of concentration, not a recommendation. The verb is "carry", never "hold". A wording
+rule list (`wordingProblems`, run by the tests over every scenario and by the page before it shows a sentence) rejects
+advice or forecast words (buy, sell, hold, should, recommend, will rise, will fall, target, opportunity, undervalued,
+overvalued, expect, forecast, predict, profit, guarantee...) and em dashes. Quotes of what the holder or the chain wrote
+(a strategy, a journal line) are set in curly quotes and left as they are.
 
 Every panel carries, once: "Facts from the chain, not advice. What you do with your Face is your choice." plus the
 short Stock Token sentence when the Face holds Stock Tokens.
@@ -103,11 +107,11 @@ rules. A future option: strategies (Accumulate, Keep liquid, Trim) could show th
 
 ## Plan
 
-1. Module `web/src/analysis.js` with tests on fixed data (returns, volatility, drawdown, correlation, concentration,
-   staleness) and the wording rule test; module `web/src/guard.js` with tests on known drainer requests, lookalike
-   domains and fake tokens.
-2. Face page panel and Market watch page; phone and tablet layouts like the rest of the app.
-3. MCP tools `analysis` and `market`; llms.txt.
-4. Fork check on real feeds and pools; copy review against the content rules; then deploy the web app.
+1. Done 14 Oct: `web/src/analysis.js` and `web/src/guard.js` with tests (returns, swings, drops, correlation,
+   concentration, price age, the wording rule; drainer requests, lookalike links and addresses, fake tokens, the
+   official mint).
+2. Done 14 Oct: the Face page panel (Safety first, then Value, Moves, Swings, Mix, Together, Market status, Trading
+   cost, Activity), `/market` and `/check`; checked at 320 and 375 px, against mainnet through the site's RPC.
+3. Next: MCP tools `analysis`, `market` and `check`; llms.txt.
 
-Order: after the sale, the reveal and First sight. Nothing here touches the launch contracts, the art or the baskets.
+Nothing here touches the launch contracts, the art or the baskets.

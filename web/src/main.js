@@ -7,6 +7,7 @@ import { holderPanel, knownTokens } from "./agent-ui.js";
 import { hunt } from "./hunter.js";
 import { route as tradeRoute } from "./actions.js";
 import { liveValue, valueHistory, sparkline } from "./value.js";
+import { renderSees, renderMarket, setupCheck } from "./whatisee.js";
 import { mosaic, reveals, cursor, tape, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 import { loadDrop, setupSiteMint, MINT_ERRORS } from "./mint.js";
@@ -18,7 +19,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 
 let gallery = []; // [{ artId, stare, record }]: on-chain pixel records
 let hunting = 0; // the set hunter shows only its latest lookup
-const VIEWS = { "": "view-home", cam: "view-cam", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide", reveal: "view-reveal" }; // routes of the app
+const VIEWS = { "": "view-home", cam: "view-cam", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide", reveal: "view-reveal", check: "view-check", market: "view-market" }; // routes of the app
 let lastView = null;
 let sets = []; // [{ set, stare, face, records[4] }]: whole sets for the Sets section
 let placeholder = null;
@@ -111,6 +112,8 @@ function route() {
   }
   if (view === "view-mine") renderMyFaces();
   if (view === "view-reveal") renderReveal();
+  if (view === "view-check") setupCheck($("#view-check"));
+  if (view === "view-market") renderMarket($("#view-market"));
   // NEONCAM (cam.js) lights the page while its camera is on, and turns it off when the view is left
   if (view === "view-cam") setupCam();
   window.dispatchEvent(new Event("neon:route"));
@@ -714,6 +717,7 @@ async function showFace(id) {
   ["#face-owner", "#face-account", "#face-balances", "#face-traits", "#face-agent", "#face-links", "#face-actions", "#face-set"].forEach((s) => ($(s).innerHTML = ""));
   $("#face-journal").innerHTML = `<li class="fine">Nothing yet.</li>`;
   $("#face-set").hidden = true;
+  $("#face-sees").hidden = true;
   $("#face-holder")?.remove();
   $("#face-agent").hidden = $("#face-agent").previousElementSibling.hidden = false;
   $("#face-search").onsubmit = (e) => {
@@ -739,7 +743,8 @@ async function showFace(id) {
     $("#face-traits").innerHTML = meta.attributes.map((a) => `<div><span>${esc(a.trait_type)}</span>${esc(show(a))}</div>`).join("");
 
     // balances: seed tokens (always) + any tradable token the account holds + ETH
-    const seedTokens = [...seed.legs, ...seed.upgradeLegs, ...(await bonusLegs(id))].map((l) => l.token.toLowerCase());
+    const bonus = await bonusLegs(id);
+    const seedTokens = [...seed.legs, ...seed.upgradeLegs, ...bonus].map((l) => l.token.toLowerCase());
     const tokens = [...new Set([...seedTokens, ...(await knownTokens()).map((x) => x.toLowerCase())])];
     const deployed = !!(await state.pub.getCode({ address: seed.account }));
     const eth = await state.pub.getBalance({ address: seed.account });
@@ -773,11 +778,14 @@ async function showFace(id) {
     else if (!seed.funded) act("Seed pending: deliver it", "fund");
     if (seed.tier >= 2 && !seed.upgraded) act(`Deliver the ${TIERS[seed.tier]} top-up`, "upgrade");
     if ($("#face-actions").children.length) keeperNote($("#face-actions"));
-    journal(id, seed.account)
+    const entries = journal(id, seed.account);
+    entries
       .then((entries) => {
         if (entries.length) $("#face-journal").innerHTML = entries.slice(0, 40).map((e) => `<li><time>${fmtDay(e.t)}</time>${esc(e.text)}</li>`).join("");
       })
       .catch(() => {});
+    // What I see: the Face reads itself (docs/ANALYST.md); only for a Face whose account exists
+    if (deployed) entries.catch(() => []).then((e) => renderSees($("#face-sees"), { id, account: seed.account, seed, rows, tokens, bonus, entries: e })).catch(() => ($("#face-sees").hidden = true));
 
     // agent + lock
     let agentInfo = null;

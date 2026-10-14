@@ -132,7 +132,7 @@
               <tr><td>Contract</td><td class="addr">0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B<br>on Robinhood Chain</td></tr>
             </tbody>
           </table></div>
-          <p class="fine">We never DM first, and we never ask you to claim anything. Never share your seed phrase. Any other link is not us.</p>
+          <p class="fine">We never DM first, and we never ask you to claim anything. Never share your seed phrase. Any other link is not us. Not sure about one? <a href="/check" data-link>Check it here</a>.</p>
         </section>
         <section id="watch" class="block reveal">
           <div class="label">The watch</div>
@@ -224,6 +224,39 @@
           <div id="say" class="say" hidden><h3>The sets' say</h3><div id="say-list"></div></div>
           <h3 class="sets-title">The 555 faces</h3>
           <div id="sets-grid" class="sets"></div>
+        </section>
+      </section>
+      <section id="view-check" class="page view" hidden>
+        <section class="block">
+          <div class="label">Check</div>
+          <h2>Before you click, before you sign.</h2>
+          <p class="lead">Paste a link, an address, a transaction or a signature request. You get, in plain words, whether it is ours and what it would allow.</p>
+          <form id="check-form" class="check-form">
+            <textarea id="check-input" rows="4" spellcheck="false" autocomplete="off" placeholder="https://… · 0x… · or the request your wallet shows"></textarea>
+            <button class="btn btn-neon">Check</button>
+          </form>
+          <div id="check-result" class="check-result" aria-live="polite" hidden></div>
+          <p class="fine">It runs in your browser: nothing you paste is stored or sent anywhere, except an address, which is looked up on the chain. A clean check is not a guarantee: a new scam can look clean.</p>
+          <h3>Only these are ours</h3>
+          <ul class="check-official">
+            <li><b>Site</b> neonfaces.xyz</li>
+            <li><b>Collection</b> opensea.io/collection/neonfaces</li>
+            <li><b>X</b> x.com/osaykancuno</li>
+            <li><b>Contract</b> <span class="addr">0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B</span></li>
+          </ul>
+          <p class="fine">Nobody from NEONFACES DMs first. There is no airdrop, no claim and no stealth mint. Never share your seed phrase, with anyone, anywhere.</p>
+        </section>
+      </section>
+      <section id="view-market" class="page view" hidden>
+        <section class="block">
+          <div class="label">Market watch</div>
+          <h2>What the baskets are made of.</h2>
+          <p class="lead">Every token a Face can carry, read from the same Chainlink feeds NeonTrader trades on.</p>
+          <div class="scroll"><table class="market-table">
+            <thead><tr><th>Token</th><th>Kind</th><th>Price</th><th>1 day</th><th>7 days</th><th>30 days</th><th>Typical day</th><th>Last price</th></tr></thead>
+            <tbody id="market-rows"></tbody>
+          </table></div>
+          <p class="fine" id="market-note"></p>
         </section>
       </section>
       <section id="view-reveal" class="page view" hidden>
@@ -361,6 +394,7 @@
               <div id="face-value" class="face-value" hidden></div>
               <div id="face-actions" class="face-actions"></div>
               <div id="face-set" class="face-set" hidden></div>
+              <div id="face-sees" class="sees" hidden></div>
               <h3>Traits</h3>
               <div id="face-traits" class="face-traits"></div>
               <h3>Agent</h3>

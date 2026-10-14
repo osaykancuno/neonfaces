@@ -17,7 +17,7 @@ const DAY = 86_400;
 
 const feeds = new Map();
 /** Chainlink feed (and its decimals) behind a token, as listed on NeonTrader; ETH uses WETH's. */
-function feedOf(token) {
+export function feedOf(token) {
   const key = token.toLowerCase();
   if (!feeds.has(key)) {
     feeds.set(
@@ -31,6 +31,14 @@ function feedOf(token) {
     );
   }
   return feeds.get(key);
+}
+
+/** Latest Chainlink price of a listed token (ETH = WETH's feed): { price, updatedAt } or null. */
+export async function latestPrice(token) {
+  const f = await feedOf(token);
+  if (!f) return null;
+  const [, answer, , updatedAt] = await state.pub.readContract({ address: f.feed, abi: FEED, functionName: "latestRoundData" });
+  return { price: Number(answer) / 10 ** f.decimals, updatedAt: Number(updatedAt) };
 }
 
 const weth = () => tokenList(state.dep).find((t) => t.symbol === "ETH")?.address;
@@ -57,7 +65,7 @@ export async function liveValue(rows) {
 }
 
 /** Chainlink rounds of one feed back to `since` (one Multicall3 call per 60 rounds): [[updatedAt, price], …] oldest first. */
-async function priceHistory(f, since) {
+export async function priceHistory(f, since) {
   const [latestId] = await state.pub.readContract({ address: f.feed, abi: FEED, functionName: "latestRoundData" });
   const phase = latestId >> 64n;
   let agg = latestId & 0xffffffffffffffffn;

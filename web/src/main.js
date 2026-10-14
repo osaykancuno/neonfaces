@@ -25,6 +25,11 @@ let placeholder = null;
 let rarity = null;
 let siteMint = false; // plan B: the mint happens on this page, through SeaDrop (mint.js)
 const faceURI = (f) => svgDataURI(f.artId, f.record);
+// declared before the first route(): a visit that lands straight on /reveal or /mine reads them at once
+let revealTimer = null;
+let revealShown = 0;
+let firstSightOn = false;
+let firstSightAsked = false; // offered on its own once per visit; Mine and each Face's page keep a button
 
 // =====================================================================================
 // start (no intro sequence since 2 Oct: the site opens straight on Home, the founder's call)
@@ -584,8 +589,6 @@ async function renderMyFaces() {
 // =====================================================================================
 // The reveal (/reveal): where it stands, live; once revealed, the minted Faces turn over one by one
 // =====================================================================================
-let revealTimer = null;
-let revealShown = 0;
 
 async function renderReveal() {
   clearTimeout(revealTimer);
@@ -649,8 +652,6 @@ function revealWall(supply, count) {
 // =====================================================================================
 // First sight: after the reveal, each of the holder's Faces is shown to them once per device (effects/firstsight.js)
 // =====================================================================================
-let firstSightOn = false;
-let firstSightAsked = false; // offered on its own once per visit; Mine and each Face's page keep a button
 
 async function runFirstSight(ids) {
   if (firstSightOn || !ids.length || state.preview) return;

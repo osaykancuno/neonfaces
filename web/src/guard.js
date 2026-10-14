@@ -333,6 +333,31 @@ export function decodeTypedData(td, known = []) {
 
 const SEED = /^([a-z]+\s+){11}([a-z]+\s+){0,12}[a-z]+$/;
 
+/** Text that carries a secret nobody should type anywhere, so the site's chat refuses to send it:
+ *  - a seed phrase: a line made only of 12 to 24 lowercase words, or such a run of words next to "seed", "phrase",
+ *    "mnemonic", "recovery" or "secret";
+ *  - a private key: 64 hex digits that the text doesn't present as a transaction or block hash.
+ *  → "seed" | "key" | null */
+export function looksSecret(text) {
+  const t = String(text ?? "");
+  const lines = t.split(/\r?\n/).map((l) => l.trim().toLowerCase());
+  const onlyWords = (s) => {
+    const w = s.split(/\s+/);
+    return w.length >= 12 && w.length <= 24 && w.every((x) => /^[a-z]{3,8}$/.test(x));
+  };
+  if (lines.some(onlyWords)) return "seed";
+  if (/\b(seed|phrase|mnemonic|recovery|secret)\b/i.test(t)) {
+    let run = 0;
+    for (const w of t.toLowerCase().split(/\s+/)) {
+      run = /^[a-z]{3,8}[.,;:]?$/.test(w) ? run + 1 : 0;
+      if (run >= 12) return "seed";
+    }
+  }
+  const hex = /(?:^|[^0-9a-z])(?:0x)?[0-9a-f]{64}(?![0-9a-z])/i.test(t);
+  if (hex && !/\b(tx|txn|transaction|hash|block)\b/i.test(t)) return "key";
+  return null;
+}
+
 /** The whole check: what the input looks like, then the right reader. → { kind, level, title, lines } (or async-able facts via `needs`). */
 export function check(raw, known = []) {
   const input = String(raw ?? "").trim();

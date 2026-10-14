@@ -3,7 +3,13 @@
 // kit): a holder adds https://neonfaces.xyz/mcp to their AI assistant and asks about their Face, nothing to install.
 // MCP "Streamable HTTP", stateless: one POST with a JSON-RPC message (or a batch) gets one JSON reply. Read-only: no keys,
 // no sessions, nothing stored about who asks.
+// /api/ask is the site's chat ("Ask", web/mcp/ask.mjs): the same tools, answered by a model reached through OpenRouter.
+// Its key is the Worker secret OPENROUTER_API_KEY (set by the founder with `wrangler secret put`), never in code or in
+// the browser; the models are the var ASK_MODELS (free ones by default, tried in order); ASK_LIMIT limits each visitor.
 import { createServer } from "../../web/mcp/core.mjs";
+import { answer, validate } from "../../web/mcp/ask.mjs";
+
+const FREE_MODELS = "google/gemma-4-31b-it:free,nvidia/nemotron-3-ultra-550b-a55b:free,thinkingmachines/inkling:free";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -22,10 +28,55 @@ moves anything. Facts from the chain, not advice. More: https://neonfaces.xyz/ll
 `;
 
 let server = null;
+const serverFor = (env, url) =>
+  (server ??= createServer({
+    site: `${url.origin}/`,
+    loadDeployment: () => env.ASSETS.fetch(new Request(`${url.origin}/deployment.json`)).then((r) => r.json()),
+    // the site's own Alchemy key answers the site's origin; the official node and PublicNode behind it
+    rpc: (d) => [...(d.chain.rpcFallbacks ?? []).filter((u) => /alchemy/i.test(u)), d.chain.rpcUrl, ...(d.chain.rpcFallbacks ?? []).filter((u) => !/alchemy|drpc/i.test(u))],
+    headers: { origin: "https://neonfaces.xyz" },
+  }));
+
+async function ask(request, env, url) {
+  const say = (error, status) => json({ error }, status);
+  if (request.method !== "POST") return say("POST only.", 405);
+  if (!env.OPENROUTER_API_KEY) return say("The assistant isn't switched on yet.", 503);
+  const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
+  if (env.ASK_LIMIT && !(await env.ASK_LIMIT.limit({ key: ip })).success) return say("Too many questions in a minute: wait a moment and ask again.", 429);
+  if (Number(request.headers.get("content-length") ?? 0) > 32_000) return say("That message is too long.", 413);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return say("That message couldn't be read.", 400);
+  }
+  const v = validate(body);
+  if (v.error) return say(v.error, 400);
+  const models = String(env.ASK_MODELS || FREE_MODELS).split(",").map((m) => m.trim()).filter(Boolean);
+  const llm = async (req) => {
+    // ASK_ENDPOINT only for local tests against a scripted model (wrangler dev --var); production uses OpenRouter
+    const r = await fetch(env.ASK_ENDPOINT || "https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.OPENROUTER_API_KEY}`, "content-type": "application/json", "http-referer": "https://neonfaces.xyz", "x-title": "NEONFACES" },
+      body: JSON.stringify({ models, ...req }),
+    });
+    const j = await r.json().catch(() => null);
+    if (r.status === 429) throw Object.assign(new Error("busy"), { busy: true });
+    if (!r.ok || !j) throw new Error(j?.error?.message ?? `the model answered ${r.status}`);
+    return j;
+  };
+  try {
+    const out = await answer(serverFor(env, url), llm, v.messages);
+    return json(out.answer ? out : { error: "No answer this time: ask again in other words." }, out.answer ? 200 : 502);
+  } catch (e) {
+    return say(e.busy ? "The free assistant is busy right now: try again in a minute." : "The assistant couldn't answer right now: try again in a minute.", e.busy ? 429 : 502);
+  }
+}
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/ask") return ask(request, env, url);
     if (url.pathname !== "/mcp" && url.pathname !== "/mcp/") return env.ASSETS.fetch(request);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     if (request.method === "GET") {
@@ -41,13 +92,7 @@ export default {
     } catch {
       return json({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } }, 400);
     }
-    server ??= createServer({
-      site: `${url.origin}/`,
-      loadDeployment: () => env.ASSETS.fetch(new Request(`${url.origin}/deployment.json`)).then((r) => r.json()),
-      // the site's own Alchemy key answers the site's origin; the official node and PublicNode behind it
-      rpc: (d) => [...(d.chain.rpcFallbacks ?? []).filter((u) => /alchemy/i.test(u)), d.chain.rpcUrl, ...(d.chain.rpcFallbacks ?? []).filter((u) => !/alchemy|drpc/i.test(u))],
-      headers: { origin: "https://neonfaces.xyz" },
-    });
+    serverFor(env, url);
     const batch = Array.isArray(body);
     const msgs = (batch ? body : [body]).slice(0, 20);
     const replies = (await Promise.all(msgs.map((m) => server.handle(m)))).filter(Boolean);

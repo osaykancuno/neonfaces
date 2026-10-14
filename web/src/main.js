@@ -8,6 +8,7 @@ import { hunt } from "./hunter.js";
 import { route as tradeRoute } from "./actions.js";
 import { liveValue, valueHistory, sparkline } from "./value.js";
 import { renderSees, renderMarket, setupCheck } from "./whatisee.js";
+import { setupAsk } from "./ask.js";
 import { mosaic, reveals, cursor, tape, toast } from "./effects/fx.js";
 import { sound, soundToggle } from "./effects/sound.js";
 import { loadDrop, setupSiteMint, MINT_ERRORS } from "./mint.js";
@@ -19,7 +20,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 
 let gallery = []; // [{ artId, stare, record }]: on-chain pixel records
 let hunting = 0; // the set hunter shows only its latest lookup
-const VIEWS = { "": "view-home", cam: "view-cam", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide", reveal: "view-reveal", check: "view-check", market: "view-market" }; // routes of the app
+const VIEWS = { "": "view-home", cam: "view-cam", faces: "view-faces", sets: "view-sets", mine: "view-mine", guide: "view-guide", reveal: "view-reveal", check: "view-check", market: "view-market", ask: "view-ask" }; // routes of the app
 let lastView = null;
 let sets = []; // [{ set, stare, face, records[4] }]: whole sets for the Sets section
 let placeholder = null;
@@ -78,7 +79,7 @@ document.addEventListener("click", (e) => {
   const url = new URL(a.href);
   if (url.origin !== location.origin) return;
   e.preventDefault();
-  history.pushState({}, "", url.pathname + url.hash);
+  history.pushState({}, "", url.pathname + url.search + url.hash); // the search too: /ask?face=65 prefills the question
   route();
 });
 
@@ -113,6 +114,7 @@ function route() {
   if (view === "view-mine") renderMyFaces();
   if (view === "view-reveal") renderReveal();
   if (view === "view-check") setupCheck($("#view-check"));
+  if (view === "view-ask") setupAsk($("#view-ask"));
   if (view === "view-market") renderMarket($("#view-market"));
   // NEONCAM (cam.js) lights the page while its camera is on, and turns it off when the view is left
   if (view === "view-cam") setupCam();
@@ -816,6 +818,7 @@ async function showFace(id) {
     if (tl) links.push(`<a href="${tl}" target="_blank" rel="noopener">Blockscout ↗</a>`);
     if (state.dep.chain.opensea) links.push(`<a href="${state.dep.chain.opensea}/${state.dep.faces}/${id}" target="_blank" rel="noopener">OpenSea ↗</a>`);
     links.push(`<a href="${meta.image}" download="neonface-${id}.svg">Download SVG</a>`);
+    links.push(`<a href="/ask?face=${id}" data-link>Ask about it</a>`);
     $("#face-links").innerHTML = links.join("");
 
     if (new URLSearchParams(location.search).get("do") && !(state.account && state.account.toLowerCase() === owner.toLowerCase())) {

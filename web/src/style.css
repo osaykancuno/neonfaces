@@ -811,3 +811,28 @@ html.neoncam .cam-seg button[aria-pressed="true"] { background: #000; color: #cc
 .market-table .up { color: var(--neon); }
 .market-table .down { color: #ffb14a; }
 .market-table td.fine { margin: 0; font-size: 12px; }
+/* Ask (/ask): the chat answered from the chain */
+.ask-log { display: grid; gap: 10px; max-width: 760px; margin-top: 18px; max-height: min(60vh, 560px); overflow-y: auto; overscroll-behavior: contain; padding: 2px; }
+.ask-msg { padding: 10px 12px; border: 1px solid var(--line); font: 400 14px/1.55 var(--mono); color: #c7d49a; overflow-wrap: anywhere; max-width: 92%; }
+.ask-msg.ai { justify-self: start; background: #000; }
+.ask-msg.me { justify-self: end; border-color: var(--neon); color: var(--neon); }
+.ask-msg.note { justify-self: start; border-color: #ffb14a; color: #ffb14a; }
+.ask-msg a { color: var(--neon); }
+.ask-msg b { color: var(--neon); font-weight: 700; }
+.ask-li { display: block; padding-left: 14px; text-indent: -14px; }
+.ask-li::before { content: "› "; color: var(--neon); }
+.ask-msg.wait { color: var(--dim); }
+.ask-msg.wait span { display: inline-block; width: 6px; height: 6px; margin-right: 3px; background: var(--neon); animation: ask-blink 1s steps(2) infinite; }
+.ask-msg.wait span:nth-child(2) { animation-delay: .33s; }
+.ask-msg.wait span:nth-child(3) { animation-delay: .66s; }
+@keyframes ask-blink { 50% { opacity: .15; } }
+@media (prefers-reduced-motion: reduce) { .ask-msg.wait span { animation: none; } }
+.ask-chips { display: flex; flex-wrap: wrap; gap: 8px; max-width: 760px; margin-top: 14px; }
+.ask-chip { background: #000; color: var(--dim); border: 1px solid var(--line); padding: 8px 10px; min-height: 40px; font: 400 13px/1.2 var(--mono); cursor: pointer; }
+.ask-chip:hover, .ask-chip:focus-visible { color: var(--neon); border-color: var(--neon); }
+.ask-form { display: grid; gap: 10px; max-width: 760px; margin-top: 12px; }
+.ask-form textarea { width: 100%; min-height: 64px; resize: vertical; background: #000; color: var(--neon); border: 1px solid var(--line); padding: 10px 12px; font: 400 16px/1.45 var(--mono); }
+.ask-form textarea:focus { outline: none; border-color: var(--neon); }
+.ask-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.ask-row .btn[hidden] { display: none; }
+@media (max-width: 420px) { .ask-chip { flex: 1 1 calc(50% - 8px); } .ask-row .btn { flex: 1 1 0; } }

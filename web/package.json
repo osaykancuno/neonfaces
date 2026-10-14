@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:preview": "vite build -c vite.preview.config.js",
     "preview": "vite preview",
-    "test": "node --test test/render.test.mjs test/analysis.test.mjs test/guard.test.mjs test/mcp.test.mjs"
+    "test": "node --test test/render.test.mjs test/analysis.test.mjs test/guard.test.mjs test/mcp.test.mjs test/ask.test.mjs"
   },
   "dependencies": {
     "viem": "^2.37.0"

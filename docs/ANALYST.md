@@ -123,5 +123,13 @@ rules. A future option: strategies (Accumulate, Keep liquid, Trim) could show th
    path is served as static assets). The server core is `web/mcp/core.mjs`; the downloadable kit is generated from it
    and `web/mcp/stdio.mjs`. Reads go through Multicall3 (a Worker may make few requests per call), through the site's
    Alchemy key on the Worker and the official node and PublicNode behind it.
+5. Done 14 Oct: **Ask** (neonfaces.xyz/ask), a chat on the site for anyone, with nothing to connect: the browser sends
+   the conversation to the Worker's /api/ask (`web/mcp/ask.mjs`), which lets a model use the same tools and answers in
+   the asker's language. The model is reached through OpenRouter (free models by default, the var `ASK_MODELS`, tried in
+   order); its key is the Worker secret `OPENROUTER_API_KEY`, never in code or in the browser. Guards: a seed phrase or a
+   private key is stopped in the browser and again on the Worker; 6 questions a minute per visitor (`ASK_LIMIT`); at most
+   3 tool rounds and 700 tokens; the answer passes `adviceProblems` (English and Italian advice and forecasts are
+   dropped, mostly-advice answers replaced by a plain refusal); the page says that questions go to OpenRouter and the
+   model's provider. Nothing is stored on our side. Tests: `web/test/ask.test.mjs` (a scripted model).
 
 Nothing here touches the launch contracts, the art or the baskets.

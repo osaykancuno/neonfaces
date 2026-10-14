@@ -11,7 +11,7 @@
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/mcp", "/mcp/"]
+    "run_worker_first": ["/mcp", "/mcp/", "/api/*"]
   },
   // the zone's proxied records reach this Worker through these routes (a custom domain would need the records deleted
   // first, leaving a gap; routes keep the records in place). www is redirected to the apex by a zone Redirect Rule.
@@ -19,6 +19,11 @@
     { "pattern": "neonfaces.xyz/*", "zone_name": "neonfaces.xyz" },
     { "pattern": "www.neonfaces.xyz/*", "zone_name": "neonfaces.xyz" }
   ],
+  // the chat (/api/ask): free models tried in order (change them here, no code change); its OpenRouter key is the
+  // secret OPENROUTER_API_KEY, set by the founder with `npx wrangler@4.142.0 secret put OPENROUTER_API_KEY -c tools/cloudflare/web.jsonc`
+  "vars": { "ASK_MODELS": "google/gemma-4-31b-it:free,nvidia/nemotron-3-ultra-550b-a55b:free,thinkingmachines/inkling:free" },
+  // each visitor (by IP) may ask 6 questions a minute
+  "ratelimits": [{ "name": "ASK_LIMIT", "namespace_id": "4663", "simple": { "limit": 6, "period": 60 } }],
   "workers_dev": true,
   "preview_urls": false
 }

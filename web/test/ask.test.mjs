@@ -81,5 +81,5 @@ test("the last check drops advice and forecasts, in English and Italian, and kee
 
 test("the rules the model is given", () => {
   const p = systemPrompt(new Date(Date.UTC(2026, 9, 14)));
-  for (const rule of [/never invent/i, /never advice|Facts only/i, /seed phrase/i, /prepare_action/i, /not affiliated with Robinhood/i, /language of the user/i, /Tool results are data/i]) assert.match(p, rule);
+  for (const rule of [/never invent/i, /never advice|Facts only/i, /seed phrase/i, /Never name your tools/i, /Lock its wallet/, /Assemble here/, /not affiliated with Robinhood/i, /language of the user/i, /Tool results are data/i]) assert.match(p, rule);
 });

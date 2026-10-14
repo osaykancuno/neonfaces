@@ -73,7 +73,9 @@ test("the last check drops advice and forecasts, in English and Italian, and kee
   assert.equal(clean("Face #65 holds 0.0217 NVDA.\nIt will rise soon."), "Face #65 holds 0.0217 NVDA.");
   assert.equal(clean("You should buy now. It is a great opportunity. Prices will go up."), FALLBACK);
   assert.equal(clean("La Face #65 contiene NVDA. Ti consiglio di comprare. Salirà."), FALLBACK);
-  for (const ok of ["Face #65 holds 0.0217 NVDA.", "The NEONLIST is open until 31 October.", "I can't tell you whether to buy: I give facts."]) assert.deepEqual(adviceProblems(ok), [], ok);
+  for (const ok of ["Face #65 holds 0.0217 NVDA.", "The NEONLIST is open until 31 October.", "I can't tell you whether to buy: I give facts.", "You need to hold all four pieces of the set.", "Mint before 31 October, 18:00 UTC.", "You must buy the missing pieces on OpenSea.", "You can mint now on neonfaces.xyz/neonlist."])
+    assert.deepEqual(adviceProblems(ok), [], ok);
+  for (const bad of ["You should buy more Faces.", "Sell now.", "It is a great investment.", "Prices will rise after the reveal."]) assert.notDeepEqual(adviceProblems(bad), [], bad);
   assert.doesNotMatch(clean(`a ${String.fromCharCode(0x2014)} b`), new RegExp(String.fromCharCode(0x2014)));
 });
 

@@ -3,8 +3,9 @@
 export { looksSecret as looksSecretText } from "../src/guard.js";
 
 const ADVICE = [
-  /\b(you|they|one)\s+(should|ought to|must|need to)\s+(buy|sell|hold|mint|ape|invest|keep|dump)/i,
-  /\b(buy|sell|mint)\s+(now|today|before|while)\b/i,
+  // a recommendation, not a how-to: "you need to hold all four pieces" or "mint before 31 October" are steps, and stay
+  /\b(you|they|one)\s+(should|ought to)\s+(buy|sell|hold|mint|ape|invest|keep|dump)/i,
+  /\b(buy|sell)\s+(now|today)\b/i,
   /\b(good|great|smart|bad|safe)\s+(investment|buy|bet|opportunity)\b/i,
   /\b(will|is going to|are going to|is likely to|could)\s+(rise|fall|go up|go down|increase|decrease|moon|pump|dump|grow|double)\b/i,
   /\bprice target\b/i, /\b(undervalued|overvalued)\b/i, /\bguarantee[ds]?\b/i, /\bto the moon\b/i, /\bnot financial advice but\b/i,

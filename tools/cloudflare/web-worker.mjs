@@ -9,7 +9,7 @@
 import { createServer } from "../../web/mcp/core.mjs";
 import { answer, validate } from "../../web/mcp/ask.mjs";
 
-const FREE_MODELS = "nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free,openrouter/free";
+const FREE_MODELS = "nvidia/nemotron-3-super-120b-a12b:free,nvidia/nemotron-3-ultra-550b-a55b:free,google/gemma-4-31b-it:free,openrouter/free";
 
 const CORS = {
   "access-control-allow-origin": "*",

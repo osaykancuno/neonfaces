@@ -3,8 +3,8 @@
 Status: agreed on 30 Sep 2026 (the founder: "like having a real assistant"); moved up to the sale and built in the web
 app on 14 Oct 2026: `web/src/analysis.js` (numbers and sentences), `web/src/guard.js` (the scam guard),
 `web/src/whatisee.js` (chain reads and the panel), the Face page panel, `/market` and `/check`, with tests in
-`web/test/analysis.test.mjs` and `web/test/guard.test.mjs`. The MCP tools and llms.txt are the next step. No contract
-changes: everything below reads the chain.
+`web/test/analysis.test.mjs` and `web/test/guard.test.mjs`. The MCP tools `analysis`, `market` and `check` and
+llms.txt followed the same day. No contract changes: everything below reads the chain.
 
 ## The idea
 
@@ -112,6 +112,13 @@ rules. A future option: strategies (Accumulate, Keep liquid, Trim) could show th
    official mint).
 2. Done 14 Oct: the Face page panel (Safety first, then Value, Moves, Swings, Mix, Together, Market status, Trading
    cost, Activity), `/market` and `/check`; checked at 320 and 375 px, against mainnet through the site's RPC.
-3. Next: MCP tools `analysis`, `market` and `check`; llms.txt.
+3. Done 14 Oct: MCP tools `analysis`, `market` and `check` in `web/public/neonfaces-mcp.mjs` (still one file with no
+   dependencies: `web/scripts/bundle-mcp.mjs` copies analysis.js and guard.js into it before every build, and
+   `web/test/mcp.test.mjs` fails if the copy is stale); `faces_of` reads the chain (Blockscout's API shows a browser
+   check to scripts); the kit reads through the official node and PublicNode in batches of 20 with retries. The kit
+   can't show the value on arrival or the journal (public nodes don't serve the old events): it points to the page.
+   llms.txt and the FAQ describe What I see and Check.
+4. Possible next: the kit hosted at neonfaces.xyz/mcp (a remote MCP server on the same Cloudflare Worker), so a
+   holder adds a URL to their assistant instead of downloading a file.
 
 Nothing here touches the launch contracts, the art or the baskets.

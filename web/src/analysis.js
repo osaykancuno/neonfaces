@@ -286,7 +286,8 @@ export function digest(f) {
   if (f.activity) {
     const a = f.activity;
     const lines = [];
-    lines.push(a.entries ? `${a.entries} ${a.entries === 1 ? "entry" : "entries"} in my journal${a.latest ? `; the latest, ${utc(a.latest.t).slice(0, 10)}: “${a.latest.text}”` : "."}` : "Nothing in my journal yet.");
+    // entries = null when the journal couldn't be read (the MCP kit has no log index): say nothing rather than "nothing"
+    if (a.entries != null) lines.push(a.entries ? `${a.entries} ${a.entries === 1 ? "entry" : "entries"} in my journal${a.latest ? `; the latest, ${utc(a.latest.t).slice(0, 10)}: “${a.latest.text}”` : "."}` : "Nothing in my journal yet.");
     lines.push(a.strategy ? `The strategy my holder set: “${a.strategy}”` : "No strategy set.");
     lines.push(a.agent ?? "No agent can act for me.");
     if (a.lockedUntil && a.lockedUntil > now) lines.push(`Locked until ${utc(a.lockedUntil)}: nothing leaves me before then.`);

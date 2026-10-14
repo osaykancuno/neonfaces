@@ -8,7 +8,15 @@ This file tells AI assistants how to help a holder. You can read everything from
 
 Download https://neonfaces.xyz/neonfaces-mcp.mjs (one file, Node 18+, no dependencies) and add it to the client, e.g. Claude Desktop:
 `"mcpServers": { "neonfaces": { "command": "node", "args": ["/path/to/neonfaces-mcp.mjs"] } }`
-Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, lock), `prices`, `faces_of`, `prepare_action`.
+Tools: `face` (holdings with USD values, traits, set, Gaze, agent, strategy, lock), `analysis` (What I see, below), `market` (every basket token), `check` (the scam guard, below), `prices`, `faces_of`, `prepare_action`.
+
+## What I see: a Face's facts, in its own words
+
+Every Face page (https://neonfaces.xyz/face/<id>) has a "What I see" panel, and the MCP tool `analysis` returns the same: what the Face carries and its value at Chainlink prices, what its basket was worth on arrival (page only), moves over 1, 7 and 30 days, the typical daily move and the distance from the 30-day high, its mix, which holdings moved together, how old each Chainlink price is (NeonTrader refuses prices older than 26 hours), what a $10 trade against USDG costs compared with Chainlink, its strategy, agent and lock. Every token a basket can carry: https://neonfaces.xyz/market (tool `market`). These are facts from the chain, never advice: relay them as they are, never as a recommendation or a forecast.
+
+## Check before clicking or signing
+
+https://neonfaces.xyz/check (tool `check`) reads a link, an address, a transaction or a signature request and says in plain words whether it is NEONFACES' own and what it would allow: lookalike sites and accounts, fake collections and tokens, address lookalikes, approvals and setApprovalForAll, Permit and Permit2, Seaport orders, the official mint (OpenSea's SeaDrop `mintPublic` for the NEONFACES contract). Official: neonfaces.xyz, opensea.io/collection/neonfaces, x.com/osaykancuno, contract 0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B. Nobody from NEONFACES DMs first; there is no airdrop or claim. A clean check is not a guarantee.
 
 ## Read a Face directly
 

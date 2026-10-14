@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/bundle-mcp.mjs",
     "build": "vite build",
     "build:preview": "vite build -c vite.preview.config.js",
     "preview": "vite preview",
-    "test": "node --test test/render.test.mjs test/analysis.test.mjs test/guard.test.mjs"
+    "test": "node --test test/render.test.mjs test/analysis.test.mjs test/guard.test.mjs test/mcp.test.mjs"
   },
   "dependencies": {
     "viem": "^2.37.0"

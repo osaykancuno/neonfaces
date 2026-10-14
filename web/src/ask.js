@@ -24,7 +24,7 @@ export function format(text) {
     .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>")
     .replace(/(^|[\s(])((?:https?:\/\/)?(?:www\.)?neonfaces\.xyz(\/[^\s)<,]*)?)/g, (m, pre, url, path) => {
       const p = (path || "/").replace(/[.]+$/, "");
-      return `${pre}<a href="${esc(p)}" data-link>neonfaces.xyz${esc(p === "/" ? "" : p)}</a>`;
+      return `${pre}<a href="${p}" data-link>neonfaces.xyz${p === "/" ? "" : p}</a>`; // p comes from text escaped above: escaping it again would break "&"
     })
     .replace(/(^|[\s(])(https:\/\/(?!(?:www\.)?neonfaces\.xyz)[^\s)<]+)/g, (m, pre, url) => `${pre}<a href="${url.replace(/[.,]+$/, "")}" target="_blank" rel="noopener nofollow">${url.replace(/[.,]+$/, "")}</a>`)
     .split("\n")

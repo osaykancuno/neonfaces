@@ -718,6 +718,10 @@ async function showFace(id) {
   $("#face-journal").innerHTML = `<li class="fine">Nothing yet.</li>`;
   $("#face-set").hidden = true;
   $("#face-sees").hidden = true;
+  // the value box belongs to the Face on screen: drop the previous Face's numbers and its refresh loop
+  clearInterval($("#face-value").dataset.timer);
+  $("#face-value").hidden = true;
+  $("#face-value").dataset.account = "";
   $("#face-holder")?.remove();
   $("#face-agent").hidden = $("#face-agent").previousElementSibling.hidden = false;
   $("#face-search").onsubmit = (e) => {
@@ -1014,9 +1018,11 @@ function usd(n) {
 async function showValue(account, rows, balRow) {
   const box = $("#face-value");
   if (!box || !state.dep.trader) return;
+  box.dataset.account = account;
+  const mine = () => box.dataset.account === account; // a slow read for an earlier Face never paints over this one
   const paint = async () => {
     const live = await liveValue(rows.filter((r) => r.bal > 0n));
-    if (!live.rows.some((r) => r.usd != null)) return;
+    if (!mine() || !live.rows.some((r) => r.usd != null)) return;
     const priced = new Map(live.rows.map((r) => [r.sym, r]));
     $("#face-balances").innerHTML = rows.map((r) => balRow(priced.get(r.sym) ?? r)).join("");
     const age = live.oldest ? Math.round((Date.now() / 1000 - live.oldest) / 3600) : null;
@@ -1031,7 +1037,7 @@ async function showValue(account, rows, balRow) {
   const timer = setInterval(() => (location.pathname.startsWith("/face/") ? paint().catch(() => {}) : clearInterval(timer)), 60_000);
   box.dataset.timer = timer;
   const hist = await valueHistory(account, rows.filter((r) => r.bal > 0n));
-  if (hist && hist.v.some((x) => x > 0)) {
+  if (mine() && hist && hist.v.some((x) => x > 0)) {
     box.querySelector(".v-chart").innerHTML =
       sparkline(hist) + `<p class="fine">The tokens inside over the last 30 days, at each day's Chainlink price (ETH at today's amount). A record of prices, not a forecast.</p>`;
   }

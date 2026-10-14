@@ -91,7 +91,7 @@
             </li>
             <li>
               <b>The stare can work.</b>
-              <p>This chain is built for agents too. You stay the owner and give it a simple rule: accumulate a ticker, keep part of it in USDG, trim a ticker that grew too big. The NEONFACES strategy agent runs it for you and writes the reason for every move in the Face's journal. You can also ask your AI assistant about your Face: it reads the chain and prepares actions you confirm.</p>
+              <p>This chain is built for agents too. You stay the owner and give it a simple rule: accumulate a ticker, keep part of it in USDG, trim a ticker that grew too big. The NEONFACES strategy agent runs it for you and writes the reason for every move in the Face's journal. Every Face also watches for you: its page says what it carries, how those prices moved and anything that looks like a trap. You can also ask your AI assistant about your Face: it reads the chain and prepares actions you confirm.</p>
             </li>
           </ol>
           <div class="truth">
@@ -273,7 +273,7 @@
         <section id="mine" class="block">
           <div class="label">Mine</div>
           <h2>Your Faces.</h2>
-          <p class="lead">Open a Face to see what's inside, withdraw, trade, lock it before listing, or let it follow a strategy.</p>
+          <p class="lead">Open a Face to see what's inside and what it sees, withdraw, trade, lock it before listing, or let it follow a strategy.</p>
           <p class="fine" data-before-reveal>The art stays sealed until the reveal. Everything else works now.</p>
           <div id="my-faces" class="mint-result"></div>
           <div class="mine-links">
@@ -365,6 +365,8 @@
             <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure. Stock Tokens are tokenized instruments that track the underlying; they give no legal ownership and no shareholder rights.</p></details>
             <details><summary>How do I assemble a set?</summary><p>Hold all four pieces, open the Face that should carry the set and press <em>Assemble</em>: the other three move into its account in one transaction, and the bonus comes with them. <em>Take apart</em> gives them back. If the mint doesn't sell out, fewer sets are dealt, but only whole ones.</p></details>
             <details><summary>Can my Face trade by itself?</summary><p>Yes, if you want. On your Face's page pick a strategy (buy a ticker every week, keep 40% in USDG, trim a ticker above 50%) and the NEONFACES strategy agent runs it within the daily limit you choose, or delegate your own agent. Trades go through a guard contract: everything bought comes back into the Face, never more than 2% below the Chainlink price. An agent can never sign for the account, it expires, and it stops the moment the Face changes hands. Each trade appears in the Face's journal with its reason. Strategies follow simple rules: they don't predict prices and promise nothing.</p></details>
+            <details><summary>What does a Face tell me about itself?</summary><p>Its page has a <b>What I see</b> panel, read from the chain and written in the Face's own words: what it carries and what that was worth when it arrived, how those prices moved over 1, 7 and 30 days and how much they swing, which of them moved together, how fresh each Chainlink price is, what a $10 trade costs, and what has happened to it. Its Safety part comes first: open approvals, tokens someone sent it, what its agent may do. Facts, not advice. Every token a basket can hold is on the <a href="/market" data-link>Market watch</a>.</p></details>
+            <details><summary>Is this link, address or request safe?</summary><p>Paste it on <a href="/check" data-link>Check</a> before you click or sign. It says in plain words whether it is ours and what it would allow: a lookalike site, a fake collection, an approval that would let someone take your Faces. It runs in your browser. A clean check is not a guarantee, and nobody from NEONFACES will ever DM you first.</p></details>
             <details><summary>Can I ask an AI about my Face?</summary><p>Yes. Give your assistant <a href="/llms.txt">neonfaces.xyz/llms.txt</a>, or add <a href="/neonfaces-mcp.mjs" download>the NEONFACES MCP kit</a> to Claude Desktop or any MCP client. It reads what your Face holds, its set, Gaze and agent, and prepares actions as links: you open the link, read the summary and confirm in your own wallet. It never touches your keys.</p></details>
             <details><summary>What if the seed pool runs out?</summary><p>Minting never fails because of seeding. The seed is marked pending and delivered as soon as the pool is restocked, usually within minutes. The pool is restocked by the mint itself: 55% of what reaches the split goes to a vault that can only buy the basket tokens for the pool. Nobody has to wait for the team: from the Face's page anyone can make the vault buy what is missing (only what Faces are owed, at Chainlink-checked prices) and deliver it, in one transaction. On weekends, when stock prices don't update, buying waits for Monday; if a token's market drifts more than 1% from its reference price, the vault waits too rather than overpay, and the page tells you before you sign anything.</p></details>
           </div>
@@ -374,7 +376,7 @@
           <h2>After the mint.</h2>
           <ul class="next-list">
             <li><b>More strategies</b><span>proposed by holders, run by the same agent under the same on-chain rules.</span></li>
-            <li><b>Market + analytics</b><span>HoodMarket listing, account-value analytics, holder votes on which tickers join the pool.</span></li>
+            <li><b>Market</b><span>HoodMarket listing, holder votes on which tickers join the pool.</span></li>
           </ul>
         </section>
       </section>

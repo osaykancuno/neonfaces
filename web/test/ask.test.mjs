@@ -2,7 +2,7 @@
 // last check that drops advice. No network.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { answer, validate, clean, systemPrompt, FALLBACK, LIMITS } from "../mcp/ask.mjs";
+import { answer, validate, clean, systemPrompt, prefetchFor, FALLBACK, LIMITS } from "../mcp/ask.mjs";
 import { adviceProblems } from "../mcp/ask-rules.mjs";
 
 const server = {
@@ -20,7 +20,7 @@ test("the model calls a tool, gets its result, then answers", async () => {
     if (seen.length === 1) return { choices: [{ message: { content: "", tool_calls: [call("a", "analysis", { tokenId: 65 }), call("b", "check", { input: "x" })] } }] };
     return { choices: [{ message: { content: "Face #65 carries 0.0217 NVDA. See neonfaces.xyz/face/65" } }] };
   };
-  const out = await answer(server, llm, [{ role: "user", content: "What does Face #65 see?" }]);
+  const out = await answer(server, llm, [{ role: "user", content: "What does my Face see?" }]);
   assert.equal(out.answer, "Face #65 carries 0.0217 NVDA. See neonfaces.xyz/face/65");
   assert.deepEqual(out.used, ["analysis"]);
   const tools = seen[1].messages.filter((m) => m.role === "tool");
@@ -28,6 +28,21 @@ test("the model calls a tool, gets its result, then answers", async () => {
   assert.match(tools[1].content, /^Error: boom/);
   assert.equal(seen[0].messages[0].role, "system");
   assert.equal(seen[0].tools[0].function.name, "analysis");
+});
+
+test("the data a question obviously needs is read before the model is called: one model call is enough", async () => {
+  assert.deepEqual(prefetchFor("What does Face #65 see?"), [{ name: "analysis", args: { tokenId: 65 } }]);
+  assert.deepEqual(prefetchFor("tell me about #12"), [{ name: "analysis", args: { tokenId: 12 } }]);
+  assert.deepEqual(prefetchFor("Is neonfaces-mint.xyz/claim safe?"), [{ name: "check", args: { input: "neonfaces-mint.xyz/claim" } }]);
+  const a = "0x8e2AD92D1986C37D4CC9618C13ae9950f4d3192B";
+  assert.deepEqual(prefetchFor(`Which Faces does ${a} hold?`).map((x) => x.name), ["check", "faces_of"]);
+  assert.deepEqual(prefetchFor("Face #9999"), []);
+  assert.deepEqual(prefetchFor("How do I mint for 0.004 ETH?"), []);
+  const seen = [];
+  const out = await answer(server, async (req) => (seen.push(req), { choices: [{ message: { content: "It carries NVDA." } }] }), [{ role: "user", content: "What does Face #65 see?" }]);
+  assert.equal(seen.length, 1);
+  assert.equal(seen[0].messages.find((m) => m.role === "tool").content, "Face #65 carries 0.0217 NVDA.");
+  assert.deepEqual(out.used, ["analysis"]);
 });
 
 test("the loop stops: after the last round the model must answer without tools", async () => {

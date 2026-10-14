@@ -80,18 +80,18 @@ export function setupAsk(root) {
     if (!text || busy) return;
     if (looksSecret(text)) {
       input.value = "";
-      return note("That looks like a seed phrase or a private key: it was not sent. Never type it anywhere. If someone asked you for it, it is a scam, and the wallet should be treated as exposed.");
+      return note("That looks like a seed phrase or a private key, so it was not sent. Never share it with anyone: whoever asks for it wants to empty your wallet.");
     }
     const msgs = [...load(), { role: "user", content: text.slice(0, 1500) }];
     store(msgs);
     input.value = "";
     busy = true;
     send.disabled = true;
-    paint(`<div class="ask-msg ai wait"><span></span><span></span><span></span> Reading the chain… free models can take up to half a minute.</div>`);
+    paint(`<div class="ask-msg ai wait"><span></span><span></span><span></span> Reading the chain…</div>`);
     try {
       const r = await fetch("/api/ask", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: msgs }) });
       const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j.answer) throw new Error(j.error || "The assistant couldn't answer right now: try again in a minute.");
+      if (!r.ok || !j.answer) throw new Error(j.error || "The assistant is busy right now. Try again in a minute.");
       store([...msgs, { role: "assistant", content: j.answer }]);
       paint();
     } catch (err) {

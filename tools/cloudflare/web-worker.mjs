@@ -42,7 +42,7 @@ async function ask(request, env, url) {
   if (request.method !== "POST") return say("POST only.", 405);
   if (!env.OPENROUTER_API_KEY) return say("The assistant isn't switched on yet.", 503);
   const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
-  if (env.ASK_LIMIT && !(await env.ASK_LIMIT.limit({ key: ip })).success) return say("Too many questions in a minute: wait a moment and ask again.", 429);
+  if (env.ASK_LIMIT && !(await env.ASK_LIMIT.limit({ key: ip })).success) return say("Too many questions in a row. Wait a minute and ask again.", 429);
   if (Number(request.headers.get("content-length") ?? 0) > 32_000) return say("That message is too long.", 413);
   let body;
   try {
@@ -91,9 +91,9 @@ async function ask(request, env, url) {
   };
   try {
     const out = await answer(serverFor(env, url), llm, v.messages);
-    return json(out.answer ? out : { error: "No answer this time: ask again in other words." }, out.answer ? 200 : 502);
+    return json(out.answer ? out : { error: "No answer this time. Try asking in other words." }, out.answer ? 200 : 502);
   } catch (e) {
-    return say(e.busy ? "The free assistant is busy right now: try again in a minute." : "The assistant couldn't answer right now: try again in a minute.", e.busy ? 429 : 502);
+    return say("The assistant is busy right now. Try again in a minute.", e.busy ? 429 : 502);
   }
 }
 

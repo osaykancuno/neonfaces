@@ -1027,7 +1027,11 @@ function createServer({ site = "https://neonfaces.xyz/", loadDeployment, rpc: pi
     const out = [`${meta.name} · holder ${owner} · account ${account}`, `Page: ${SITE}face/${tokenId}`];
     out.push(`Inside: ${rows.length ? rows.join("; ") : "nothing"}${rows.length ? ` · total ≈ ${usd8(total)}${stale ? " (some prices unavailable)" : ""}` : ""}`);
     out.push(`Traits: ${meta.attributes.map((a) => `${a.trait_type}: ${a.display_type === "date" ? new Date(a.value * 1000).toISOString().slice(0, 10) : a.value}`).join(" · ")}`);
-    if (stratH) out.push(`Strategy: ${describeStrategy(ts, words(stratH))} · daily trading limit ${usd8(words(capH)[0] ?? 0n)}, ${usd8(words(leftH)[0] ?? 0n)} left today`);
+    if (stratH) {
+      // a daily limit of 0 only means the holder hasn't set one yet (it is set together with a first trade or strategy)
+      const cap = words(capH)[0] ?? 0n;
+      out.push(`Strategy: ${describeStrategy(ts, words(stratH))}${cap ? ` · daily trading limit ${usd8(cap)}, ${usd8(words(leftH)[0] ?? 0n)} left today` : ""}`);
+    }
     if (active) {
       const isOurs = d.strategyAgent && asAddr(agent).toLowerCase() === d.strategyAgent.toLowerCase();
       out.push(`Agent: ${isOurs ? "the NEONFACES strategy agent" : asAddr(agent)} until ${new Date(Number(expiry) * 1000).toISOString().slice(0, 10)}, ETH budget ${fmt(allowance, 18)}`);

@@ -262,7 +262,7 @@ export async function renderMarket(root) {
       }
     }),
   );
-  note.textContent = `Read ${utc(now)} from the Chainlink feeds NeonTrader trades on. "Typical day" is how much the price moved on an ordinary day over the last 30 days. Chainlink writes a new price when it moves enough, and at least once a day; NeonTrader won't trade on a price older than 26 hours, and Stock Token prices pause at weekends. Facts from the chain, not advice. Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.`;
+  note.textContent = `Read ${utc(now)} from the Chainlink feeds NeonTrader trades on. "Typical day" is how much the price moved on an ordinary day over the last 30 days. Chainlink writes a new price when it moves enough, and at least once a day; NeonTrader won't trade on a price older than 26 hours, and Stock Token prices pause at weekends. Facts from the chain, not advice.`;
 }
 
 // =====================================================================================

@@ -296,13 +296,10 @@ export function digest(f) {
   return out;
 }
 
-/** The line every panel carries once, plus the Stock Token sentence when the Face carries Stock Tokens. */
+/** The line every panel carries once. The Stock Token disclaimer lives once in the site's footer (the founder, 15 Oct:
+ *  repeated in every section it reads as a brake). `items` is kept for callers. */
 export function footer(items) {
-  const stocks = items.some((i) => i.amount > 0 && isStock(i.sym));
-  return (
-    "Facts from the chain, not advice. What you do with your Face is your choice." +
-    (stocks ? " Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms." : "")
-  );
+  return "Facts from the chain, not advice. What you do with your Face is your choice.";
 }
 
 /** The market watch: every token a basket can carry, the same facts in one row each. */

@@ -104,9 +104,9 @@ test("wording rule: no advice, no forecast, no em dash, in any sentence", () => 
   for (const ok of ["The holder decides.", "What I carry", "holdings"]) assert.deepEqual(wordingProblems(ok), [], ok);
 });
 
-test("footer carries the Stock Token sentence only with Stock Tokens", () => {
-  assert.match(footer([{ sym: "NVDA", amount: 1 }]), /economic exposure only/);
-  assert.doesNotMatch(footer([{ sym: "USDG", amount: 1 }, { sym: "ETH", amount: 1 }]), /economic exposure/);
+test("the panel's footer says facts not advice, and leaves the Stock Token disclaimer to the site's footer", () => {
+  assert.match(footer([{ sym: "NVDA", amount: 1 }]), /Facts from the chain, not advice/);
+  assert.doesNotMatch(footer([{ sym: "NVDA", amount: 1 }]), /economic exposure/);
 });
 
 test("market rows", () => {

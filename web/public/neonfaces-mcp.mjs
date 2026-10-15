@@ -312,13 +312,10 @@ function digest(f) {
   return out;
 }
 
-/** The line every panel carries once, plus the Stock Token sentence when the Face carries Stock Tokens. */
+/** The line every panel carries once. The Stock Token disclaimer lives once in the site's footer (the founder, 15 Oct:
+ *  repeated in every section it reads as a brake). `items` is kept for callers. */
 function footer(items) {
-  const stocks = items.some((i) => i.amount > 0 && isStock(i.sym));
-  return (
-    "Facts from the chain, not advice. What you do with your Face is your choice." +
-    (stocks ? " Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms." : "")
-  );
+  return "Facts from the chain, not advice. What you do with your Face is your choice.";
 }
 
 /** The market watch: every token a basket can carry, the same facts in one row each. */
@@ -1120,7 +1117,7 @@ function createServer({ site = "https://neonfaces.xyz/", loadDeployment, rpc: pi
           ` · last price ${ANALYSIS.utc(r.updatedAt)}${r.paused ? " (older than 26 h: NeonTrader won't trade it until a fresh one)" : ""}`
         );
       });
-      return `Every token a NEONFACES basket can carry, from the Chainlink feeds NeonTrader trades on, read ${ANALYSIS.utc(now)}. "Typical day" is how much the price moved on an ordinary day over 30 days. Facts, not advice.\n${rows.join("\n")}\nStock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.`;
+      return `Every token a NEONFACES basket can carry, from the Chainlink feeds NeonTrader trades on, read ${ANALYSIS.utc(now)}. "Typical day" is how much the price moved on an ordinary day over 30 days. Facts, not advice.\n${rows.join("\n")}`;
     });
 
   async function check({ input }) {
@@ -1249,7 +1246,7 @@ function createServer({ site = "https://neonfaces.xyz/", loadDeployment, rpc: pi
 Use "face" to read a Face, "analysis" for what it sees (facts from the chain, in its own words), "market" for every basket token, and "check" before the holder clicks a link or signs anything. Never promise returns or give investment advice: describe what is inside and what the holder can do; pass on "analysis" facts as they are, never as a recommendation or a forecast.
 You cannot move anything: "prepare_action" returns a link the holder opens and confirms in their own wallet. Never ask for keys or seed phrases.
 Rules the contracts enforce: trades go through NeonTrader (Chainlink price, at most 1% worse plus pool fee, output back into the Face, daily USD limit, no trades on stale prices at weekends); an agent can only do what the holder allowed, expires, and stops when the Face is sold; a lock blocks everything leaving the wallet.
-Stock Tokens give economic exposure only, not legal ownership; whether they are available depends on where the holder lives and on the issuer's terms.`;
+Stock Tokens give economic exposure only, not legal ownership; whether they are available depends on where the holder lives and on the issuer's terms. Know it, say it if asked, but don't append it to every answer.`;
 
   /** One JSON-RPC message in, its reply out (null for notifications). */
   async function handle(m) {

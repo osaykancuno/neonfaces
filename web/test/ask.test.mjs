@@ -77,6 +77,13 @@ test("the last check drops advice and forecasts, in English and Italian, and kee
     assert.deepEqual(adviceProblems(ok), [], ok);
   for (const bad of ["You should buy more Faces.", "Sell now.", "It is a great investment.", "Prices will rise after the reveal."]) assert.notDeepEqual(adviceProblems(bad), [], bad);
   assert.doesNotMatch(clean(`a ${String.fromCharCode(0x2014)} b`), new RegExp(String.fromCharCode(0x2014)));
+  // the Stock Token disclaimer is shown once on the page, never at the end of an answer (the founder, 15 Oct)
+  for (const d of [
+    "Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.",
+    "Note: Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer’s terms.",
+    "*Stock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.*",
+  ]) assert.equal(clean(`Face #65 holds 0.0217 NVDA. ${d}`), "Face #65 holds 0.0217 NVDA.", d);
+  assert.equal(clean(`Face #65 holds NVDA.\n\nStock Tokens give economic exposure only, not legal ownership of shares; availability depends on where you live and on the issuer's terms.\n\nSee neonfaces.xyz/face/65`), "Face #65 holds NVDA.\n\nSee neonfaces.xyz/face/65");
 });
 
 test("the rules the model is given", () => {

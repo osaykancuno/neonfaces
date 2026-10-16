@@ -1,5 +1,5 @@
 import { formatEther, formatUnits, encodeFunctionData } from "viem";
-import { ABI, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata, facesOf } from "./chain.js";
+import { ABI, TIERS, state, loadDeployment, read, readAt, wallets, connect, ensureChain, short, explorer, metadata, facesOf, MINT_PAUSED_ON_SITE } from "./chain.js";
 import { pixelEye } from "./effects/eye.js";
 import { decode, svgDataURI, setDataURI, PIECES, SINGLES } from "./render.js";
 import { journal, longestStares, completedSets, fmtDay, openApprovals } from "./journal.js";
@@ -502,7 +502,7 @@ function startSiteMint(drop) {
   $("#official-os-label").textContent = "Collection";
   $("#mint-fine").textContent = `Minting happens right here, through OpenSea's SeaDrop contract: the same contract OpenSea's own drops use, so the stage, price and limit are enforced on-chain, not by this page. Each Face is minted with its account and base basket in the same transaction.`;
   $("#funds-lead").innerHTML = `The mint runs through OpenSea's SeaDrop contract${fee ? `, and OpenSea keeps ${fee}% of primary sales` : ""}. The rest can only be paid to <code>NeonPayout</code>: shares and addresses are immutable, and anyone can push the split with <code>releaseAll()</code>. Resale royalties: 5% suggested on-chain (ERC-2981) to the treasury multisig, optional because transfers are never restricted.`;
-  $("#faq-where").textContent = "Right here: the Mint button on Home opens the panel, which mints through OpenSea's SeaDrop contract on Robinhood Chain. Your Faces show up on OpenSea and trade there. This app is also where you look inside your Faces and manage them: withdraw, trade, lock, assemble sets, delegate an agent.";
+  $("#faq-where").textContent = "Nowhere right now: the mint is paused. Your Faces are on OpenSea and trade there. This app is where you look inside your Faces and manage them: withdraw, trade, lock, assemble sets, delegate an agent.";
   setupSiteMint({
     doConnect,
     errMsg,
@@ -530,7 +530,7 @@ async function refreshMint() {
     $("#progress-bar").style.width = `${Math.min(1, Number(supply) / 5555) * 100}%`;
     $("#progress-note").textContent = sold
       ? "Sold out: all 5444 Faces of the sale are minted. The team's remaining Faces come next, then the reveal."
-      : `5444 for sale, 111 for the team: ${team} of those went to the first holders, and the team keeps ${111n - team}.`;
+      : `5444 for sale, 111 for the team: ${team} of those went to the wallets that minted, and the team keeps ${111n - team}.`;
     $("#seeded-text").textContent = `${funded} seeded`;
     document.querySelectorAll('[data-stat="minted"]').forEach((e) => (e.textContent = supply.toString()));
     document.querySelectorAll('[data-stat="seeded"]').forEach((e) => (e.textContent = funded.toString()));
@@ -601,7 +601,7 @@ async function renderReveal() {
   const status = $("#reveal-status");
   const detail = $("#reveal-detail");
   try {
-    const [seed, target, closed, supply] = await Promise.all([read("faces", "revealSeed"), read("faces", "revealBlock"), read("faces", "mintClosed"), read("faces", "totalSupply")]);
+    const [seed, target, closed, supply, paused] = await Promise.all([read("faces", "revealSeed"), read("faces", "revealBlock"), read("faces", "mintClosed"), read("faces", "totalSupply"), read("faces", "mintPaused")]);
     if (seed > 0n) {
       document.documentElement.classList.remove("until-reveal");
       status.textContent = `Revealed. One seed from the chain dealt the art and the Stare of all ${supply} Faces at once.`;
@@ -615,6 +615,9 @@ async function renderReveal() {
       const left = target >= now ? Number(target - now) + 1 : 0;
       status.textContent = left ? `The mint is closed. The seed comes from block ${target.toLocaleString("en-US")}: ${left} block${left === 1 ? "" : "s"} to go.` : "The block is there: the reveal is being finalized.";
       detail.textContent = "Nobody knows a block's hash before it exists. When it does, one transaction turns it into the seed, and every Face is revealed in the same instant.";
+    } else if (paused || MINT_PAUSED_ON_SITE) {
+      status.textContent = "The reveal is on hold while the mint is paused.";
+      detail.textContent = "When the mint closes, the hash of a future block becomes the seed: nobody knows it in advance, and it deals the art and the Stare of every Face at once. Until then every Face carries the same sealed image, and everything inside it works.";
     } else {
       status.textContent = "The reveal comes when the mint closes: with the last Face, or on Sat 31 Oct, 18:00 UTC, whichever is first.";
       detail.textContent = "Then the hash of a future block becomes the seed: nobody knows it in advance, and it deals the art and the Stare of every Face at once. Until then every Face carries the same sealed image.";

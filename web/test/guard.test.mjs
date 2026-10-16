@@ -75,8 +75,8 @@ test("calls: approvals, operators, transfers", () => {
 
 test("the official mint, and a mint of something else", () => {
   const ok = decodeCall({ to: dep.seaDrop, value: 8n * 10n ** 15n, data: enc("mintPublic", [dep.faces, EVIL, "0x0000000000000000000000000000000000000000", 2n]) }, K);
-  assert.equal(ok.level, "ok");
-  assert.match(ok.lines[0], /mints 2 NEONFACES .* 0\.008 ETH: the official mint/);
+  assert.equal(ok.level, "warn");
+  assert.match(ok.lines[0], /mints 2 NEONFACES .* 0\.008 ETH: the official mint contract\. The mint is paused/);
   assert.equal(decodeCall({ to: dep.seaDrop, data: enc("mintPublic", [EVIL, EVIL, EVIL, 1n]) }, K).level, "danger");
   assert.equal(decodeCall({ to: EVIL, data: enc("mintPublic", [dep.faces, EVIL, EVIL, 1n]) }, K).level, "danger");
 });

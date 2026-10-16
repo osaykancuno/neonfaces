@@ -3,6 +3,10 @@
 // runs in preview mode (art previews only). Minting happens on OpenSea (SeaDrop), not here.
 import { createPublicClient, createTransport, createWalletClient, custom, http, parseAbi, defineChain, getAddress, shouldThrow } from "viem";
 
+// The site stops minting by itself (16 Oct, the founder): the mint panel shows "Mint paused" whatever the chain says,
+// and the Safe's setMintPaused(true) stops SeaDrop on-chain too. Everything else on the site works as before.
+export const MINT_PAUSED_ON_SITE = true;
+
 export const ABI = {
   faces: parseAbi([
     "function totalSupply() view returns (uint256)",
@@ -14,6 +18,7 @@ export const ABI = {
     "function revealSeed() view returns (uint256)",
     "function revealBlock() view returns (uint256)",
     "function mintClosed() view returns (bool)",
+    "function mintPaused() view returns (bool)",
     "function heldSince(uint256 tokenId) view returns (uint64)",
     "function safeTransferFrom(address from, address to, uint256 tokenId)",
     "function transferFrom(address from, address to, uint256 tokenId)",

@@ -113,7 +113,7 @@
               <div class="phase-row"><span class="pill" id="phase-pill">Loading…</span></div>
               <div class="progress"><div id="progress-bar"></div></div>
               <div class="progress-label"><span id="progress-text">... / 5555</span><span id="seeded-text"></span></div>
-              <p class="fine progress-note" id="progress-note">5444 for sale, 111 for the team: 36 of those went to the first holders, and the team keeps 75.</p>
+              <p class="fine progress-note" id="progress-note">5444 for sale, 111 for the team.</p>
               <div class="stare" id="stare" hidden aria-hidden="true"><canvas width="480" height="240"></canvas></div>
               <div id="mint-log" class="mint-log" hidden aria-live="polite"></div>
               <div id="site-mint" hidden></div>
@@ -379,9 +379,8 @@
         <section id="guide-faq" class="block reveal">
           <div class="label">Guide / FAQ</div>
           <div class="faq">
-            <details><summary>What is the NEONLIST?</summary><p>The way NEONFACES mints: 0.004 ETH a Face, up to 15 per wallet, from Tuesday 13 October, 13:00 UTC until Saturday 31 October, 18:00 UTC. The panel on Home checks whether a connected wallet is ready (Robinhood Chain, enough ETH, Faces left) and mints from it.</p></details>
-            <details><summary>Can I mint without connecting to this site?</summary><p>Yes. The mint is OpenSea's SeaDrop contract <code>0x00005EA00Ac477B1030CE78506496e8C2dE24bf5</code> on Robinhood Chain. Open it on <a href="https://robinhoodchain.blockscout.com/address/0x00005EA00Ac477B1030CE78506496e8C2dE24bf5?tab=write_contract" target="_blank" rel="noopener">the explorer</a>, connect there and open <code>mintPublic</code>. Its values are on Home: connect a wallet and open <em>Mint from the explorer instead</em> under the panel. In <em>Send native ETH</em> the explorer wants wei: 4000000000000000 for 1 Face, times the quantity (or type 0.004 times the quantity and press ×10¹⁸ on that field only). It is the same transaction this site sends.</p></details>
-            <details><summary>Where do I mint?</summary><p id="faq-where">Right here: the Mint button on Home opens the panel, which mints through OpenSea's SeaDrop contract on Robinhood Chain. Your Faces show up on OpenSea and trade there. This app is also where you look inside your Faces and manage them: withdraw, trade, lock, assemble sets, delegate an agent.</p></details>
+            <details><summary>Why is the mint paused?</summary><p>Fewer people minted than we planned for, so we stopped selling. Every Face that exists keeps working as it does today: its wallet, What I see, trades, withdrawals, strategies and the lock. With the mint paused, the reveal is on hold: the art stays sealed for now.</p></details>
+            <details><summary>Where do I mint?</summary><p id="faq-where">Nowhere right now: the mint is paused. Your Faces are on OpenSea and trade there. This app is where you look inside your Faces and manage them: withdraw, trade, lock, assemble sets, delegate an agent.</p></details>
             <details><summary>What is actually inside a Face?</summary><p>An ERC-6551 account controlled by whoever holds the NFT: a base basket from mint, a top-up after reveal for Watch / Heavy Stare, plus anything you add. You can withdraw everything, add more, delegate an agent or lock it, all from the Face's page.</p></details>
             <details><summary>How are the faces made?</summary><p>Each one starts from a black-and-white portrait of a person who doesn't exist, generated for the collection: 555 different people for the sets, others for the close-ups. The portrait is cut to the Face's crop, turned into big neon blocks with its grain and traits, and only those pixels are stored on-chain. They are the art, sealed against a fingerprint published before the mint.</p></details>
             <details><summary>Are these shares?</summary><p>No. You buy an artwork that can hold on-chain exposure. Stock Tokens are tokenized instruments that track the underlying; they give no legal ownership and no shareholder rights.</p></details>

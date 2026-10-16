@@ -17,7 +17,7 @@ Every Face page (https://neonfaces.xyz/face/<id>) has a "What I see" panel, and 
 
 ## Check before clicking or signing
 
-https://neonfaces.xyz/check (tool `check`) reads a link, an address, a transaction or a signature request and says in plain words whether it is NEONFACES' own and what it would allow: lookalike sites and accounts, fake collections and tokens, address lookalikes, approvals and setApprovalForAll, Permit and Permit2, Seaport orders, the official mint (OpenSea's SeaDrop `mintPublic` for the NEONFACES contract). Official: neonfaces.xyz, opensea.io/collection/neonfaces, x.com/osaykancuno, contract 0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B. Nobody from NEONFACES DMs first; there is no airdrop or claim. A clean check is not a guarantee.
+https://neonfaces.xyz/check (tool `check`) reads a link, an address, a transaction or a signature request and says in plain words whether it is NEONFACES' own and what it would allow: lookalike sites and accounts, fake collections and tokens, address lookalikes, approvals and setApprovalForAll, Permit and Permit2, Seaport orders, the official mint (OpenSea's SeaDrop `mintPublic` for the NEONFACES contract). Official: neonfaces.xyz, opensea.io/collection/neonfaces, x.com/osaykancuno, contract 0x67384d956ac12f2C4a69167BF0DC67A3F72C1C1B. Nobody from NEONFACES DMs first; there is no claim. The mint is paused. A clean check is not a guarantee.
 
 ## Read a Face directly
 

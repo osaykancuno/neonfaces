@@ -7,11 +7,14 @@
 // SeaDrop, not here (the window, the price, the per-wallet limit): this panel reads the chain and shows what the
 // contract will accept, so nobody signs a transaction that would fail.
 //
+// Paused (16 Oct, the founder): MINT_PAUSED_ON_SITE stops the panel at once, the Safe's setMintPaused(true) stops SeaDrop
+// mints on-chain. The panel says so and offers My Faces; the Faces that exist keep working, and the reveal is on hold.
+//
 // The check (The Stare): before the NEONLIST opens, a connected wallet is checked for what minting needs, read live:
 // Robinhood Chain in the wallet, ETH on Robinhood Chain for at least one Face and its gas, Faces left of its 15.
 // #419's eye opens on the wallet as the checks pass: wide and lit when it is ready, half open on what is missing.
 import { parseAbi, parseEther, formatEther, formatUnits, parseEventLogs } from "viem";
-import { state, ensureChain, short, read, readAt, metadata, explorer } from "./chain.js";
+import { state, ensureChain, short, read, readAt, metadata, explorer, MINT_PAUSED_ON_SITE } from "./chain.js";
 import { chamber, terminal, birth } from "./effects/birth.js";
 import { pixelEye } from "./effects/eye.js";
 
@@ -44,7 +47,7 @@ export const MINT_ERRORS = {
   MintQuantityExceedsMaxTokenSupplyForStage: "Not that many Faces are left: try a smaller number.",
   ExceedsPublicAllocation: "Not that many Faces are left: try a smaller number.",
   IncorrectPayment: "The amount sent doesn't match the price. Reload the page and try again.",
-  MintIsPaused: "Minting is paused for a moment. Nothing was sent: try again shortly.",
+  MintIsPaused: "The mint is paused. Nothing was sent.",
   MintIsClosed: "The mint is over. The Faces now trade on OpenSea.",
 };
 
@@ -130,11 +133,12 @@ function stageAt(t) {
 async function readChain() {
   const pub = state.pub;
   const who = state.account;
-  const [block, drop, stats, closed, gasPrice] = await Promise.all([
+  const [block, drop, stats, closed, paused, gasPrice] = await Promise.all([
     pub.getBlock(),
     pub.readContract({ address: P.seaDrop, abi: SEADROP, functionName: "getPublicDrop", args: [P.faces] }),
     pub.readContract({ address: P.faces, abi: FACES, functionName: "getMintStats", args: [who ?? ZERO] }),
     pub.readContract({ address: P.faces, abi: parseAbi(["function mintClosed() view returns (bool)"]), functionName: "mintClosed" }),
+    pub.readContract({ address: P.faces, abi: parseAbi(["function mintPaused() view returns (bool)"]), functionName: "mintPaused" }),
     pub.getGasPrice(),
   ]);
   // the device's clock, unless it is more than 2 minutes off the chain's (a phone set to the wrong time): the latest
@@ -154,7 +158,7 @@ async function readChain() {
       feeBps: BigInt(drop.feeBps),
     };
   }
-  const v = { configured: onChain, closed, minted: who ? stats[0] : 0n, supply: stats[1], max: stats[2], balance: null, onChain: null, gasPrice, account: who };
+  const v = { configured: onChain, closed, paused: paused || MINT_PAUSED_ON_SITE, minted: who ? stats[0] : 0n, supply: stats[1], max: stats[2], balance: null, onChain: null, gasPrice, account: who };
   if (who) {
     const [balance, chainId] = await Promise.all([
       pub.getBalance({ address: who }),
@@ -171,6 +175,8 @@ function offer(v) {
   const stage = stageAt(nowChain());
   const remaining = v.max > v.supply ? v.max - v.supply : 0n;
   if (v.closed || remaining === 0n) return { stage: "soldout" };
+  // paused comes before the window: a paused mint stays paused after the NEONLIST's end date too
+  if (v.paused) return { stage: "paused" };
   if (stage === "ended") return { stage };
   if (stage === "list" && !listSet(v)) return { stage: "waiting" };
   const l = L();
@@ -226,7 +232,12 @@ function paint() {
   const l = L();
   const pill = $("#phase-pill");
   pill.classList.toggle("live", o.stage === "list");
-  pill.textContent = { before: "NEONLIST opens soon", list: "NEONLIST live", waiting: "Opening", soldout: "Sold out", ended: "Mint over" }[o.stage];
+  pill.textContent = { before: "NEONLIST opens soon", list: "NEONLIST live", waiting: "Opening", soldout: "Sold out", ended: "Mint over", paused: "Mint paused" }[o.stage];
+  const heroBtn = $("#hero-mint");
+  if (heroBtn) {
+    heroBtn.textContent = o.stage === "paused" ? "My Faces" : "NEONLIST";
+    heroBtn.setAttribute("href", o.stage === "paused" ? "/mine" : "/#mint");
+  }
   const terms = `The NEONLIST: ${ethFmt(l.mintPrice)} a Face, up to ${l.maxTotalMintableByWallet} per wallet in total, until ${esc(when(l.endTime))}. You pay with ETH on Robinhood Chain, not on Ethereum, plus a few cents of gas.`;
   const who = view.account ? `<span class="fine">Wallet ${short(view.account)}</span>` : "";
   let html = "";
@@ -239,6 +250,11 @@ function paint() {
     else html += fixes(view, o) + who;
   } else if (o.stage === "waiting") {
     html = `<p class="mint-line">Opening in a moment: the NEONLIST is being set on-chain.</p><p class="fine">This page checks every few seconds. No need to reload.</p>${who}`;
+  } else if (o.stage === "paused") {
+    html = `<p class="mint-line"><b>The mint is paused.</b></p>
+      <p>Fewer people minted than we planned for, so we stopped selling. The ${view.supply} Faces that exist keep working as they do today: their wallets, What I see, trades, withdrawals, strategies and the lock.</p>
+      <p class="fine">With the mint paused, the reveal is on hold: the art stays sealed for now.</p>
+      <a class="btn btn-neon btn-wide" href="/mine" data-link>My Faces</a>`;
   } else if (o.stage === "soldout" || o.stage === "ended") {
     html = `<p class="mint-line">${o.stage === "soldout" ? "Sold out: all 5444 Faces of the sale are minted." : "The mint is over."} They now trade on OpenSea.</p>`;
   } else {
@@ -435,11 +451,13 @@ export function setupSiteMint(helpers) {
     const t = nowChain();
     const s = stageAt(t);
     // once the mint is over (sold out or past its end), the countdown becomes the way to the reveal
-    const over = s === "ended" || view?.closed;
+    const over = (s === "ended" && !view?.paused) || view?.closed;
+    const paused = !over && view?.paused;
     const revealed = !document.documentElement.classList.contains("until-reveal");
-    hero.hidden = !(s === "before" || s === "list" || over);
+    hero.hidden = !(s === "before" || s === "list" || over || paused);
     hero.href = over ? (revealed ? "/mine" : "/reveal") : "/#mint";
-    if (over) hero.innerHTML = revealed ? `<span>The Faces are revealed</span><b>See yours</b>` : `<span>The mint is closed</span><b>The reveal</b>`;
+    if (paused) hero.innerHTML = `<span>The mint is paused</span><b>What it means</b>`;
+    else if (over) hero.innerHTML = revealed ? `<span>The Faces are revealed</span><b>See yours</b>` : `<span>The mint is closed</span><b>The reveal</b>`;
     else if (s === "before") hero.innerHTML = `<span>The NEONLIST opens in</span><b>${countdown(Number(L().startTime) - t)}</b>`;
     else if (s === "list") hero.innerHTML = `<span>The NEONLIST is open</span><b>Mint now</b>`;
   };

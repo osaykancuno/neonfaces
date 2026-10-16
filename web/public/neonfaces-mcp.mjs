@@ -386,7 +386,7 @@ const tokenSymbols = (known) => new Map(known.filter((x) => x.kind === "token").
 const short = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const name = (known, a) => lookup(known, a)?.name ?? short(a);
 const CLEAN_NOTE = "A clean check is not a guarantee: a new scam can look clean.";
-const TRICKS = "Nobody from NEONFACES DMs first. There is no airdrop, no claim and no stealth mint. Never share your seed phrase.";
+const TRICKS = "Nobody from NEONFACES DMs first. There is no claim and no stealth mint: Faces the team gives arrive in the wallet by themselves. Never share your seed phrase.";
 
 // ---------------------------------------------------------------- links
 
@@ -574,8 +574,8 @@ function decodeCall({ to, data = "0x", value = 0n }, known = [], depth = 0) {
     case "161ac21f": {
       const nft = asAddr(w[0]);
       if (target?.kind === "seadrop" && lookup(known, nft)?.kind === "collection") {
-        lines.push(`It mints ${w[3]} NEONFACES through OpenSea's SeaDrop, paying ${ETH(value)}: the official mint.`);
-        level = "ok";
+        lines.push(`It mints ${w[3]} NEONFACES through OpenSea's SeaDrop, paying ${ETH(value)}: the official mint contract. The mint is paused: don't send it.`);
+        raise("warn");
       } else {
         lines.push(`It mints from ${name(known, nft)}${target ? "" : ` through ${tName}`}: not the NEONFACES collection.`);
         raise("danger");

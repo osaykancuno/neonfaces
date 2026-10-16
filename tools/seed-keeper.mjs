@@ -64,6 +64,7 @@ const wallet = createWalletClient({ account: privateKeyToAccount(process.env.PK)
 const abi = parseAbi([
   "function totalSupply() view returns (uint256)",
   "function revealSeed() view returns (uint256)",
+  "function mintPaused() view returns (bool)",
   "function seedOf(uint256) view returns ((address account, uint8 tier, uint32 basketId, uint32 upgradeBasketId, bool activated, bool funded, bool upgraded, (address token, uint256 amount)[] legs, (address token, uint256 amount)[] upgradeLegs))",
   "function tierBaskets(uint8) view returns (uint32[])",
   "function basket(uint32) view returns ((address token, uint256 amount)[])",
@@ -101,6 +102,12 @@ async function send(address, functionName, args) {
   return hash;
 }
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
+/** The base-basket draw of a Face (NeonSeeder storage: `_seeds` at slot 4, `variant` packed at bits 88..119). */
+const drawOf = async (id) => {
+  const slot = keccak256(encodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], [BigInt(id), 4n]));
+  const word = BigInt((await pub.getStorageAt({ address: dep.seeder, slot })) ?? "0x0");
+  return Number((word >> 88n) & 0xffffffffn);
+};
 
 const WETH = cfg.weth.toLowerCase();
 const symOf = Object.fromEntries(cfg.tokens.map((t) => [t.address.toLowerCase(), t.symbol]));
@@ -238,12 +245,17 @@ async function round() {
       map.set(t, (map.get(t) ?? 0n) + l.amount * BigInt(times));
     }
   };
-  const perBase = Math.ceil(pendingBase.length / baseIds.length);
-  for (const b of baseIds) await add(owed, b, perBase);
+  // each pending Face's base basket is already drawn (NeonSeeder._seeds[id].variant): buy exactly those baskets, so a
+  // short vault never stocks a basket nobody is waiting for. Spread evenly only if the draw can't be read.
+  const draws = await Promise.all(pendingBase.map(drawOf)).catch(() => null);
+  if (draws) for (const v of draws) await add(owed, baseIds[v % baseIds.length], 1);
+  else for (const b of baseIds) await add(owed, b, Math.ceil(pendingBase.length / baseIds.length));
   for (const b of pendingTop.values()) await add(owed, b, 1);
   for (const b of bonusDue.values()) await add(owed, b, 1);
   const ahead = new Map(owed);
-  if (!revealSeed) {
+  // stock for the next Faces only while the mint runs: paused (16 Oct), every ETH goes to the Faces that wait
+  const paused = await read(dep.faces, "mintPaused").catch(() => false);
+  if (!revealSeed && !paused) {
     for (const b of baseIds) await add(ahead, b, Math.ceil(BUFFER / baseIds.length));
     // during the sale, the set bonuses too: one set for every 10 Faces minted (NeonSeeder.setsIn), so the pool
     // already holds every bonus at the reveal and the first assemblies are paid in their own transaction
